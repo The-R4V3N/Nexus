@@ -181,7 +181,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 NEXUS begins with:
 - 10 foundational analysis rules (ICT methodology)
 - A base system prompt built from first principles
-- 1,700 lines of TypeScript
+- 2,400+ lines of TypeScript across 9 modules
 - No history. No bias. No predictions.
 
 Every session it gets a little smarter.
