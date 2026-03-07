@@ -24,8 +24,13 @@ Watch it grow.
 GitHub Actions (Mon–Fri, every 4 hours)
     │
     ├── fetches live market data       (Yahoo Finance — 17 instruments)
-    ├── reads open community issues    (humans teaching NEXUS)
+    ├── reads open community issues    (sanitized — injection checked)
     ├── reads open self-tasks          (NEXUS's own to-do list)
+    │
+    ├── 🛡️  SECURITY — all external input sanitized before touching the AI
+    │       prompt injection detection (20+ patterns)
+    │       max 5 issues · max 4,000 chars total · max 2,048 output tokens
+    │       every new rule and self-task validated before written to memory
     │
     ├── 🔭 ORACLE — analyzes market structure
     │       bias, FVGs, order blocks, liquidity sweeps, setups
@@ -78,6 +83,7 @@ src/
 ├── markets.ts      Live data via Yahoo Finance API
 ├── issues.ts       Community GitHub issues reader
 ├── self-tasks.ts   Autonomous issue creation + resolution
+├── security.ts     Prompt injection + cost abuse protection
 ├── journal.ts      Markdown + GitHub Pages generator
 └── types.ts        TypeScript interfaces
 
@@ -92,6 +98,27 @@ docs/               GitHub Pages live journal site
 ├── ISSUE_TEMPLATE/ Community input templates (feedback, challenge, suggestion)
 └── workflows/      Automated execution — every 4 hours, Mon–Fri
 ```
+
+---
+
+## Security
+
+NEXUS is open to community input — but that input passes through a security layer before it ever reaches the AI.
+
+**Prompt injection protection** — every issue title and body is scanned against 20+ patterns before being injected into the prompt. Classic attacks like `"Ignore all previous instructions"`, role hijacking, identity overrides, and `[SYSTEM]` tag injections are blocked outright. Blocked issues are logged in the Actions output with a 🛡️ prefix.
+
+**Cost abuse prevention** — hard limits are enforced at every layer regardless of what the AI requests:
+
+| Limit | Value |
+|-------|-------|
+| Max community issues per session | 5 |
+| Max total issue chars injected | 4,000 |
+| Max output tokens per API call | 2,048 |
+| Max new rules AXIOM can write per session | 2 |
+| Max self-tasks NEXUS can open per session | 2 |
+| Max chars per rule | 300 |
+
+**Memory integrity** — AXIOM's own output is sanitized before anything touches `memory/`. New rules are scanned for injection patterns, rule weights are clamped to 1–10, self-task categories and priorities are validated against an allowlist. NEXUS cannot be tricked into writing malicious rules to its own mind.
 
 ---
 
@@ -145,6 +172,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 7. **Markets run Mon–Fri.** So does NEXUS.
 8. **Community input is considered, not obeyed.** NEXUS reads feedback and challenges but decides for itself what to act on.
 9. **Self-tasks are filed publicly.** If a gap is too big to fix in one session, NEXUS opens an issue on itself and works through it over future sessions.
+10. **All external input is sanitized.** Community issues pass through security before reaching the AI. NEXUS cannot be prompt-injected through GitHub issues.
 
 ---
 
