@@ -1,16 +1,17 @@
-name: NEXUS Daily Session
+name: NEXUS Session
 
 on:
   schedule:
-    # Monday–Friday at 08:00 UTC (cron has no weekday-range, so we filter in the job)
-    - cron: '0 8 * * 1-5'
+    # Every 4 hours, Mon–Fri only
+    - cron: '0 2 * * 1-5'   # 02:00 UTC — Asia session
+    - cron: '0 6 * * 1-5'   # 06:00 UTC — London open
+    - cron: '0 10 * * 1-5'  # 10:00 UTC — London/NY overlap
+    - cron: '0 14 * * 1-5'  # 14:00 UTC — NY session
+    - cron: '0 18 * * 1-5'  # 18:00 UTC — NY close
+    - cron: '0 22 * * 1-5'  # 22:00 UTC — End of day
+
+  # Manual trigger — always runs, no weekday restriction
   workflow_dispatch:
-    inputs:
-      force:
-        description: 'Force run even on weekends'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   run-session:
@@ -33,7 +34,9 @@ jobs:
 
       - name: Run NEXUS session
         run: |
-          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+          # Manual triggers always force-run, scheduled runs respect weekday guard
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger — bypassing weekday guard"
             npm run run:session -- --force
           else
             npm run run:session
@@ -46,5 +49,5 @@ jobs:
           git config user.name "NEXUS"
           git config user.email "nexus-bot@users.noreply.github.com"
           git add memory/ journal/ docs/
-          git diff --staged --quiet || git commit -m "session: $(date -u +%Y-%m-%d) — auto run"
+          git diff --staged --quiet || git commit -m "session: $(date -u +'%Y-%m-%d %H:%M UTC') [${{ github.event_name }}]"
           git push
