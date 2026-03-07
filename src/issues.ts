@@ -3,6 +3,8 @@
 // Fetches open GitHub issues tagged nexus-input
 // ============================================================
 
+import { sanitizeAllIssues, IssueSecurityReport } from "./security";
+
 export interface CommunityIssue {
     number: number;
     title: string;
@@ -69,22 +71,32 @@ function extractLabel(labels: any[]): CommunityIssue["label"] {
 export function formatIssuesForPrompt(issues: CommunityIssue[]): string {
     if (issues.length === 0) return "";
 
+    // Run all issues through security sanitizer before injecting into prompt
+    const report: IssueSecurityReport = sanitizeAllIssues(
+        issues.map((i) => ({
+            number: i.number,
+            title: i.title,
+            body: i.body,
+            reactions: i.reactions,
+        }))
+    );
+
+    if (report.blocked.length > 0) {
+        console.warn(`  🛡️  Security: blocked ${report.blocked.length} issue(s) — ${report.blocked.map(n => `#${n}`).join(", ")}`);
+    }
+
+    if (report.warnings.length > 0) {
+        for (const w of report.warnings) console.warn(`  ⚠ Security: ${w}`);
+    }
+
+    if (!report.safe.trim()) return "";
+
     const lines = [
         "=== COMMUNITY INPUT ===",
-        `${issues.length} open issue(s) from the community. These are real people giving you feedback.`,
-        "Address them honestly in your analysis and reflection.\n",
+        `${report.usedIssues} of ${report.totalIssues} issue(s) passed security review.`,
+        "These are real people giving feedback. Address them honestly.\n",
+        report.safe,
     ];
-
-    for (const issue of issues) {
-        const emoji = { feedback: "🔴", challenge: "🟡", suggestion: "🟢", unknown: "⚪" }[issue.label];
-        lines.push(`${emoji} [#${issue.number}] [${issue.label.toUpperCase()}] ${issue.title}`);
-        lines.push(`By: @${issue.author} | Reactions: ${issue.reactions} | ${issue.url}`);
-        if (issue.body.trim()) {
-            lines.push(`---`);
-            lines.push(issue.body.trim());
-        }
-        lines.push("");
-    }
 
     return lines.join("\n");
 }

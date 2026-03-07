@@ -4,6 +4,7 @@
 // ============================================================
 
 import Anthropic from "@anthropic-ai/sdk";
+import { getMaxOutputTokens } from "./security";
 import * as fs from "fs";
 import * as path from "path";
 import { formatSnapshotsForPrompt } from "./markets";
@@ -88,7 +89,7 @@ Only respond with the JSON, no other text.`;
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
+    max_tokens: getMaxOutputTokens(),
     system: systemPrompt,
     messages: [{ role: "user", content: userMessage }],
   });

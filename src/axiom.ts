@@ -5,6 +5,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
+import { sanitizeAxiomOutput, getMaxOutputTokens } from "./security";
 import * as fs from "fs";
 import * as path from "path";
 import type {
@@ -112,7 +113,7 @@ Only create new rules if the session revealed a genuine gap not covered. Only mo
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
+    max_tokens: getMaxOutputTokens(),
     system: systemMessage,
     messages: [{ role: "user", content: userMessage }],
   });
@@ -123,7 +124,25 @@ Only create new rules if the session revealed a genuine gap not covered. Only mo
     .join("");
 
   const jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
-  const parsed = JSON.parse(jsonText);
+  const rawParsed = JSON.parse(jsonText);
+
+  // ── Security: sanitize AXIOM output before applying to memory ──
+  const secResult = sanitizeAxiomOutput(rawParsed, sessionNumber);
+  if (secResult.warnings.length > 0) {
+    for (const w of secResult.warnings) console.warn(`  🛡️  Security: ${w}`);
+  }
+  if (secResult.blockedRules > 0) {
+    console.warn(`  🛡️  Security: blocked ${secResult.blockedRules} suspicious rule(s)`);
+  }
+
+  // Merge sanitized fields back
+  const parsed = {
+    ...rawParsed,
+    newRules: secResult.newRules,
+    ruleUpdates: secResult.ruleUpdates,
+    newSelfTasks: secResult.newSelfTasks,
+    resolvedSelfTasks: secResult.resolvedTasks,
+  };
 
   // Apply rule updates to memory
   const reflection: AxiomReflection = {
