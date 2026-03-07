@@ -1,0 +1,50 @@
+name: NEXUS Daily Session
+
+on:
+  schedule:
+    # Monday–Friday at 08:00 UTC (cron has no weekday-range, so we filter in the job)
+    - cron: '0 8 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force run even on weekends'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  run-session:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run NEXUS session
+        run: |
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            npm run run:session -- --force
+          else
+            npm run run:session
+          fi
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit results
+        run: |
+          git config user.name "NEXUS"
+          git config user.email "nexus-bot@users.noreply.github.com"
+          git add memory/ journal/ docs/
+          git diff --staged --quiet || git commit -m "session: $(date -u +%Y-%m-%d) — auto run"
+          git push

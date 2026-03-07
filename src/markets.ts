@@ -1,0 +1,113 @@
+// ============================================================
+// NEXUS — Market Data Module
+// Fetches data from Yahoo Finance v8 API (no package needed)
+// ============================================================
+
+import chalk from "chalk";
+import type { MarketConfig, MarketSnapshot } from "./types";
+
+// ── Instrument Registry ────────────────────────────────────
+
+export const MARKET_CONFIGS: MarketConfig[] = [
+  { symbol: "EURUSD=X", name: "EUR/USD", category: "forex" },
+  { symbol: "GBPUSD=X", name: "GBP/USD", category: "forex" },
+  { symbol: "USDJPY=X", name: "USD/JPY", category: "forex" },
+  { symbol: "GBPJPY=X", name: "GBP/JPY", category: "forex" },
+  { symbol: "AUDUSD=X", name: "AUD/USD", category: "forex" },
+  { symbol: "USDCAD=X", name: "USD/CAD", category: "forex" },
+  { symbol: "^NDX", name: "NASDAQ 100", category: "indices" },
+  { symbol: "^GSPC", name: "S&P 500", category: "indices" },
+  { symbol: "^DJI", name: "Dow Jones", category: "indices" },
+  { symbol: "^GDAXI", name: "DAX", category: "indices" },
+  { symbol: "^FTSE", name: "FTSE 100", category: "indices" },
+  { symbol: "BTC-USD", name: "Bitcoin", category: "crypto" },
+  { symbol: "ETH-USD", name: "Ethereum", category: "crypto" },
+  { symbol: "GC=F", name: "Gold", category: "metals" },
+  { symbol: "SI=F", name: "Silver", category: "metals" },
+  { symbol: "CL=F", name: "Crude Oil", category: "commodities" },
+  { symbol: "NG=F", name: "Nat Gas", category: "commodities" },
+];
+
+// ── Yahoo Finance v8 fetch ─────────────────────────────────
+
+async function fetchYahooQuote(symbol: string): Promise<any> {
+  const encoded = encodeURIComponent(symbol);
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&range=2d`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json() as any;
+  return data?.chart?.result?.[0] ?? null;
+}
+
+export async function fetchMarketSnapshot(config: MarketConfig): Promise<MarketSnapshot | null> {
+  try {
+    const result = await fetchYahooQuote(config.symbol);
+    if (!result) return null;
+    const meta = result.meta;
+    const price = meta.regularMarketPrice ?? 0;
+    const previousClose = meta.chartPreviousClose ?? meta.previousClose ?? price;
+    const change = price - previousClose;
+    const changePercent = previousClose !== 0 ? (change / previousClose) * 100 : 0;
+    return {
+      symbol: config.symbol, name: config.name, category: config.category,
+      price, previousClose, change, changePercent,
+      high: meta.regularMarketDayHigh ?? price,
+      low: meta.regularMarketDayLow ?? price,
+      timestamp: new Date(),
+    };
+  } catch (err) {
+    console.warn(chalk.yellow(`  ⚠ Could not fetch ${config.name}: ${err}`));
+    return null;
+  }
+}
+
+export async function fetchAllMarkets(): Promise<MarketSnapshot[]> {
+  const results = await Promise.allSettled(MARKET_CONFIGS.map((c) => fetchMarketSnapshot(c)));
+  const snapshots: MarketSnapshot[] = [];
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value !== null) snapshots.push(r.value);
+  }
+  return snapshots;
+}
+
+export function formatSnapshotsForPrompt(snapshots: MarketSnapshot[]): string {
+  const byCategory: Record<string, MarketSnapshot[]> = {};
+  for (const s of snapshots) {
+    if (!byCategory[s.category]) byCategory[s.category] = [];
+    byCategory[s.category].push(s);
+  }
+  const lines: string[] = ["=== CURRENT MARKET DATA ===\n"];
+  for (const [category, items] of Object.entries(byCategory)) {
+    lines.push(`--- ${category.toUpperCase()} ---`);
+    for (const s of items) {
+      const sign = s.change >= 0 ? "+" : "";
+      const pct = s.changePercent.toFixed(2);
+      const price = s.price < 10 ? s.price.toFixed(5) : s.price.toFixed(2);
+      lines.push(`${s.name.padEnd(14)} ${price.padStart(12)}  ${sign}${s.change.toFixed(4)} (${sign}${pct}%)  H:${s.high.toFixed(2)} L:${s.low.toFixed(2)}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+export function printMarketsTable(snapshots: MarketSnapshot[]): void {
+  const byCategory: Record<string, MarketSnapshot[]> = {};
+  for (const s of snapshots) {
+    if (!byCategory[s.category]) byCategory[s.category] = [];
+    byCategory[s.category].push(s);
+  }
+  for (const [category, items] of Object.entries(byCategory)) {
+    console.log(chalk.dim(`\n  ── ${category.toUpperCase()} ──`));
+    for (const s of items) {
+      const up = s.change >= 0;
+      const sign = up ? "+" : "";
+      const pct = s.changePercent.toFixed(2);
+      const price = s.price < 10 ? s.price.toFixed(5) : s.price.toFixed(2);
+      const changeStr = chalk[up ? "green" : "red"](`${sign}${pct.padStart(6)}%`);
+      console.log(`  ${chalk.white(s.name.padEnd(14))} ${chalk.cyan(price.padStart(12))}  ${changeStr}`);
+    }
+  }
+  console.log("");
+}

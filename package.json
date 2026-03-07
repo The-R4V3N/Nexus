@@ -1,0 +1,27 @@
+{
+  "name": "nexus",
+  "version": "0.0.1",
+  "description": "A self-evolving market intelligence agent",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "run:session": "ts-node src/index.ts run",
+    "status": "ts-node src/index.ts status",
+    "journal": "ts-node src/index.ts journal",
+    "mind": "ts-node src/index.ts mind",
+    "rebuild-site": "ts-node src/index.ts rebuild-site"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "chalk": "^4.1.2",
+    "dotenv": "^16.4.5",
+    "commander": "^12.1.0",
+    "ora": "^5.4.1",
+    "date-fns": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.2"
+  }
+}

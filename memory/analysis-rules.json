@@ -1,0 +1,32 @@
+{
+  "rules": [
+    {
+      "id": "r001",
+      "category": "catalyst_verification",
+      "description": "Never attribute market moves to specific events (geopolitical, economic data, etc.) without explicitly stating 'assuming' or 'if confirmed'. Separate observed price action from assumed causation.",
+      "weight": 9,
+      "addedSession": 1,
+      "lastModifiedSession": 1
+    },
+    {
+      "id": "r002",
+      "category": "technical_precision",
+      "description": "When analyzing cross-asset divergences, quantify the divergence strength and provide historical context for whether this magnitude is significant.",
+      "weight": 7,
+      "addedSession": 1,
+      "lastModifiedSession": 1
+    },
+    {
+      "id": "r003",
+      "category": "setup_validation",
+      "description": "For each setup, include the timeframe context and what invalidates the thesis. Avoid setups that contradict the broader macro thesis without strong technical conviction.",
+      "weight": 8,
+      "addedSession": 1,
+      "lastModifiedSession": 1
+    }
+  ],
+  "version": 2,
+  "lastUpdated": "2026-03-07T15:55:32.450Z",
+  "focusInstruments": [],
+  "sessionNotes": "Last updated: Session #1"
+}
