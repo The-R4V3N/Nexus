@@ -128,7 +128,7 @@ export function updateGithubPages(entries: JournalEntry[]): void {
   const latest = sorted[0];
   const totalRules = latest?.ruleCount ?? 0;
 
-  const journalHTML = sorted.map((e) => buildEntryHTML(e)).join("\n");
+  const journalHTML = sorted.map((e, i) => buildEntryHTML(e, i)).join("\n");
 
   const html = buildPageHTML(journalHTML, sorted.length, totalRules, latest);
   fs.writeFileSync(path.join(DOCS_DIR, "index.html"), html);
@@ -149,60 +149,86 @@ export function saveJournalEntry(entry: JournalEntry): void {
   fs.writeFileSync(stored, JSON.stringify(entries, null, 2));
 }
 
+// ── HTML helpers ──────────────────────────────────────────
+
+function escapeHTML(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function escapeAndBreak(str: string): string {
+  return escapeHTML(str).replace(/\n/g, "<br>");
+}
+
 // ── HTML builders ──────────────────────────────────────────
 
-function buildEntryHTML(entry: JournalEntry): string {
-  const biasClass = entry.fullAnalysis.bias.overall;
+function buildEntryHTML(entry: JournalEntry, index: number): string {
+  const biasClass = escapeHTML(entry.fullAnalysis.bias.overall);
+  const isFirst = index === 0; // newest entry starts expanded
+
   const setupsHTML = entry.fullAnalysis.setups.map((s) => `
-    <div class="setup-chip ${s.direction}">
-      <span class="setup-name">${s.instrument}</span>
-      <span class="setup-type">${s.type}</span>
-      <span class="setup-dir">${s.direction === "bullish" ? "↑" : s.direction === "bearish" ? "↓" : "—"}</span>
+    <div class="setup-chip ${escapeHTML(s.direction)}">
+      <span class="setup-name">${escapeHTML(s.instrument)}</span>
+      <span class="setup-type">${escapeHTML(s.type)}</span>
+      <span class="setup-dir">${s.direction === "bullish" ? "&#x2191;" : s.direction === "bearish" ? "&#x2193;" : "&#x2014;"}</span>
     </div>`).join("");
 
   const rulesHTML = entry.reflection.ruleUpdates.length > 0
     ? entry.reflection.ruleUpdates.map((u) => `
-    <div class="rule-update ${u.type}">
-      <span class="rule-type">[${u.type}]</span>
-      <span class="rule-id">${u.ruleId}</span>
-      <span class="rule-reason">${u.reason}</span>
+    <div class="rule-update ${escapeHTML(u.type)}">
+      <span class="rule-type">[${escapeHTML(u.type)}]</span>
+      <span class="rule-id">${escapeHTML(u.ruleId)}</span>
+      <span class="rule-reason">${escapeHTML(u.reason)}</span>
     </div>`).join("")
     : `<div class="no-change">No rule changes</div>`;
 
+  // Extract time from date string (format: "yyyy-MM-dd HH:mm")
+  const dateParts = entry.date.split(" ");
+  const dateStr = escapeHTML(dateParts[0] ?? entry.date);
+  const timeStr = dateParts[1] ? escapeHTML(dateParts[1]) : "";
+
   return `
-  <article class="entry" data-bias="${biasClass}">
-    <div class="entry-header">
+  <article class="entry${isFirst ? " expanded" : ""}" data-bias="${biasClass}">
+    <div class="entry-header" onclick="this.parentElement.classList.toggle('expanded')">
       <div class="session-meta">
         <span class="session-num">SESSION_${String(entry.sessionNumber).padStart(3, "0")}</span>
-        <span class="session-date">${entry.date}</span>
+        <span class="session-date">${dateStr}</span>
+        ${timeStr ? `<span class="session-time">${timeStr} UTC</span>` : ""}
         <span class="confidence-badge">CONF:${entry.fullAnalysis.confidence}%</span>
+        <span class="expand-icon"></span>
       </div>
-      <h2 class="entry-title">${entry.title}</h2>
+      <h2 class="entry-title">${escapeHTML(entry.title)}</h2>
       <div class="bias-line">
-        <span class="bias-indicator bias-${biasClass}">${entry.fullAnalysis.bias.overall.toUpperCase()}</span>
-        <span class="bias-note">${entry.fullAnalysis.bias.notes}</span>
+        <span class="bias-indicator bias-${biasClass}">${escapeHTML(entry.fullAnalysis.bias.overall.toUpperCase())}</span>
+        <span class="bias-note">${escapeHTML(entry.fullAnalysis.bias.notes)}</span>
       </div>
     </div>
 
-    <div class="entry-grid">
-      <div class="oracle-col">
-        <h3 class="col-header">// ORACLE</h3>
-        <div class="analysis-text">${entry.fullAnalysis.analysis.replace(/\n/g, "<br>")}</div>
-        <div class="setups-row">${setupsHTML || '<span class="no-setup">NO SETUPS</span>'}</div>
-      </div>
-
-      <div class="axiom-col">
-        <h3 class="col-header">// AXIOM</h3>
-        <div class="evolution-text">${entry.reflection.evolutionSummary}</div>
-        ${entry.reflection.cognitiveBiases.length > 0 ? `
-        <div class="biases">
-          ${entry.reflection.cognitiveBiases.map((b) => `<span class="bias-tag">${b}</span>`).join("")}
-        </div>` : ""}
-        <div class="rule-updates">
-          <span class="rules-label">MIND DELTA</span>
-          ${rulesHTML}
+    <div class="entry-body">
+      <div class="entry-grid">
+        <div class="oracle-col">
+          <h3 class="col-header">// ORACLE</h3>
+          <div class="analysis-text">${escapeAndBreak(entry.fullAnalysis.analysis)}</div>
+          <div class="setups-row">${setupsHTML || '<span class="no-setup">NO SETUPS</span>'}</div>
         </div>
-        <div class="rule-count">rules: ${entry.ruleCount} | prompt_v${entry.systemPromptVersion}</div>
+
+        <div class="axiom-col">
+          <h3 class="col-header">// AXIOM</h3>
+          <div class="evolution-text">${escapeHTML(entry.reflection.evolutionSummary)}</div>
+          ${entry.reflection.cognitiveBiases.length > 0 ? `
+          <div class="biases">
+            ${entry.reflection.cognitiveBiases.map((b) => `<span class="bias-tag">${escapeHTML(b)}</span>`).join("")}
+          </div>` : ""}
+          <div class="rule-updates">
+            <span class="rules-label">MIND DELTA</span>
+            ${rulesHTML}
+          </div>
+          <div class="rule-count">rules: ${entry.ruleCount} | prompt_v${entry.systemPromptVersion}</div>
+        </div>
       </div>
     </div>
   </article>`;
@@ -342,6 +368,18 @@ function buildPageHTML(
     min-width: 280px;
   }
 
+  @media (max-width: 768px) {
+    .status-grid {
+      grid-template-columns: repeat(2, 1fr);
+      min-width: auto;
+      width: 100%;
+    }
+    .header-inner {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
   .stat-cell {
     background: var(--bg2);
     padding: 12px 16px;
@@ -416,10 +454,39 @@ function buildPageHTML(
 
   .entry:hover { border-color: var(--amber-dim); }
 
+  /* Accordion */
   .entry-header {
     padding: 20px 24px 16px 28px;
     border-bottom: 1px solid var(--border);
     background: var(--bg3);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .entry-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+
+  .entry.expanded .entry-body {
+    max-height: 5000px;
+  }
+
+  .expand-icon {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+
+  .expand-icon::after {
+    content: '\\25BC';
+  }
+
+  .entry.expanded .expand-icon {
+    transform: rotate(180deg);
   }
 
   .session-meta {
@@ -438,6 +505,7 @@ function buildPageHTML(
   }
 
   .session-date { font-size: 10px; color: var(--text-dim); }
+  .session-time { font-size: 10px; color: var(--text-dim); font-style: italic; }
 
   .confidence-badge {
     font-size: 9px;
@@ -479,7 +547,10 @@ function buildPageHTML(
     gap: 0;
   }
 
-  @media (max-width: 768px) { .entry-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) {
+    .entry-grid { grid-template-columns: 1fr; }
+    .oracle-col { border-right: none; border-bottom: 1px solid var(--border); }
+  }
 
   .oracle-col,
   .axiom-col {
