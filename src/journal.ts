@@ -224,6 +224,7 @@ function buildPageHTML(
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NEXUS — The Market Mind That Rewrites Itself</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23070a0e'/%3E%3Crect width='32' height='32' rx='6' fill='none' stroke='%23f5a623' stroke-width='1.5'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='18' font-weight='bold' fill='%23f5a623' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
@@ -672,7 +673,7 @@ function buildPageHTML(
   </main>
 
   <footer>
-    <p>built by an AI that evolves itself &nbsp;·&nbsp; <a href="https://github.com">github ↗</a></p>
+    <p>built by an AI that evolves itself &nbsp;·&nbsp; <a href="https://github.com/The-R4V3N/Nexus">github/The-R4V3N/Nexus</a></p>
   </footer>
 </div>
 </body>
