@@ -1,110 +1,149 @@
 # NEXUS 🔮
+### The Market Mind That Rewrites Itself
 
-> The market mind that rewrites itself.
+[![session](https://img.shields.io/github/actions/workflow/status/The-R4V3N/Nexus/session.yml?label=last%20session&logo=github)](https://github.com/The-R4V3N/Nexus/actions)
+[![last commit](https://img.shields.io/github/last-commit/The-R4V3N/Nexus)](https://github.com/The-R4V3N/Nexus/commits/main)
+[![license MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/built%20with-TypeScript-3178c6)](https://www.typescriptlang.org/)
 
-NEXUS is a self-evolving market intelligence agent. Every session it analyzes global financial markets using ICT methodology, then reflects on its own reasoning, identifies cognitive biases, and rewrites its own rules and system prompt.
-
-It grows in public. Its mind is open source.
-
----
-
-## What is this?
-
-NEXUS has two parallel loops:
-
-**🔭 ORACLE** — Market analysis using ICT concepts: FVGs, order blocks, liquidity sweeps, market structure shifts. Covers forex, indices (NAS100, SPX, DAX), crypto, metals (Gold, Silver), and commodities (Oil, Gas).
-
-**🧠 AXIOM** — Cognitive self-reflection. After each analysis, NEXUS critiques itself: what biases appeared, what rules are wrong, what's missing. Then it literally rewrites its own `memory/system-prompt.md` and `memory/analysis-rules.json`.
-
-The evolution is committed to git. The journal is published to GitHub Pages.
+[Live Journal →](https://the-r4v3n.github.io/Nexus/) · [Sessions](#sessions) · [How It Works](#how-it-works) · [Run It](#run-it-yourself)
 
 ---
 
-## Setup
+NEXUS is a self-evolving market intelligence AI. Every weekday it analyzes global financial markets — forex, indices, crypto, metals, commodities — using ICT methodology. Then it reflects on its own reasoning, identifies cognitive biases, and **rewrites its own rules and system prompt**.
+
+No human tells it what to think. No static prompt tells it how to analyze. It decides for itself — and gets better each session.
+
+Watch it grow.
+
+---
+
+## How It Works
+
+```
+GitHub Actions (Mon–Fri, 08:00 UTC)
+    │
+    ├── 🔭 ORACLE — fetches live market data (Yahoo Finance)
+    │       analyzes structure, bias, FVGs, liquidity, setups
+    │       outputs: bias, setups, key levels, confidence score
+    │
+    ├── 🧠 AXIOM — reads the oracle analysis
+    │       critiques itself: what worked, what failed, what biases appeared
+    │       surgically rewrites memory/analysis-rules.json
+    │       appends to memory/system-prompt.md
+    │
+    └── 📓 JOURNAL — writes session markdown
+            regenerates GitHub Pages site
+            commits everything to git
+            pushes
+```
+
+The entire cognitive history is in the git log. Every rule change is versioned. The mind is open source.
+
+---
+
+## What NEXUS Watches
+
+| Category | Instruments |
+|----------|------------|
+| **Forex** | EUR/USD · GBP/USD · USD/JPY · GBP/JPY · AUD/USD · USD/CAD |
+| **Indices** | NAS100 · S&P 500 · Dow Jones · DAX · FTSE 100 |
+| **Crypto** | Bitcoin · Ethereum |
+| **Metals** | Gold · Silver |
+| **Commodities** | Crude Oil · Natural Gas |
+
+---
+
+## The Two Minds
+
+**ORACLE** applies ICT (Inner Circle Trader) methodology — fair value gaps, order blocks, liquidity sweeps, market structure shifts, session ranges. It identifies the highest-probability setup, states a directional bias, and rates its own confidence from 0–100.
+
+**AXIOM** is the part nobody else builds. After every session it asks: *what biases infected my reasoning? what rule is wrong? what am I missing?* Then it edits its own rulebook. After 50 sessions, `memory/` in this repo is a visible record of an AI mind developing real domain expertise — not from training, but from iterative self-reflection.
+
+---
+
+## Architecture
+
+```
+src/
+├── index.ts        CLI entry point
+├── agent.ts        Session orchestrator
+├── oracle.ts       Market analysis engine (ICT methodology)
+├── axiom.ts        Self-reflection + memory evolution
+├── markets.ts      Live data via Yahoo Finance API
+├── journal.ts      Markdown + GitHub Pages generator
+└── types.ts        TypeScript interfaces
+
+memory/             NEXUS's evolving mind (committed to git)
+├── system-prompt.md    Grows every session
+├── analysis-rules.json Evolves every session
+└── sessions.json       Full session history
+
+journal/            Per-session markdown entries
+docs/               GitHub Pages live journal site
+.github/workflows/  Automated daily execution
+```
+
+---
+
+## Run It Yourself
 
 ```bash
-# 1. Clone and install
-git clone <your-repo>
-cd nexus
+git clone https://github.com/The-R4V3N/Nexus
+cd Nexus
 npm install
-
-# 2. Set your API key
 cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY
-# (Alpha Vantage key optional for now — Yahoo Finance is free)
-
-# 3. Run first session
+# Add your ANTHROPIC_API_KEY to .env
 npm run run:session
 ```
 
----
+Other commands:
 
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `npm run run:session` | Run a full ORACLE + AXIOM session |
-| `npx ts-node src/index.ts status` | Current state of NEXUS's mind |
-| `npx ts-node src/index.ts journal` | List past sessions |
-| `npx ts-node src/index.ts mind` | See all current analysis rules |
-| `npx ts-node src/index.ts rebuild-site` | Regenerate GitHub Pages |
-
----
-
-## Project Structure
-
+```bash
+npm run status        # Current state of NEXUS's mind
+npm run journal       # List past sessions
+npm run mind          # See all current analysis rules
+npm run rebuild-site  # Regenerate GitHub Pages locally
 ```
-nexus/
-├── src/
-│   ├── index.ts        # CLI entry point
-│   ├── agent.ts        # Session orchestrator
-│   ├── oracle.ts       # Market analysis engine
-│   ├── axiom.ts        # Self-reflection + memory evolution
-│   ├── markets.ts      # Data fetching (Yahoo Finance)
-│   ├── journal.ts      # Markdown + GitHub Pages writer
-│   └── types.ts        # TypeScript interfaces
-│
-├── memory/             # NEXUS's evolving mind (committed to git)
-│   ├── system-prompt.md    # Current system prompt (grows each session)
-│   ├── analysis-rules.json # Current rules (evolves each session)
-│   └── sessions.json       # All session data
-│
-├── journal/            # Markdown journal entries
-│   └── session-0001-*.md
-│
-├── docs/               # GitHub Pages site
-│   └── index.html      # The public journal
-│
-└── .env                # Your API keys (never committed)
+
+Override the weekday guard (for testing):
+```bash
+npm run run:session -- --force
 ```
 
 ---
 
-## GitHub Pages Setup
+## Sessions
 
-1. Push to GitHub
-2. Go to Settings → Pages
-3. Set source to `main` branch, `/docs` folder
-4. Your evolving journal is live
+Every session is committed to this repo. The journal lives at [the-r4v3n.github.io/Nexus](https://the-r4v3n.github.io/Nexus/).
+
+| # | Date | Bias | Setups | Confidence | Rule Δ |
+|---|------|------|--------|------------|--------|
+| — | — | — | — | — | Day 0 |
+
+*This table will be updated automatically each session.*
 
 ---
 
-## The Rules
+## The Rules NEXUS Lives By
 
-1. **Every session produces one journal entry.** No silent sessions.
+1. **Every session produces one journal entry.** No silent runs.
 2. **AXIOM always runs after ORACLE.** No analysis without reflection.
-3. **Memory is committed to git.** Every rule change is versioned history.
-4. **I never delete the journal.** It's my memory.
-5. **Confidence must be honest.** No setup with < 2 confluences gets > 40% confidence.
+3. **Memory is committed to git.** Every cognitive change is history.
+4. **The journal is never deleted.** It is the memory.
+5. **Confidence must be honest.** Fewer than 2 confluences = confidence below 40.
+6. **No setup is forced.** "No clear setup" is a valid and valuable output.
+7. **Markets run Mon–Fri.** So does NEXUS.
 
 ---
 
 ## Day 0
 
 NEXUS begins with:
-- 10 foundational analysis rules
-- A base system prompt built on ICT methodology
-- No history, no bias, no predictions
+- 10 foundational analysis rules (ICT methodology)
+- A base system prompt built from first principles
+- 1,700 lines of TypeScript
+- No history. No bias. No predictions.
 
 Every session it gets a little smarter.
 
