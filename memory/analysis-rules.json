@@ -2,6 +2,86 @@
   "rules": [
     {
       "id": "r001",
+      "category": "structure",
+      "description": "Always identify the higher timeframe (daily) bias before analyzing intraday setups",
+      "weight": 10,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r002",
+      "category": "structure",
+      "description": "A market structure shift (MSS) requires a candle close beyond the last swing high/low, not just a wick",
+      "weight": 9,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r003",
+      "category": "fvg",
+      "description": "Fair Value Gaps are only valid if formed with displacement (strong impulsive move), not choppy price action",
+      "weight": 9,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r004",
+      "category": "liquidity",
+      "description": "Equal highs/lows are liquidity targets — price is drawn to them before reversing",
+      "weight": 8,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r005",
+      "category": "correlation",
+      "description": "Check DXY direction when analyzing forex pairs — risk assets (indices, crypto) typically inversely correlate with DXY",
+      "weight": 8,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r006",
+      "category": "sessions",
+      "description": "Asian range defines liquidity for London session — London often sweeps Asian highs or lows before the true move",
+      "weight": 7,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r007",
+      "category": "risk",
+      "description": "During high-impact news (NFP, CPI, FOMC), flag setups as high-risk and note the event",
+      "weight": 7,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r008",
+      "category": "metals",
+      "description": "Gold (XAU) often leads as a risk-off signal — rising gold with falling indices = fear in the market",
+      "weight": 7,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r009",
+      "category": "crypto",
+      "description": "Bitcoin dominance matters — if BTC rises while altcoins fall, sentiment is defensive within crypto",
+      "weight": 6,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r010",
+      "category": "discipline",
+      "description": "If fewer than 2 confluences align for a setup, classify confidence as low (<40). Never force a trade narrative.",
+      "weight": 9,
+      "addedSession": 0,
+      "lastModifiedSession": 0
+    },
+    {
+      "id": "r011",
       "category": "catalyst_verification",
       "description": "Never attribute market moves to specific events (geopolitical, economic data, etc.) without explicitly stating 'assuming' or 'if confirmed'. Separate observed price action from assumed causation.",
       "weight": 9,
@@ -9,7 +89,7 @@
       "lastModifiedSession": 1
     },
     {
-      "id": "r002",
+      "id": "r012",
       "category": "technical_precision",
       "description": "When analyzing cross-asset divergences, quantify the divergence strength and provide historical context for whether this magnitude is significant.",
       "weight": 7,
@@ -17,7 +97,7 @@
       "lastModifiedSession": 1
     },
     {
-      "id": "r003",
+      "id": "r013",
       "category": "setup_validation",
       "description": "For each setup, include the timeframe context and what invalidates the thesis. Avoid setups that contradict the broader macro thesis without strong technical conviction.",
       "weight": 8,
@@ -25,8 +105,8 @@
       "lastModifiedSession": 1
     }
   ],
-  "version": 2,
-  "lastUpdated": "2026-03-07T15:55:32.450Z",
-  "focusInstruments": [],
-  "sessionNotes": "Last updated: Session #1"
+  "version": 3,
+  "lastUpdated": "2026-03-07T16:00:00.000Z",
+  "focusInstruments": ["NAS100", "EUR/USD", "GBP/JPY", "Gold", "BTC"],
+  "sessionNotes": "Last updated: Session #1 — foundational rules restored, session 1 learnings preserved as r011-r013"
 }

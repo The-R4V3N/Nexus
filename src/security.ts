@@ -67,8 +67,18 @@ const LIMITS = {
     MAX_TOTAL_ISSUE_CHARS: 4000,   // total chars across all issues combined
     MAX_RULE_LENGTH: 300,    // max chars per rule AXIOM can write
     MAX_RULES_PER_SESSION: 2,      // max new rules AXIOM can add per session
-    MAX_OUTPUT_TOKENS: 2048,   // hard cap on API response tokens
+    MAX_OUTPUT_TOKENS: 4096,   // hard cap on API response tokens
+    MIN_RULE_COUNT: 5,             // AXIOM cannot reduce rules below this threshold
+    MAX_SYSTEM_PROMPT_LENGTH: 8000, // max chars for the evolving system prompt
 };
+
+// ── Foundational rule IDs that AXIOM cannot remove ───────
+// These are the constitutional rules — the core ICT methodology
+// that NEXUS must always retain. AXIOM can modify them but not delete them.
+const FOUNDATIONAL_RULE_IDS = new Set([
+    "r001", "r002", "r003", "r004", "r005",
+    "r006", "r007", "r008", "r009", "r010",
+]);
 
 // ── Sanitization result ────────────────────────────────────
 
@@ -206,7 +216,7 @@ export interface AxiomSecurityResult {
     warnings: string[];
 }
 
-export function sanitizeAxiomOutput(parsed: any, sessionNumber: number): AxiomSecurityResult {
+export function sanitizeAxiomOutput(parsed: any, sessionNumber: number, currentRuleCount: number = 10): AxiomSecurityResult {
     const warnings: string[] = [];
     let blockedRules = 0;
     let blockedSelfTasks = 0;
@@ -246,7 +256,28 @@ export function sanitizeAxiomOutput(parsed: any, sessionNumber: number): AxiomSe
     const rawUpdates = (parsed.ruleUpdates ?? []) as any[];
     const safeUpdates: any[] = [];
 
+    // Count how many removals are being attempted
+    let removalCount = 0;
+
     for (const update of rawUpdates) {
+        // Block removal of foundational rules
+        if (update.type === "remove" && FOUNDATIONAL_RULE_IDS.has(update.ruleId)) {
+            blockedRules++;
+            warnings.push(`Blocked removal of foundational rule ${update.ruleId} — constitutional rules cannot be deleted`);
+            continue;
+        }
+
+        // Enforce minimum rule count — block removals that would drop below threshold
+        if (update.type === "remove") {
+            removalCount++;
+            if (currentRuleCount - removalCount < LIMITS.MIN_RULE_COUNT) {
+                blockedRules++;
+                warnings.push(`Blocked removal of ${update.ruleId} — would drop below minimum ${LIMITS.MIN_RULE_COUNT} rules`);
+                removalCount--; // didn't actually remove
+                continue;
+            }
+        }
+
         if (update.after && update.after.length > LIMITS.MAX_RULE_LENGTH) {
             update.after = update.after.slice(0, LIMITS.MAX_RULE_LENGTH);
         }
@@ -315,4 +346,12 @@ export function getSelfTaskLimit(): number {
     return LIMITS.MAX_SELF_TASKS_PER_SESSION;
 }
 
-export { LIMITS };
+export function getMaxSystemPromptLength(): number {
+    return LIMITS.MAX_SYSTEM_PROMPT_LENGTH;
+}
+
+export function isFoundationalRule(ruleId: string): boolean {
+    return FOUNDATIONAL_RULE_IDS.has(ruleId);
+}
+
+export { LIMITS, FOUNDATIONAL_RULE_IDS };

@@ -5,7 +5,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
-import { sanitizeAxiomOutput, getMaxOutputTokens } from "./security";
+import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
 import * as fs from "fs";
 import * as path from "path";
 import type {
@@ -109,6 +109,8 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
   ]
 }
 
+Rules r001–r010 are FOUNDATIONAL — you can modify their wording but you CANNOT remove them. These are your constitutional ICT methodology rules.
+When adding new rules, use IDs that continue from the highest existing ID (e.g. r014, r015, etc.).
 Only create new rules if the session revealed a genuine gap not covered. Only modify rules if you have a specific, better formulation. Be surgical.`;
 
   const response = await client.messages.create({
@@ -124,10 +126,33 @@ Only create new rules if the session revealed a genuine gap not covered. Only mo
     .join("");
 
   const jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
-  const rawParsed = JSON.parse(jsonText);
+  let rawParsed: any;
+  try {
+    rawParsed = JSON.parse(jsonText);
+  } catch (parseErr) {
+    // Try to salvage truncated JSON by closing open braces/brackets
+    const salvaged = salvageJSON(jsonText);
+    if (salvaged) {
+      rawParsed = salvaged;
+      console.warn("  ⚠ AXIOM returned malformed JSON — salvaged partial response");
+    } else {
+      console.error("  ✗ AXIOM returned unparseable JSON, using empty reflection");
+      rawParsed = {
+        whatWorked: "Unable to parse reflection",
+        whatFailed: "JSON parse error in AXIOM response",
+        cognitiveBiases: [],
+        evolutionSummary: "Reflection failed due to malformed response — no changes applied.",
+        ruleUpdates: [],
+        newRules: [],
+        systemPromptAdditions: "",
+        newSelfTasks: [],
+        resolvedSelfTasks: [],
+      };
+    }
+  }
 
   // ── Security: sanitize AXIOM output before applying to memory ──
-  const secResult = sanitizeAxiomOutput(rawParsed, sessionNumber);
+  const secResult = sanitizeAxiomOutput(rawParsed, sessionNumber, currentRules.rules.length);
   if (secResult.warnings.length > 0) {
     for (const w of secResult.warnings) console.warn(`  🛡️  Security: ${w}`);
   }
@@ -183,6 +208,37 @@ Only create new rules if the session revealed a genuine gap not covered. Only mo
   }
 
   return reflection;
+}
+
+// ── JSON salvage helper ────────────────────────────────────
+
+function salvageJSON(text: string): any | null {
+  // Try to fix truncated JSON by closing open braces/brackets
+  let attempt = text;
+  const openBraces = (attempt.match(/{/g) || []).length;
+  const closeBraces = (attempt.match(/}/g) || []).length;
+  const openBrackets = (attempt.match(/\[/g) || []).length;
+  const closeBrackets = (attempt.match(/]/g) || []).length;
+
+  // Close any trailing string
+  const lastQuote = attempt.lastIndexOf('"');
+  const afterLast = attempt.slice(lastQuote + 1);
+  if (lastQuote > 0 && !afterLast.includes('"') && (afterLast.includes(',') || afterLast.trim() === '')) {
+    attempt = attempt.slice(0, lastQuote + 1);
+  }
+
+  // Remove trailing comma
+  attempt = attempt.replace(/,\s*$/, '');
+
+  // Close brackets and braces
+  for (let i = 0; i < openBrackets - closeBrackets; i++) attempt += ']';
+  for (let i = 0; i < openBraces - closeBraces; i++) attempt += '}';
+
+  try {
+    return JSON.parse(attempt);
+  } catch {
+    return null;
+  }
 }
 
 // ── Memory Evolution ───────────────────────────────────────
@@ -243,12 +299,32 @@ async function evolveMemory(
 
   fs.writeFileSync(ANALYSIS_RULES_PATH, JSON.stringify(updatedRules, null, 2));
 
-  // ── Update system prompt ──
+  // ── Update system prompt (capped to prevent unbounded growth) ──
   let newSystemPrompt = currentSystemPrompt;
+  const maxLen = getMaxSystemPromptLength();
+
   if (axiomOutput.systemPromptAdditions && axiomOutput.systemPromptAdditions.trim()) {
-    newSystemPrompt +=
+    const addition =
       `\n\n## Evolved — Session #${sessionNumber}\n` +
       axiomOutput.systemPromptAdditions.trim();
+
+    if (newSystemPrompt.length + addition.length <= maxLen) {
+      newSystemPrompt += addition;
+    } else {
+      // Prune oldest evolved sections to make room, keeping the base prompt
+      const baseEnd = newSystemPrompt.indexOf("\n\n## Evolved");
+      const basePrompt = baseEnd === -1 ? newSystemPrompt : newSystemPrompt.slice(0, baseEnd);
+      const evolvedSections = baseEnd === -1 ? "" : newSystemPrompt.slice(baseEnd);
+
+      // Split into sections and drop the oldest ones until it fits
+      const sections = evolvedSections.split(/\n\n(?=## Evolved)/).filter(Boolean);
+      while (sections.length > 0 && basePrompt.length + sections.join("\n\n").length + addition.length > maxLen) {
+        sections.shift(); // remove oldest section
+      }
+
+      newSystemPrompt = basePrompt + (sections.length > 0 ? "\n\n" + sections.join("\n\n") : "") + addition;
+      console.log(`  ⚠ System prompt pruned — dropped oldest evolution(s) to stay under ${maxLen} chars`);
+    }
   }
 
   fs.writeFileSync(SYSTEM_PROMPT_PATH, newSystemPrompt);

@@ -101,7 +101,19 @@ Only respond with the JSON, no other text.`;
 
   // Strip markdown fences if present
   const jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
-  const parsed = JSON.parse(jsonText);
+  let parsed: any;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    // Try to salvage truncated JSON
+    const salvaged = salvageJSON(jsonText);
+    if (salvaged) {
+      parsed = salvaged;
+      console.warn("  ⚠ ORACLE returned malformed JSON — salvaged partial response");
+    } else {
+      throw new Error("ORACLE returned unparseable JSON — cannot proceed without market analysis");
+    }
+  }
 
   return {
     timestamp: new Date(),
@@ -113,6 +125,26 @@ Only respond with the JSON, no other text.`;
     keyLevels: parsed.keyLevels ?? [],
     confidence: parsed.confidence ?? 50,
   };
+}
+
+// ── JSON salvage helper ────────────────────────────────────
+
+function salvageJSON(text: string): any | null {
+  let attempt = text;
+  const openBraces = (attempt.match(/{/g) || []).length;
+  const closeBraces = (attempt.match(/}/g) || []).length;
+  const openBrackets = (attempt.match(/\[/g) || []).length;
+  const closeBrackets = (attempt.match(/]/g) || []).length;
+
+  attempt = attempt.replace(/,\s*$/, '');
+  for (let i = 0; i < openBrackets - closeBrackets; i++) attempt += ']';
+  for (let i = 0; i < openBraces - closeBraces; i++) attempt += '}';
+
+  try {
+    return JSON.parse(attempt);
+  } catch {
+    return null;
+  }
 }
 
 // ── Formatters ─────────────────────────────────────────────
