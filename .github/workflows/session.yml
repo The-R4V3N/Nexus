@@ -16,6 +16,9 @@ on:
 jobs:
   run-session:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write    # push commits
+      issues: write      # open and close self-tasks
 
     steps:
       - name: Checkout

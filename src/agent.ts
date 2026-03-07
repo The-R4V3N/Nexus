@@ -11,6 +11,7 @@ import * as path from "path";
 import { format } from "date-fns";
 import { fetchAllMarkets, printMarketsTable } from "./markets";
 import { fetchCommunityIssues, formatIssuesForPrompt } from "./issues";
+import { fetchOpenSelfTasks, formatSelfTasksForPrompt } from "./self-tasks";
 import { runOracleAnalysis } from "./oracle";
 import { runAxiomReflection, initMemoryIfNeeded } from "./axiom";
 import {
@@ -134,6 +135,26 @@ export async function runSession(force = false): Promise<void> {
     console.log(chalk.dim("  Community issues: unavailable\n"));
   }
 
+  // ── Phase 1c: Open self-tasks ──
+  let selfTasksText = "";
+  let selfTaskNumbers: number[] = [];
+  try {
+    const selfTasks = await fetchOpenSelfTasks();
+    selfTaskNumbers = selfTasks.map((t) => t.number);
+    if (selfTasks.length > 0) {
+      console.log(chalk.dim(`  Open self-tasks: `) + chalk.yellow(`${selfTasks.length} pending`));
+      for (const t of selfTasks) {
+        console.log(chalk.dim(`    ✦ #${t.number} [${t.category}] ${t.title}`));
+      }
+      selfTasksText = formatSelfTasksForPrompt(selfTasks);
+      console.log("");
+    } else {
+      console.log(chalk.dim("  Open self-tasks: none\n"));
+    }
+  } catch {
+    console.log(chalk.dim("  Open self-tasks: unavailable\n"));
+  }
+
   // ── Phase 2: ORACLE analysis ──
   console.log(chalk.bold.yellow("  ── PHASE 2: ORACLE ANALYSIS ──\n"));
   const oracleSpinner = ora({ text: "ORACLE analyzing market structure...", color: "yellow" }).start();
@@ -172,7 +193,7 @@ export async function runSession(force = false): Promise<void> {
   const prevContext = buildPreviousSessionsContext();
 
   try {
-    reflection = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText);
+    reflection = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, selfTaskNumbers);
     axiomSpinner.succeed(
       chalk.green(`Reflection complete — ${reflection.ruleUpdates.length} rule updates, mind evolved`)
     );

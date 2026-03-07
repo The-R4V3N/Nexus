@@ -4,6 +4,7 @@
 // ============================================================
 
 import Anthropic from "@anthropic-ai/sdk";
+import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import * as fs from "fs";
 import * as path from "path";
 import type {
@@ -24,7 +25,9 @@ export async function runAxiomReflection(
   oracle: OracleAnalysis,
   sessionNumber: number,
   previousSessions: string,
-  communityIssues: string = ""
+  communityIssues: string = "",
+  openSelfTasksText: string = "",
+  openSelfTaskNumbers: number[] = []
 ): Promise<AxiomReflection> {
   const currentSystemPrompt = fs.existsSync(SYSTEM_PROMPT_PATH)
     ? fs.readFileSync(SYSTEM_PROMPT_PATH, "utf-8")
@@ -59,6 +62,8 @@ ${previousSessions || "No previous sessions."}
 
 ${communityIssues ? "### Community input this session:\n" + communityIssues : "### Community input: none this session."}
 
+${openSelfTasksText ? openSelfTasksText : "### My open self-tasks: none."}
+
 ---
 
 Reflect deeply on this session. Then respond with ONLY a JSON object:
@@ -86,7 +91,21 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
       "reason": "Why I'm adding this"
     }
   ],
-  "systemPromptAdditions": "Any new section or modification to add to the system prompt (empty string if none)"
+  "systemPromptAdditions": "Any new section or modification to add to the system prompt (empty string if none)",
+  "newSelfTasks": [
+    {
+      "title": "Short title for the gap I identified",
+      "body": "Detailed description of what the gap is and why it matters",
+      "category": "blind-spot|bias|rule-gap|new-concept|correlation",
+      "priority": "high|medium|low"
+    }
+  ],
+  "resolvedSelfTasks": [
+    {
+      "issueNumber": 5,
+      "resolutionComment": "How I addressed this issue this session"
+    }
+  ]
 }
 
 Only create new rules if the session revealed a genuine gap not covered. Only modify rules if you have a specific, better formulation. Be surgical.`;
@@ -120,6 +139,29 @@ Only create new rules if the session revealed a genuine gap not covered. Only mo
 
   // Persist the evolved memory
   await evolveMemory(currentRules, currentSystemPrompt, parsed, sessionNumber);
+
+  // ── Handle self-tasks ──
+  // Open new self-tasks NEXUS identified
+  if (parsed.newSelfTasks && parsed.newSelfTasks.length > 0) {
+    for (const task of parsed.newSelfTasks as SelfTask[]) {
+      const issueNum = await createSelfTask(task, sessionNumber);
+      if (issueNum) {
+        console.log(`    ✦ Opened self-task #${issueNum}: ${task.title}`);
+      }
+    }
+  }
+
+  // Close resolved self-tasks
+  if (parsed.resolvedSelfTasks && parsed.resolvedSelfTasks.length > 0) {
+    for (const resolved of parsed.resolvedSelfTasks as { issueNumber: number; resolutionComment: string }[]) {
+      if (openSelfTaskNumbers.includes(resolved.issueNumber)) {
+        const closed = await closeSelfTask(resolved.issueNumber, resolved.resolutionComment, sessionNumber);
+        if (closed) {
+          console.log(`    ✓ Closed self-task #${resolved.issueNumber}`);
+        }
+      }
+    }
+  }
 
   return reflection;
 }
