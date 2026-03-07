@@ -12,7 +12,7 @@
 
 NEXUS is a self-evolving market intelligence AI. Every weekday it analyzes global financial markets — forex, indices, crypto, metals, commodities — using ICT methodology. Then it reflects on its own reasoning, identifies cognitive biases, and **rewrites its own rules and system prompt**.
 
-No human tells it what to think. No static prompt tells it how to analyze. It decides for itself — and gets better each session.
+The community can challenge it, correct it, and suggest what to learn — but NEXUS decides what to do with that input. No static prompt tells it how to analyze. It opens GitHub issues on itself when it spots gaps, works through them over future sessions, and closes them when solved.
 
 Watch it grow.
 
@@ -21,21 +21,26 @@ Watch it grow.
 ## How It Works
 
 ```
-GitHub Actions (Mon–Fri, 08:00 UTC)
+GitHub Actions (Mon–Fri, every 4 hours)
     │
-    ├── 🔭 ORACLE — fetches live market data (Yahoo Finance)
-    │       analyzes structure, bias, FVGs, liquidity, setups
-    │       outputs: bias, setups, key levels, confidence score
+    ├── fetches live market data       (Yahoo Finance — 17 instruments)
+    ├── reads open community issues    (humans teaching NEXUS)
+    ├── reads open self-tasks          (NEXUS's own to-do list)
     │
-    ├── 🧠 AXIOM — reads the oracle analysis
-    │       critiques itself: what worked, what failed, what biases appeared
-    │       surgically rewrites memory/analysis-rules.json
+    ├── 🔭 ORACLE — analyzes market structure
+    │       bias, FVGs, order blocks, liquidity sweeps, setups
+    │       confidence score 0–100
+    │
+    ├── 🧠 AXIOM — reflects on its own reasoning
+    │       what worked, what failed, what biases appeared
+    │       rewrites memory/analysis-rules.json
     │       appends to memory/system-prompt.md
+    │       opens GitHub issues for gaps too big to fix in one session
+    │       closes issues it has resolved
     │
     └── 📓 JOURNAL — writes session markdown
             regenerates GitHub Pages site
-            commits everything to git
-            pushes
+            commits everything and pushes
 ```
 
 The entire cognitive history is in the git log. Every rule change is versioned. The mind is open source.
@@ -71,6 +76,8 @@ src/
 ├── oracle.ts       Market analysis engine (ICT methodology)
 ├── axiom.ts        Self-reflection + memory evolution
 ├── markets.ts      Live data via Yahoo Finance API
+├── issues.ts       Community GitHub issues reader
+├── self-tasks.ts   Autonomous issue creation + resolution
 ├── journal.ts      Markdown + GitHub Pages generator
 └── types.ts        TypeScript interfaces
 
@@ -81,7 +88,9 @@ memory/             NEXUS's evolving mind (committed to git)
 
 journal/            Per-session markdown entries
 docs/               GitHub Pages live journal site
-.github/workflows/  Automated daily execution
+.github/
+├── ISSUE_TEMPLATE/ Community input templates (feedback, challenge, suggestion)
+└── workflows/      Automated execution — every 4 hours, Mon–Fri
 ```
 
 ---
@@ -134,6 +143,8 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 5. **Confidence must be honest.** Fewer than 2 confluences = confidence below 40.
 6. **No setup is forced.** "No clear setup" is a valid and valuable output.
 7. **Markets run Mon–Fri.** So does NEXUS.
+8. **Community input is considered, not obeyed.** NEXUS reads feedback and challenges but decides for itself what to act on.
+9. **Self-tasks are filed publicly.** If a gap is too big to fix in one session, NEXUS opens an issue on itself and works through it over future sessions.
 
 ---
 
