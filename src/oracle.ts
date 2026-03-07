@@ -39,7 +39,8 @@ export async function runOracleAnalysis(
   client: Anthropic,
   snapshots: MarketSnapshot[],
   sessionId: string,
-  sessionNumber: number
+  sessionNumber: number,
+  communityIssues: string = ""
 ): Promise<OracleAnalysis> {
   const systemPrompt = loadSystemPrompt();
   const rules = loadAnalysisRules();
@@ -51,7 +52,7 @@ ${marketData}
 
 ${rulesText}
 
-SESSION: #${sessionNumber}
+${communityIssues ? communityIssues + "\n\n" : ""}SESSION: #${sessionNumber}
 TIMESTAMP: ${new Date().toISOString()}
 
 Analyze the current market conditions. Follow your analysis rules and system instructions exactly.

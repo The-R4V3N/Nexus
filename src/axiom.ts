@@ -23,7 +23,8 @@ export async function runAxiomReflection(
   client: Anthropic,
   oracle: OracleAnalysis,
   sessionNumber: number,
-  previousSessions: string
+  previousSessions: string,
+  communityIssues: string = ""
 ): Promise<AxiomReflection> {
   const currentSystemPrompt = fs.existsSync(SYSTEM_PROMPT_PATH)
     ? fs.readFileSync(SYSTEM_PROMPT_PATH, "utf-8")
@@ -55,6 +56,8 @@ ${currentRules.rules.map((r) => `[${r.id}] [W:${r.weight}] ${r.description}`).jo
 
 ### Recent session history:
 ${previousSessions || "No previous sessions."}
+
+${communityIssues ? "### Community input this session:\n" + communityIssues : "### Community input: none this session."}
 
 ---
 

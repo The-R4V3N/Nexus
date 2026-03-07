@@ -10,6 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { format } from "date-fns";
 import { fetchAllMarkets, printMarketsTable } from "./markets";
+import { fetchCommunityIssues, formatIssuesForPrompt } from "./issues";
 import { runOracleAnalysis } from "./oracle";
 import { runAxiomReflection, initMemoryIfNeeded } from "./axiom";
 import {
@@ -114,13 +115,32 @@ export async function runSession(force = false): Promise<void> {
 
   printMarketsTable(snapshots);
 
+  // ── Phase 1b: Community issues ──
+  let issuesText = "";
+  try {
+    const issues = await fetchCommunityIssues();
+    if (issues.length > 0) {
+      console.log(chalk.dim(`  Community issues: `) + chalk.cyan(`${issues.length} open`));
+      issuesText = formatIssuesForPrompt(issues);
+      for (const issue of issues) {
+        const emoji = issue.label === "feedback" ? "🔴" : issue.label === "challenge" ? "🟡" : "🟢";
+        console.log(chalk.dim(`    ${emoji} #${issue.number} ${issue.title}`));
+      }
+      console.log("");
+    } else {
+      console.log(chalk.dim("  Community issues: none open\n"));
+    }
+  } catch {
+    console.log(chalk.dim("  Community issues: unavailable\n"));
+  }
+
   // ── Phase 2: ORACLE analysis ──
   console.log(chalk.bold.yellow("  ── PHASE 2: ORACLE ANALYSIS ──\n"));
   const oracleSpinner = ora({ text: "ORACLE analyzing market structure...", color: "yellow" }).start();
 
   let oracle;
   try {
-    oracle = await runOracleAnalysis(client, snapshots, sessionId, sessionNumber);
+    oracle = await runOracleAnalysis(client, snapshots, sessionId, sessionNumber, issuesText);
     oracleSpinner.succeed(
       chalk.green(`Analysis complete — ${oracle.bias.overall.toUpperCase()} bias, ${oracle.setups.length} setups, ${oracle.confidence}% confidence`)
     );
@@ -152,7 +172,7 @@ export async function runSession(force = false): Promise<void> {
   const prevContext = buildPreviousSessionsContext();
 
   try {
-    reflection = await runAxiomReflection(client, oracle, sessionNumber, prevContext);
+    reflection = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText);
     axiomSpinner.succeed(
       chalk.green(`Reflection complete — ${reflection.ruleUpdates.length} rule updates, mind evolved`)
     );
