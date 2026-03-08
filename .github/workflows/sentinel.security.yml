@@ -1,0 +1,48 @@
+name: Sentinel Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  secrets-scan:
+    name: Secrets & API Key Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for hardcoded secrets
+        # Protects against accidentally committing ANTHROPIC_API_KEY
+        # or any other credentials into the repo
+        uses: MaxwellCalkin/sentinel-ai@main
+        with:
+          secrets-scan: "true"
+          block-on: critical
+
+  dependency-scan:
+    name: Dependency Supply Chain Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan npm dependencies
+        uses: MaxwellCalkin/sentinel-ai@main
+        with:
+          dep-scan: "true"
+          block-on: high
+
+  claudemd-scan:
+    name: CLAUDE.md Injection Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan CLAUDE.md for injection vectors
+        # Nexus has a CLAUDE.md — worth scanning for hidden instructions
+        # or authority impersonation that could affect Claude Code sessions
+        uses: MaxwellCalkin/sentinel-ai@main
+        with:
+          claudemd-scan: "true"
+          block-on: high
