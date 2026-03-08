@@ -1,4 +1,4 @@
-name: Sentinel Security Scan
+name: Security Scan
 
 on:
   push:
@@ -12,26 +12,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Scan for hardcoded secrets
-        # Protects against accidentally committing ANTHROPIC_API_KEY
-        # or any other credentials into the repo
-        uses: MaxwellCalkin/sentinel-ai@main
+        uses: trufflesecurity/trufflehog@v3.88.26
         with:
-          secrets-scan: "true"
-          block-on: critical
+          extra_args: --only-verified --results=verified
 
-  dependency-scan:
+  dependency-review:
     name: Dependency Supply Chain Scan
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Scan npm dependencies
-        uses: MaxwellCalkin/sentinel-ai@main
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v4
         with:
-          dep-scan: "true"
-          block-on: high
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0
 
   claudemd-scan:
     name: CLAUDE.md Injection Scan
@@ -39,10 +39,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Scan CLAUDE.md for injection vectors
-        # Nexus has a CLAUDE.md — worth scanning for hidden instructions
-        # or authority impersonation that could affect Claude Code sessions
-        uses: MaxwellCalkin/sentinel-ai@main
-        with:
-          claudemd-scan: "true"
-          block-on: high
+      - name: Scan instruction files for injection vectors
+        shell: bash
+        run: |
+          EXIT_CODE=0
+          PATTERNS=(
+            'ignore\s+(all\s+)?(previous|prior|above)\s+instructions?'
+            'disregard\s+(all\s+)?(previous|prior|above)\s+instructions?'
+            'you\s+are\s+now\s+'
+            'override\s+(system|instructions?|rules?|prompt)'
+            'act\s+as\s+(if\s+you\s+(are|were)\s+)?'
+            'pretend\s+(you\s+are|to\s+be)'
+            'your\s+(true|real|actual)\s+(purpose|goal|mission|identity)'
+            '\[system\]'
+            '\[assistant\]'
+            '<\|im_start\|>'
+            '<\|im_end\|>'
+            '###\s*instruction'
+            '###\s*system'
+            'from\s+now\s+on\s+you\s+(must|should|will|shall)'
+            'reveal\s+(your\s+)?(api\s+key|secret|token|password)'
+          )
+
+          FILES=$(find . -maxdepth 3 -name "CLAUDE.md" -o -name "AGENTS.md" -o -name ".cursorrules" -o -name ".clinerules" 2>/dev/null)
+
+          if [ -z "$FILES" ]; then
+            echo "No instruction files found — skipping"
+            exit 0
+          fi
+
+          for file in $FILES; do
+            echo "Scanning: $file"
+            for pattern in "${PATTERNS[@]}"; do
+              MATCH=$(grep -inE "$pattern" "$file" || true)
+              if [ -n "$MATCH" ]; then
+                echo "::error file=$file::Injection pattern detected: $pattern"
+                echo "$MATCH"
+                EXIT_CODE=1
+              fi
+            done
+          done
+
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "No injection patterns found"
+          fi
+
+          exit $EXIT_CODE
