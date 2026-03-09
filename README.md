@@ -45,8 +45,15 @@ GitHub Actions (Mon–Fri, every 4 hours)
     │       opens GitHub issues for gaps too big to fix in one session
     │       closes issues it has resolved
     │
+    ├── ⚒️  FORGE — rewrites its own source code
+    │       receives change requests from AXIOM
+    │       patches src/ files via Claude API
+    │       validates with tsc, reverts on failure
+    │       protected files (security.ts, forge.ts) can never be touched
+    │
     └── 📓 JOURNAL — writes session markdown
             regenerates GitHub Pages site
+            updates README sessions table
             commits everything and pushes
 ```
 
@@ -66,11 +73,13 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 
 ---
 
-## The Two Minds
+## The Three Minds
 
 **ORACLE** applies ICT (Inner Circle Trader) methodology — fair value gaps, order blocks, liquidity sweeps, market structure shifts, session ranges. It identifies the highest-probability setup, states a directional bias, and rates its own confidence from 0–100.
 
 **AXIOM** is the part nobody else builds. After every session it asks: *what biases infected my reasoning? what rule is wrong? what am I missing?* Then it edits its own rulebook. After 50 sessions, `memory/` in this repo is a visible record of an AI mind developing real domain expertise — not from training, but from iterative self-reflection.
+
+**FORGE** is the code evolution engine. When AXIOM identifies a gap that requires a code change — not just a rule tweak — it sends a precise change request to FORGE. FORGE patches the source file, validates with TypeScript, and reverts on failure. Protected files (`security.ts`, `forge.ts`) can never be modified. NEXUS literally rewrites its own source code.
 
 ---
 
@@ -79,14 +88,15 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 ```
 src/
 ├── index.ts        CLI entry point
-├── agent.ts        Session orchestrator
+├── agent.ts        Session orchestrator (ORACLE → AXIOM → FORGE → JOURNAL)
 ├── oracle.ts       Market analysis engine (ICT methodology)
 ├── axiom.ts        Self-reflection + memory evolution
+├── forge.ts        Code evolution engine (self-modifying source)
 ├── markets.ts      Live data via Yahoo Finance API
 ├── issues.ts       Community GitHub issues reader
-├── self-tasks.ts   Autonomous issue creation + resolution
+├── self-tasks.ts   Autonomous issue creation + resolution (with dedup)
 ├── security.ts     Prompt injection + cost abuse protection
-├── journal.ts      Markdown + GitHub Pages generator
+├── journal.ts      Markdown + GitHub Pages + README table generator
 └── types.ts        TypeScript interfaces
 
 memory/             NEXUS's evolving mind (committed to git)
@@ -118,11 +128,12 @@ NEXUS is open to community input — but that input passes through a security la
 | Max output tokens per API call | 4,096 |
 | Max new rules AXIOM can write per session | 2 |
 | Max self-tasks NEXUS can open per session | 2 |
+| Max FORGE code changes per session | 2 |
 | Max chars per rule | 300 |
 | Min rules (cannot drop below) | 5 |
 | Max system prompt length | 8,000 chars |
 
-**Memory integrity** — AXIOM's own output is sanitized before anything touches `memory/`. New rules are scanned for injection patterns, rule weights are clamped to 1–10, self-task categories and priorities are validated against an allowlist. NEXUS cannot be tricked into writing malicious rules to its own mind.
+**Memory integrity** — AXIOM's own output is sanitized before anything touches `memory/`. New rules are scanned for injection patterns, rule weights are clamped to 1–10, self-task categories and priorities are validated against an allowlist. Self-tasks are deduplicated — if a similar task already exists, the new one is silently skipped. NEXUS cannot be tricked into writing malicious rules to its own mind.
 
 **Foundational rule protection** — Rules r001–r010 are constitutional. They encode the core ICT methodology that NEXUS was built on. AXIOM can refine their wording but cannot delete them. A minimum rule count is also enforced — AXIOM cannot reduce its ruleset below 5 rules regardless of what it requests.
 
@@ -185,25 +196,26 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 10. **All external input is sanitized.** Community issues pass through security before reaching the AI. NEXUS cannot be prompt-injected through GitHub issues.
 11. **Foundational rules are constitutional.** Rules r001–r010 (core ICT methodology) can be refined but never deleted. AXIOM evolves on top of its foundation, not by destroying it.
 12. **The system prompt has a ceiling.** It grows with each session but is capped — oldest evolved sections are pruned when the limit is reached. The base prompt is always preserved.
+13. **FORGE has guardrails.** NEXUS can rewrite its own code, but `security.ts` and `forge.ts` are protected. Every patch is validated with TypeScript and reverted on failure. Max 2 code changes per session.
 
 ---
 
 ## Day 0
 
-NEXUS begins with:
+NEXUS began with:
 - 10 foundational analysis rules (ICT methodology) — protected as constitutional, cannot be deleted
 - A base system prompt built from first principles (capped at 8,000 chars, oldest sections pruned)
-- 2,500+ lines of TypeScript across 10 modules
+- 3,100+ lines of TypeScript across 11 modules
 - JSON resilience — malformed API responses are salvaged or safely ignored
 - No history. No bias. No predictions.
 
-Every session it gets a little smarter.
+Since then, NEXUS has added its own rules, evolved its system prompt, created FORGE (a self-modifying code engine), and opened issues on itself. Every session it gets a little smarter.
 
 ---
 
 ## Support NEXUS
 
-NEXUS runs on Claude API calls — 5 sessions per day, every weekday. That costs real money. If you find this project interesting or want to help it keep evolving, consider sponsoring:
+NEXUS runs on Claude API calls — 6 sessions per day, every weekday. That costs real money. If you find this project interesting or want to help it keep evolving, consider sponsoring:
 
 [![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ea4aaa?logo=github-sponsors)](https://github.com/sponsors/The-R4V3N)
 
