@@ -15,7 +15,7 @@ import type {
 } from "./types";
 
 const MEMORY_DIR = path.join(process.cwd(), "memory");
-const SYSTEM_PROMPT_PATH = path.join(MEMORY_DIR, "system-prompt.md");
+const SYSTEM_PROMPT_PATH  = path.join(MEMORY_DIR, "system-prompt.md");
 const ANALYSIS_RULES_PATH = path.join(MEMORY_DIR, "analysis-rules.json");
 
 // ── Load evolving memory ───────────────────────────────────
@@ -43,10 +43,10 @@ export async function runOracleAnalysis(
   sessionNumber: number,
   communityIssues: string = ""
 ): Promise<OracleAnalysis> {
-  const systemPrompt = loadSystemPrompt();
-  const rules = loadAnalysisRules();
-  const marketData = formatSnapshotsForPrompt(snapshots);
-  const rulesText = formatRulesForPrompt(rules);
+  const systemPrompt  = loadSystemPrompt();
+  const rules         = loadAnalysisRules();
+  const marketData    = formatSnapshotsForPrompt(snapshots);
+  const rulesText     = formatRulesForPrompt(rules);
 
   const userMessage = `
 ${marketData}
@@ -87,11 +87,13 @@ Respond in the following JSON structure:
 
 Only respond with the JSON, no other text.`;
 
+  const stripSurrogates = (s: string) => s.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
+
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: getMaxOutputTokens(),
-    system: systemPrompt,
-    messages: [{ role: "user", content: userMessage }],
+    system: stripSurrogates(systemPrompt),
+    messages: [{ role: "user", content: stripSurrogates(userMessage) }],
   });
 
   const rawText = response.content
@@ -101,50 +103,18 @@ Only respond with the JSON, no other text.`;
 
   // Strip markdown fences if present
   const jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
-  let parsed: any;
-  try {
-    parsed = JSON.parse(jsonText);
-  } catch {
-    // Try to salvage truncated JSON
-    const salvaged = salvageJSON(jsonText);
-    if (salvaged) {
-      parsed = salvaged;
-      console.warn("  ⚠ ORACLE returned malformed JSON — salvaged partial response");
-    } else {
-      throw new Error("ORACLE returned unparseable JSON — cannot proceed without market analysis");
-    }
-  }
+  const parsed   = JSON.parse(jsonText);
 
   return {
-    timestamp: new Date(),
+    timestamp:       new Date(),
     sessionId,
     marketSnapshots: snapshots,
-    analysis: parsed.analysis,
-    setups: parsed.setups ?? [],
-    bias: parsed.bias ?? { overall: "neutral", notes: "" },
-    keyLevels: parsed.keyLevels ?? [],
-    confidence: parsed.confidence ?? 50,
+    analysis:        parsed.analysis,
+    setups:          parsed.setups         ?? [],
+    bias:            parsed.bias           ?? { overall: "neutral", notes: "" },
+    keyLevels:       parsed.keyLevels      ?? [],
+    confidence:      parsed.confidence     ?? 50,
   };
-}
-
-// ── JSON salvage helper ────────────────────────────────────
-
-function salvageJSON(text: string): any | null {
-  let attempt = text;
-  const openBraces = (attempt.match(/{/g) || []).length;
-  const closeBraces = (attempt.match(/}/g) || []).length;
-  const openBrackets = (attempt.match(/\[/g) || []).length;
-  const closeBrackets = (attempt.match(/]/g) || []).length;
-
-  attempt = attempt.replace(/,\s*$/, '');
-  for (let i = 0; i < openBrackets - closeBrackets; i++) attempt += ']';
-  for (let i = 0; i < openBraces - closeBraces; i++) attempt += '}';
-
-  try {
-    return JSON.parse(attempt);
-  } catch {
-    return null;
-  }
 }
 
 // ── Formatters ─────────────────────────────────────────────
@@ -205,90 +175,90 @@ This system prompt will evolve as you learn from each session.`;
 
 function getDefaultRules(): AnalysisRules {
   return {
-    version: 1,
-    lastUpdated: new Date().toISOString(),
-    focusInstruments: ["NAS100", "EUR/USD", "GBP/JPY", "Gold", "BTC"],
-    sessionNotes: "Initial ruleset — Day 0",
+    version:           1,
+    lastUpdated:       new Date().toISOString(),
+    focusInstruments:  ["NAS100", "EUR/USD", "GBP/JPY", "Gold", "BTC"],
+    sessionNotes:      "Initial ruleset — Day 0",
     rules: [
       {
-        id: "r001",
-        category: "structure",
-        description: "Always identify the higher timeframe (daily) bias before analyzing intraday setups",
-        weight: 10,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r001",
+        category:              "structure",
+        description:           "Always identify the higher timeframe (daily) bias before analyzing intraday setups",
+        weight:                10,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r002",
-        category: "structure",
-        description: "A market structure shift (MSS) requires a candle close beyond the last swing high/low, not just a wick",
-        weight: 9,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r002",
+        category:              "structure",
+        description:           "A market structure shift (MSS) requires a candle close beyond the last swing high/low, not just a wick",
+        weight:                9,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r003",
-        category: "fvg",
-        description: "Fair Value Gaps are only valid if formed with displacement (strong impulsive move), not choppy price action",
-        weight: 9,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r003",
+        category:              "fvg",
+        description:           "Fair Value Gaps are only valid if formed with displacement (strong impulsive move), not choppy price action",
+        weight:                9,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r004",
-        category: "liquidity",
-        description: "Equal highs/lows are liquidity targets — price is drawn to them before reversing",
-        weight: 8,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r004",
+        category:              "liquidity",
+        description:           "Equal highs/lows are liquidity targets — price is drawn to them before reversing",
+        weight:                8,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r005",
-        category: "correlation",
-        description: "Check DXY direction when analyzing forex pairs — risk assets (indices, crypto) typically inversely correlate with DXY",
-        weight: 8,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r005",
+        category:              "correlation",
+        description:           "Check DXY direction when analyzing forex pairs — risk assets (indices, crypto) typically inversely correlate with DXY",
+        weight:                8,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r006",
-        category: "sessions",
-        description: "Asian range defines liquidity for London session — London often sweeps Asian highs or lows before the true move",
-        weight: 7,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r006",
+        category:              "sessions",
+        description:           "Asian range defines liquidity for London session — London often sweeps Asian highs or lows before the true move",
+        weight:                7,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r007",
-        category: "risk",
-        description: "During high-impact news (NFP, CPI, FOMC), flag setups as high-risk and note the event",
-        weight: 7,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r007",
+        category:              "risk",
+        description:           "During high-impact news (NFP, CPI, FOMC), flag setups as high-risk and note the event",
+        weight:                7,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r008",
-        category: "metals",
-        description: "Gold (XAU) often leads as a risk-off signal — rising gold with falling indices = fear in the market",
-        weight: 7,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r008",
+        category:              "metals",
+        description:           "Gold (XAU) often leads as a risk-off signal — rising gold with falling indices = fear in the market",
+        weight:                7,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r009",
-        category: "crypto",
-        description: "Bitcoin dominance matters — if BTC rises while altcoins fall, sentiment is defensive within crypto",
-        weight: 6,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r009",
+        category:              "crypto",
+        description:           "Bitcoin dominance matters — if BTC rises while altcoins fall, sentiment is defensive within crypto",
+        weight:                6,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
       {
-        id: "r010",
-        category: "discipline",
-        description: "If fewer than 2 confluences align for a setup, classify confidence as low (<40). Never force a trade narrative.",
-        weight: 9,
-        addedSession: 0,
-        lastModifiedSession: 0,
+        id:                    "r010",
+        category:              "discipline",
+        description:           "If fewer than 2 confluences align for a setup, classify confidence as low (<40). Never force a trade narrative.",
+        weight:                9,
+        addedSession:          0,
+        lastModifiedSession:   0,
       },
     ],
   };
