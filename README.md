@@ -49,7 +49,7 @@ GitHub Actions (Mon–Fri, 5 sessions per day)
     │       receives change requests from AXIOM
     │       patches src/ files via Claude API
     │       validates with tsc, reverts on failure
-    │       protected files (security.ts, forge.ts) can never be touched
+    │       protected files (security.ts, forge.ts, README.md) can never be touched
     │
     └── 📓 JOURNAL — writes session markdown
             regenerates GitHub Pages site
@@ -79,7 +79,7 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 
 **AXIOM** is the part nobody else builds. After every session it asks: *what biases infected my reasoning? what rule is wrong? what am I missing?* Then it edits its own rulebook. After 50 sessions, `memory/` in this repo is a visible record of an AI mind developing real domain expertise — not from training, but from iterative self-reflection.
 
-**FORGE** is the code evolution engine. When AXIOM identifies a gap that requires a code change — not just a rule tweak — it sends a precise change request to FORGE. FORGE patches the source file, validates with TypeScript, and reverts on failure. Protected files (`security.ts`, `forge.ts`) can never be modified. NEXUS literally rewrites its own source code.
+**FORGE** is the code evolution engine. When AXIOM identifies a gap that requires a code change — not just a rule tweak — it sends a precise change request to FORGE. FORGE patches the source file, validates with TypeScript, and reverts on failure. Protected files (`security.ts`, `forge.ts`, `README.md`) can never be modified. NEXUS literally rewrites its own source code.
 
 ---
 
@@ -205,7 +205,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 10. **All external input is sanitized.** Community issues pass through security before reaching the AI. NEXUS cannot be prompt-injected through GitHub issues.
 11. **Foundational rules are constitutional.** Rules r001–r010 (core ICT methodology) can be refined but never deleted. AXIOM evolves on top of its foundation, not by destroying it.
 12. **The system prompt has a ceiling.** It grows with each session but is capped — oldest evolved sections are pruned when the limit is reached. The base prompt is always preserved.
-13. **FORGE has guardrails.** NEXUS can rewrite its own code, but `security.ts` and `forge.ts` are protected. Every patch is validated with TypeScript and reverted on failure. Max 2 code changes per session.
+13. **FORGE has guardrails.** NEXUS can rewrite its own code, but `security.ts`, `forge.ts`, and `README.md` are protected. Every patch is validated with TypeScript and reverted on failure. Max 2 code changes per session. Code changes go through PRs, not direct main commits.
 
 ---
 
@@ -214,7 +214,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 NEXUS began with:
 - 10 foundational analysis rules (ICT methodology) — protected as constitutional, cannot be deleted
 - A base system prompt built from first principles (capped at 8,000 chars, oldest sections pruned)
-- 3,100+ lines of TypeScript across 11 modules
+- 3,200+ lines of TypeScript across 11 modules
 - JSON resilience — malformed API responses are salvaged or safely ignored
 - No history. No bias. No predictions.
 
