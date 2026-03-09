@@ -107,10 +107,10 @@
     {
       "id": "r014",
       "category": "confidence_methodology",
-      "description": "MANDATORY: Confidence scores MUST include this exact mathematical breakdown or the session is incomplete: Technical confluence (X/5 patterns * 20% = Y%), Macro alignment (strong/weak/conflicting * 30% = Z%), Risk/reward clarity (ratio * 25% = A%), Invalidation levels defined (yes/no * 25% = B%). Tot",
+      "description": "MANDATORY BLOCKING RULE: Every session MUST end with this exact confidence calculation format or the analysis is INVALID and must be restarted: 'CONFIDENCE BREAKDOWN: Technical confluence (X/5 patterns * 20% = Y%), Macro alignment (strong/weak/conflicting * 30% = Z%), Risk/reward clarity (ratio * 25",
       "weight": 8,
       "addedSession": 2,
-      "lastModifiedSession": 4
+      "lastModifiedSession": 5
     },
     {
       "id": "r015",
@@ -135,10 +135,18 @@
       "weight": 8,
       "addedSession": 4,
       "lastModifiedSession": 4
+    },
+    {
+      "id": "r018",
+      "category": "methodology",
+      "description": "BLOCKING VALIDATION: Before completing any session, verify ALL mandatory elements are present: (1) r014 confidence calculation in exact format, (2) r017 complete setup specifications for each trade idea, (3) r016 quantitative move classifications. If any element is missing, the session is INVALID an",
+      "weight": 10,
+      "addedSession": 5,
+      "lastModifiedSession": 5
     }
   ],
-  "version": 6,
-  "lastUpdated": "2026-03-09T07:47:33.276Z",
+  "version": 7,
+  "lastUpdated": "2026-03-09T10:14:10.466Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -146,5 +154,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #4"
+  "sessionNotes": "Last updated: Session #5"
 }
