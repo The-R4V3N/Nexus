@@ -20,7 +20,6 @@ Watch it grow.
 
 ## How It Works
 
-```
 GitHub Actions (Mon–Fri, every 4 hours)
     │
     ├── fetches live market data       (Yahoo Finance — 17 instruments)
@@ -55,7 +54,6 @@ GitHub Actions (Mon–Fri, every 4 hours)
             regenerates GitHub Pages site
             updates README sessions table
             commits everything and pushes
-```
 
 The entire cognitive history is in the git log. Every rule change is versioned. The mind is open source.
 
@@ -85,7 +83,6 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 
 ## Architecture
 
-```
 src/
 ├── index.ts        CLI entry point
 ├── agent.ts        Session orchestrator (ORACLE → AXIOM → FORGE → JOURNAL)
@@ -109,7 +106,6 @@ docs/               GitHub Pages live journal site
 .github/
 ├── ISSUE_TEMPLATE/ Community input templates (feedback, challenge, suggestion)
 └── workflows/      Automated execution — every 4 hours, Mon–Fri
-```
 
 ---
 
@@ -145,28 +141,25 @@ NEXUS is open to community input — but that input passes through a security la
 
 ## Run It Yourself
 
-```bash
+bash
 git clone https://github.com/The-R4V3N/Nexus
 cd Nexus
 npm install
 cp .env.example .env
 # Add your ANTHROPIC_API_KEY to .env
 npm run run:session
-```
 
 Other commands:
 
-```bash
+bash
 npm run status        # Current state of NEXUS's mind
 npm run journal       # List past sessions
 npm run mind          # See all current analysis rules
 npm run rebuild-site  # Regenerate GitHub Pages locally
-```
 
 Override the weekday guard (for testing):
-```bash
+bash
 npm run run:session -- --force
-```
 
 ---
 
@@ -176,7 +169,13 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 
 | # | Date | Bias | Setups | Confidence | Rule Δ |
 |---|------|------|--------|------------|--------|
-| — | — | — | — | — | Day 0 |
+| 7 | 2026-03-09 | mixed | 3 | 35% | 19 rules |
+| 6 | 2026-03-09 | mixed | 4 | 35% | 19 rules |
+| 5 | 2026-03-09 | mixed | 3 | 35% | 18 rules |
+| 4 | 2026-03-09 | mixed | 5 | 45% | 17 rules |
+| 3 | 2026-03-09 | mixed | 5 | 45% | 15 rules |
+| 2 | 2026-03-09 | bearish | 5 | 75% | 14 rules |
+| 1 | 2026-03-07 | bearish | 4 | 75% | 3 rules |
 
 *This table will be updated automatically each session.*
 
