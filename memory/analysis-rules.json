@@ -91,10 +91,10 @@
     {
       "id": "r012",
       "category": "technical_precision",
-      "description": "When analyzing cross-asset divergences, provide specific correlation data, timeframes, and percentile rankings of current moves vs historical ranges. State explicitly when historical context is unavailable.",
+      "description": "When analyzing cross-asset divergences, provide available correlation context using proxy measures if primary data unavailable (e.g. if DXY missing, reference bond yields, volatility indices, or sector rotation patterns). State historical context limitations but attempt magnitude assessment using av",
       "weight": 7,
       "addedSession": 1,
-      "lastModifiedSession": 2
+      "lastModifiedSession": 11
     },
     {
       "id": "r013",
@@ -145,8 +145,8 @@
       "lastModifiedSession": 7
     }
   ],
-  "version": 14,
-  "lastUpdated": "2026-03-09T19:43:25.979Z",
+  "version": 15,
+  "lastUpdated": "2026-03-09T21:07:06.924Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -154,5 +154,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #10"
+  "sessionNotes": "Last updated: Session #11"
 }
