@@ -228,6 +228,15 @@ export function sanitizeAxiomOutput(
             continue;
         }
 
+        // Block meta-rules that just enforce other rules (e.g. "verify r014 and r017")
+        const ruleRefs = (rule.description.match(/r\d{3}/g) || []).length;
+        const isMetaRule = ruleRefs >= 2 && /\b(verify|validate|check|ensure|must|mandatory|blocking|invalid|restart)\b/i.test(rule.description);
+        if (isMetaRule) {
+            blockedRules++;
+            warnings.push(`Blocked meta-rule referencing ${ruleRefs} other rules: "${rule.description.slice(0, 60)}..."`);
+            continue;
+        }
+
         rule.weight = Math.min(10, Math.max(1, parseInt(rule.weight) || 5));
         safeRules.push(rule);
     }

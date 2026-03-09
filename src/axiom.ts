@@ -211,9 +211,15 @@ FORGE rules:
 - Maximum 2 code changes per session. Pick the highest priority open self-tasks first.
 - If you truly have nothing to code, set codeChanges to [].
 
-Rules r001–r010 are FOUNDATIONAL — you can modify their wording but you CANNOT remove them. These are your constitutional ICT methodology rules.
-When adding new rules, use IDs that continue from the highest existing ID (e.g. r014, r015, etc.).
-Only create new rules if the session revealed a genuine gap not covered. Only modify rules if you have a specific, better formulation. Be surgical.`;
+RULE POLICY — CRITICAL:
+- Rules r001–r010 are FOUNDATIONAL — you can modify their wording but you CANNOT remove them.
+- When adding new rules, use IDs that continue from the highest existing ID.
+- Only create new rules if the session revealed a genuine gap not covered by ANY existing rule.
+- DO NOT create "meta-rules" that just enforce other rules (e.g. "verify r014/r016/r017 are followed"). That is validation logic, not an analysis rule. If you want validation, use codeChanges instead.
+- DO NOT create rules with words like MANDATORY, BLOCKING, INVALID, or MUST RESTART. Rules are guidelines, not kill switches.
+- DO NOT duplicate existing rules in different words. Before adding a rule, check your current rules list above.
+- If you have 15+ rules already, prefer modifying existing rules over adding new ones.
+- Be surgical. Quality over quantity.`;
 
   // Strip lone surrogates before serializing to JSON — broken emoji in issue titles
   // can survive earlier sanitization and cause a 400 from the Anthropic API
