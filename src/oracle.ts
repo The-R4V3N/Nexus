@@ -34,6 +34,49 @@ function loadAnalysisRules(): AnalysisRules {
   return getDefaultRules();
 }
 
+// ── Validation ─────────────────────────────────────────────
+
+function validateAnalysisCompleteness(analysis: any): string[] {
+  const errors: string[] = [];
+
+  // 1. Check confidence calculation with mathematical breakdown (r014 format)
+  if (typeof analysis.confidence !== 'number') {
+    errors.push("Missing confidence value");
+  } else {
+    // Look for mathematical breakdown in analysis text
+    const hasBreakdown = /\b(\d+(?:\.\d+)?%?\s*[+\-×÷*/]\s*\d+(?:\.\d+)?%?|\w+:\s*\d+(?:\.\d+)?%?)/i.test(analysis.analysis || "");
+    if (!hasBreakdown) {
+      errors.push("Confidence calculation missing mathematical breakdown (r014 format required)");
+    }
+  }
+
+  // 2. Check all setups have required fields
+  if (!Array.isArray(analysis.setups)) {
+    errors.push("Missing setups array");
+  } else {
+    analysis.setups.forEach((setup: any, i: number) => {
+      const required = ['entry', 'stop', 'target', 'RR', 'timeframe'];
+      required.forEach(field => {
+        if (!(field in setup) || setup[field] === undefined || setup[field] === null) {
+          errors.push(`Setup ${i + 1} missing required field: ${field}`);
+        }
+      });
+    });
+  }
+
+  // 3. Check quantitative move classifications (r016 format)
+  if (analysis.analysis) {
+    const hasQuantitative = /\b(move|swing|impulse|retracement)\s+of\s+\d+(?:\.\d+)?\s*(pips?|points?|%|ticks?)\b/i.test(analysis.analysis);
+    if (!hasQuantitative) {
+      errors.push("Missing quantitative move classifications per r016 (must specify move sizes in pips/points/%)");
+    }
+  } else {
+    errors.push("Missing analysis text for quantitative classification check");
+  }
+
+  return errors;
+}
+
 // ── Oracle Analysis ────────────────────────────────────────
 
 export async function runOracleAnalysis(
@@ -71,7 +114,12 @@ Respond in the following JSON structure:
       "type": "FVG|OB|Liquidity Sweep|MSS|CISD|PDH/PDL|Other",
       "direction": "bullish|bearish|neutral",
       "description": "What you see",
-      "invalidation": "What would invalidate this"
+      "invalidation": "What would invalidate this",
+      "entry": 1234.56,
+      "stop": 1230.00,
+      "target": 1240.00,
+      "RR": 1.5,
+      "timeframe": "15m|1H|4H|1D"
     }
   ],
   "keyLevels": [
@@ -104,6 +152,12 @@ Only respond with the JSON, no other text.`;
   // Strip markdown fences if present
   const jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
   const parsed   = JSON.parse(jsonText);
+
+  // Validate analysis completeness before returning
+  const validationErrors = validateAnalysisCompleteness(parsed);
+  if (validationErrors.length > 0) {
+    throw new Error(`Analysis validation failed: ${validationErrors.join('; ')}. Forcing restart to ensure rule compliance.`);
+  }
 
   return {
     timestamp:       new Date(),

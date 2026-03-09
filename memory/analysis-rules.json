@@ -143,10 +143,18 @@
       "weight": 10,
       "addedSession": 5,
       "lastModifiedSession": 5
+    },
+    {
+      "id": "r019",
+      "category": "structural",
+      "description": "MANDATORY COMPLETION GATE: No session can be completed without: (1) Confidence breakdown in exact r014 format with mathematical components visible, (2) All setups containing entry/stop/target/RR/timeframe per r017, (3) All move descriptions using quantitative language per r016. If any element missin",
+      "weight": 10,
+      "addedSession": 6,
+      "lastModifiedSession": 6
     }
   ],
-  "version": 7,
-  "lastUpdated": "2026-03-09T10:14:10.466Z",
+  "version": 8,
+  "lastUpdated": "2026-03-09T14:20:24.819Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -154,5 +162,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #5"
+  "sessionNotes": "Last updated: Session #6"
 }
