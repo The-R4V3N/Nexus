@@ -2,13 +2,12 @@ name: NEXUS Session
 
 on:
   schedule:
-    # Every 4 hours, Mon–Fri only
+    # 5 sessions per day, Mon–Fri — aligned to market sessions
     - cron: '0 2 * * 1-5'   # 02:00 UTC — Asia session
-    - cron: '0 6 * * 1-5'   # 06:00 UTC — London open
-    - cron: '0 10 * * 1-5'  # 10:00 UTC — London/NY overlap
-    - cron: '0 14 * * 1-5'  # 14:00 UTC — NY session
-    - cron: '0 18 * * 1-5'  # 18:00 UTC — NY close
-    - cron: '0 22 * * 1-5'  # 22:00 UTC — End of day
+    - cron: '0 7 * * 1-5'   # 07:00 UTC — London open
+    - cron: '0 13 * * 1-5'  # 13:00 UTC — NY open / London-NY overlap
+    - cron: '0 18 * * 1-5'  # 18:00 UTC — NY afternoon
+    - cron: '0 21 * * 1-5'  # 21:00 UTC — NY close (4 PM ET)
 
   # Manual trigger — always runs, no weekday restriction
   workflow_dispatch:
