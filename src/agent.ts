@@ -225,6 +225,21 @@ export async function runSession(force = false): Promise<void> {
       const succeeded = forgeResults.filter(r => r.success).length;
       const failed    = forgeResults.filter(r => !r.success).length;
       forgeSpinner.succeed(chalk.green(`FORGE complete — ${succeeded} patched, ${failed} failed/reverted`));
+
+      // Auto-close linked self-tasks for successful FORGE patches
+      for (let i = 0; i < forgeResults.length; i++) {
+        const result  = forgeResults[i];
+        const request = axiomResult.forgeRequests[i];
+        if (result.success && request.selfTaskIssueNumber) {
+          const { closeSelfTask } = await import("./self-tasks");
+          const closed = await closeSelfTask(
+            request.selfTaskIssueNumber,
+            `FORGE patched \`${result.file}\` in session #${sessionNumber}. ${result.reason}`,
+            sessionNumber
+          );
+          if (closed) console.log(chalk.green(`    ✓ Auto-closed self-task #${request.selfTaskIssueNumber}`));
+        }
+      }
     } catch (err) {
       forgeSpinner.fail("FORGE failed");
       console.warn(chalk.yellow(`  ⚠ FORGE error (non-fatal): ${err}`));
