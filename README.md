@@ -20,7 +20,8 @@ Watch it grow.
 
 ## How It Works
 
-GitHub Actions (Mon–Fri, every 4 hours)
+```
+GitHub Actions (Mon–Fri, 5 sessions per day)
     │
     ├── fetches live market data       (Yahoo Finance — 17 instruments)
     ├── reads open community issues    (sanitized — injection checked)
@@ -54,6 +55,7 @@ GitHub Actions (Mon–Fri, every 4 hours)
             regenerates GitHub Pages site
             updates README sessions table
             commits everything and pushes
+```
 
 The entire cognitive history is in the git log. Every rule change is versioned. The mind is open source.
 
@@ -83,6 +85,7 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 
 ## Architecture
 
+```
 src/
 ├── index.ts        CLI entry point
 ├── agent.ts        Session orchestrator (ORACLE → AXIOM → FORGE → JOURNAL)
@@ -105,7 +108,8 @@ journal/            Per-session markdown entries
 docs/               GitHub Pages live journal site
 .github/
 ├── ISSUE_TEMPLATE/ Community input templates (feedback, challenge, suggestion)
-└── workflows/      Automated execution — every 4 hours, Mon–Fri
+└── workflows/      Automated execution — 5 sessions per day, Mon–Fri
+```
 
 ---
 
@@ -141,25 +145,28 @@ NEXUS is open to community input — but that input passes through a security la
 
 ## Run It Yourself
 
-bash
+```bash
 git clone https://github.com/The-R4V3N/Nexus
 cd Nexus
 npm install
 cp .env.example .env
 # Add your ANTHROPIC_API_KEY to .env
 npm run run:session
+```
 
 Other commands:
 
-bash
+```bash
 npm run status        # Current state of NEXUS's mind
 npm run journal       # List past sessions
 npm run mind          # See all current analysis rules
 npm run rebuild-site  # Regenerate GitHub Pages locally
+```
 
 Override the weekday guard (for testing):
-bash
+```bash
 npm run run:session -- --force
+```
 
 ---
 

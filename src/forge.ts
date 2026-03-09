@@ -23,6 +23,7 @@ const PROTECTED_FILES = new Set([
   "security.ts",
   "forge.ts",      // FORGE cannot rewrite itself
   "session.yml",   // self-modifying execution environment is too dangerous
+  "README.md",     // documentation integrity — FORGE must not strip formatting
 ]);
 
 // ── Max file size FORGE will attempt to patch ─────────────
