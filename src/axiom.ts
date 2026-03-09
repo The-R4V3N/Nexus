@@ -13,6 +13,7 @@ import type {
   AxiomReflection,
   AnalysisRules,
   RuleUpdate,
+  ForgeRequest,
 } from "./types";
 
 const MEMORY_DIR         = path.join(process.cwd(), "memory");
@@ -29,7 +30,7 @@ export async function runAxiomReflection(
   communityIssues:        string = "",
   openSelfTasksText:      string = "",
   openSelfTaskNumbers:    number[] = []
-): Promise<AxiomReflection> {
+): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
   const currentSystemPrompt = fs.existsSync(SYSTEM_PROMPT_PATH)
     ? fs.readFileSync(SYSTEM_PROMPT_PATH, "utf-8")
     : "";
@@ -106,8 +107,23 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
       "issueNumber": 5,
       "resolutionComment": "How I addressed this issue this session"
     }
+  ],
+  "codeChanges": [
+    {
+      "file": "journal.ts",
+      "description": "Precise description of exactly what code change to make",
+      "reason": "Why this change improves NEXUS",
+      "selfTaskIssueNumber": 3
+    }
   ]
 }
+
+FORGE rules:
+- Only request code changes for genuine functional gaps you cannot fix through rules or prompt changes alone
+- Be surgical and precise — describe exactly what function or section to change and how
+- Only target files in src/ — never security.ts or forge.ts
+- Maximum 2 code changes per session
+- If you have no code changes to make, set codeChanges to []
 
 Rules r001–r010 are FOUNDATIONAL — you can modify their wording but you CANNOT remove them. These are your constitutional ICT methodology rules.
 When adding new rules, use IDs that continue from the highest existing ID (e.g. r014, r015, etc.).
@@ -153,6 +169,7 @@ Only create new rules if the session revealed a genuine gap not covered. Only mo
         systemPromptAdditions:  "",
         newSelfTasks:           [],
         resolvedSelfTasks:      [],
+        codeChanges:            [],
       };
     }
   }
@@ -205,7 +222,14 @@ Only create new rules if the session revealed a genuine gap not covered. Only mo
     }
   }
 
-  return reflection;
+  const forgeRequests: ForgeRequest[] = (parsed.codeChanges ?? []).map((c: any) => ({
+    file:                 c.file        ?? "",
+    description:          c.description ?? "",
+    reason:               c.reason      ?? "",
+    selfTaskIssueNumber:  c.selfTaskIssueNumber,
+  })).filter((r: ForgeRequest) => r.file && r.description);
+
+  return { reflection, forgeRequests };
 }
 
 // ── JSON salvage helper ────────────────────────────────────
