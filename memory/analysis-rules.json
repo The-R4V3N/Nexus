@@ -107,10 +107,10 @@
     {
       "id": "r014",
       "category": "confidence_methodology",
-      "description": "Confidence scores must include the mathematical breakdown: Technical confluence (X/5 patterns * 20% = Y%), Macro alignment (strong/weak/conflicting * 30% = Z%), Risk/reward clarity (ratio * 25% = A%), Invalidation levels defined (yes/no * 25% = B%). Total = Y+Z+A+B%. No session completion without th",
+      "description": "MANDATORY: Confidence scores MUST include this exact mathematical breakdown or the session is incomplete: Technical confluence (X/5 patterns * 20% = Y%), Macro alignment (strong/weak/conflicting * 30% = Z%), Risk/reward clarity (ratio * 25% = A%), Invalidation levels defined (yes/no * 25% = B%). Tot",
       "weight": 8,
       "addedSession": 2,
-      "lastModifiedSession": 3
+      "lastModifiedSession": 4
     },
     {
       "id": "r015",
@@ -119,10 +119,26 @@
       "weight": 8,
       "addedSession": 3,
       "lastModifiedSession": 3
+    },
+    {
+      "id": "r016",
+      "category": "quantitative_context",
+      "description": "When describing price moves, provide quantitative context: small (<1 standard deviation), normal (1-2 standard deviations), large (2-3 standard deviations), extreme (>3 standard deviations from historical mean). If historical data unavailable, state 'magnitude context unavailable' rather than using ",
+      "weight": 7,
+      "addedSession": 4,
+      "lastModifiedSession": 4
+    },
+    {
+      "id": "r017",
+      "category": "setup_requirements",
+      "description": "Every setup must include: (1) specific timeframe, (2) precise entry level, (3) clear invalidation point, (4) risk/reward ratio. Setups missing any of these four elements must be classified as 'incomplete' rather than assigned a bias direction.",
+      "weight": 8,
+      "addedSession": 4,
+      "lastModifiedSession": 4
     }
   ],
-  "version": 5,
-  "lastUpdated": "2026-03-09T07:09:53.081Z",
+  "version": 6,
+  "lastUpdated": "2026-03-09T07:47:33.276Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -130,5 +146,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #3"
+  "sessionNotes": "Last updated: Session #4"
 }
