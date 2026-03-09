@@ -17,8 +17,9 @@ jobs:
   run-session:
     runs-on: ubuntu-latest
     permissions:
-      contents: write    # push commits
-      issues: write      # open and close self-tasks
+      contents: write        # push commits
+      issues: write          # open and close self-tasks
+      pull-requests: write   # FORGE opens PRs for code changes
 
     steps:
       - name: Checkout
@@ -49,11 +50,81 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
-      - name: Commit results
+      - name: Commit memory & journal to main
         run: |
           git config user.name "NEXUS"
           git config user.email "nexus-bot@users.noreply.github.com"
           git pull --rebase --autostash origin main
-          git add memory/ journal/ docs/ src/ README.md
+
+          # Check if FORGE changed any src/ files
+          FORGE_CHANGES=$(git diff --name-only src/ 2>/dev/null || true)
+
+          if [ -n "$FORGE_CHANGES" ]; then
+            echo "🔀 FORGE changed source files — will open PR"
+            echo "FORGE_CHANGED=true" >> "$GITHUB_ENV"
+
+            # Stash src/ changes before committing memory to main
+            git stash push -- src/
+          else
+            echo "FORGE_CHANGED=false" >> "$GITHUB_ENV"
+          fi
+
+          # Commit memory/journal/docs/README to main (always)
+          git add memory/ journal/ docs/ README.md
           git diff --staged --quiet || git commit -m "session: $(date -u +'%Y-%m-%d %H:%M UTC') [${{ github.event_name }}]"
           git push
+
+      - name: Open PR for FORGE code changes
+        if: env.FORGE_CHANGED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get session number from latest sessions.json entry
+          SESSION_NUM=$(node -e "const s=require('./memory/sessions.json'); console.log(s[s.length-1]?.sessionNumber ?? 'unknown')")
+          BRANCH="forge/session-${SESSION_NUM}-$(date -u +'%Y%m%d-%H%M')"
+
+          # Create branch from current main
+          git checkout -b "$BRANCH"
+
+          # Apply the stashed FORGE changes
+          git stash pop
+
+          # Commit src/ changes
+          git add src/
+          git diff --staged --quiet && { echo "No src/ changes after unstash"; exit 0; }
+
+          # Build commit message from changed files
+          CHANGED_FILES=$(git diff --staged --name-only | tr '\n' ', ' | sed 's/,$//')
+          git commit -m "forge: code evolution from session #${SESSION_NUM}
+
+          Files changed: ${CHANGED_FILES}
+          This PR was created automatically by NEXUS FORGE."
+
+          # Push branch and open PR
+          git push -u origin "$BRANCH"
+
+          # Ensure labels exist (no-op if they already do)
+          gh label create "forge" --description "Code changes by NEXUS FORGE" --color "0e8a16" 2>/dev/null || true
+          gh label create "automated" --description "Created automatically by NEXUS" --color "bfdadc" 2>/dev/null || true
+
+          gh pr create \
+            --title "FORGE: Code evolution from session #${SESSION_NUM}" \
+            --label "forge" --label "automated" \
+            --body "## FORGE Code Evolution
+
+          This PR contains source code changes made by NEXUS FORGE during session #${SESSION_NUM}.
+
+          FORGE receives change requests from AXIOM (the self-reflection engine), patches source files
+          using Claude, and validates with TypeScript before committing. Protected files (\`security.ts\`,
+          \`forge.ts\`) can never be modified.
+
+          ### Review checklist
+          - [ ] Changes are sensible and improve the system
+          - [ ] No security regressions
+          - [ ] TypeScript compiles clean
+          - [ ] No unintended side effects
+
+          ---
+          *This PR was created automatically by NEXUS. Review before merging.*"
+
+          echo "PR created for FORGE changes on branch $BRANCH"
