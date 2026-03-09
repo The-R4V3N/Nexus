@@ -20,6 +20,81 @@ const MEMORY_DIR         = path.join(process.cwd(), "memory");
 const SYSTEM_PROMPT_PATH = path.join(MEMORY_DIR, "system-prompt.md");
 const ANALYSIS_RULES_PATH= path.join(MEMORY_DIR, "analysis-rules.json");
 
+
+// ── Build codebase context for AXIOM ──────────────────────
+// Injects file listing + contents of small/relevant files so
+// AXIOM can write precise codeChanges instructions.
+
+const MAX_FILE_INJECT_CHARS = 3000; // per file
+const ALWAYS_INJECT = ["journal.ts", "agent.ts"]; // always show these to AXIOM
+
+function buildCodebaseContext(openSelfTasksText: string): string {
+  const srcDir      = path.join(process.cwd(), "src");
+  const readmePath  = path.join(process.cwd(), "README.md");
+  const sessionsPath= path.join(process.cwd(), "memory", "sessions.json");
+  const lines: string[] = ["=== CODEBASE MAP ==="];
+
+  // File listing
+  try {
+    const files = fs.readdirSync(srcDir).filter(f => f.endsWith(".ts"));
+    for (const f of files) {
+      const size = fs.statSync(path.join(srcDir, f)).size;
+      lines.push(`  src/${f} (${size} bytes)`);
+    }
+  } catch { /* ignore */ }
+
+  lines.push("");
+
+  // Inject contents of always-inject files and small files
+  try {
+    const files = fs.readdirSync(srcDir).filter(f => f.endsWith(".ts"));
+    for (const f of files) {
+      if (f === "security.ts" || f === "forge.ts") continue; // skip protected
+      const filePath = path.join(srcDir, f);
+      const raw = fs.readFileSync(filePath, "utf-8");
+      const shouldInject = ALWAYS_INJECT.includes(f) || raw.length <= MAX_FILE_INJECT_CHARS;
+      if (shouldInject) {
+        const preview = raw.length > MAX_FILE_INJECT_CHARS
+          ? raw.slice(0, MAX_FILE_INJECT_CHARS) + "\n... [truncated]"
+          : raw;
+        lines.push(`=== src/${f} ===`);
+        lines.push(preview);
+        lines.push("");
+      }
+    }
+  } catch { /* ignore */ }
+
+  // Always inject README sessions table section
+  try {
+    const readme = fs.readFileSync(readmePath, "utf-8");
+    const tableStart = readme.indexOf("| # | Date | Bias");
+    const tableEnd   = readme.indexOf("*This table will be updated", tableStart);
+    if (tableStart !== -1 && tableEnd !== -1) {
+      lines.push("=== README.md (sessions table section) ===");
+      lines.push(readme.slice(tableStart, tableEnd + 60));
+      lines.push("");
+    }
+  } catch { /* ignore */ }
+
+  // Inject last 5 sessions summary for README table update
+  try {
+    const sessions = JSON.parse(fs.readFileSync(sessionsPath, "utf-8"));
+    const recent = (sessions as any[]).slice(-5).reverse();
+    lines.push("=== LAST 5 SESSIONS (for README table) ===");
+    for (const s of recent) {
+      const bias  = s.fullAnalysis?.bias?.overall ?? "—";
+      const conf  = s.fullAnalysis?.confidence ?? "—";
+      const setup = s.fullAnalysis?.setups?.length ?? "—";
+      const rules = s.ruleCount ?? "—";
+      const date  = (s.date ?? "—").split(" ")[0];
+      lines.push(`  #${s.sessionNumber} | ${date} | ${bias} | ${setup} setups | ${conf}% | ${rules} rules`);
+    }
+    lines.push("");
+  } catch { /* ignore */ }
+
+  return lines.join("\n");
+}
+
 // ── AXIOM Reflection ───────────────────────────────────────
 
 export async function runAxiomReflection(
@@ -65,6 +140,9 @@ ${previousSessions || "No previous sessions."}
 ${communityIssues ? "### Community input this session:\n" + communityIssues : "### Community input: none this session."}
 
 ${openSelfTasksText ? openSelfTasksText : "### My open self-tasks: none."}
+
+### Codebase context (so you can write precise codeChanges):
+${buildCodebaseContext(openSelfTasksText)}
 
 ---
 
@@ -118,12 +196,14 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
   ]
 }
 
-FORGE rules:
-- Only request code changes for genuine functional gaps you cannot fix through rules or prompt changes alone
-- Be surgical and precise — describe exactly what function or section to change and how
-- Only target files in src/ — never security.ts or forge.ts
-- Maximum 2 code changes per session
-- If you have no code changes to make, set codeChanges to []
+FORGE rules — IMPORTANT:
+- If you have open self-tasks, you MUST attempt to resolve them this session. Use codeChanges for anything requiring code, rules/prompt for analytical gaps.
+- Do NOT open new self-tasks for problems you can fix right now with codeChanges.
+- Be surgical: describe exactly which function to add/modify, what it should do, and what data it uses.
+- You can see the codebase above — use that context to write precise instructions.
+- Only target files in src/ or README.md — never security.ts or forge.ts.
+- Maximum 2 code changes per session. Pick the highest priority open self-tasks first.
+- If you truly have nothing to code, set codeChanges to [].
 
 Rules r001–r010 are FOUNDATIONAL — you can modify their wording but you CANNOT remove them. These are your constitutional ICT methodology rules.
 When adding new rules, use IDs that continue from the highest existing ID (e.g. r014, r015, etc.).
