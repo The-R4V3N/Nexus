@@ -169,6 +169,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 
 | # | Date | Bias | Setups | Confidence | Rule Δ |
 |---|------|------|--------|------------|--------|
+| 8 | 2026-03-09 | mixed | 3 | 45% | 18 rules |
 | 7 | 2026-03-09 | mixed | 3 | 35% | 19 rules |
 | 6 | 2026-03-09 | mixed | 4 | 35% | 19 rules |
 | 5 | 2026-03-09 | mixed | 3 | 35% | 18 rules |
