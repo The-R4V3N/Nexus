@@ -117,3 +117,18 @@ export interface NexusSession {
   axiom?: AxiomReflection;
   journal?: JournalEntry;
 }
+
+export interface ForgeRequest {
+  file:        string;   // e.g. "journal.ts" — relative to src/
+  description: string;   // what change to make
+  reason:      string;   // why — linked to which self-task or gap
+  selfTaskIssueNumber?: number; // issue to close if this succeeds
+}
+
+export interface ForgeResult {
+  file:      string;
+  success:   boolean;
+  reason:    string;
+  reverted:  boolean;
+  linesChanged?: number;
+}
