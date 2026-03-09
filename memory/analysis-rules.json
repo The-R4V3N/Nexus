@@ -107,14 +107,22 @@
     {
       "id": "r014",
       "category": "confidence_methodology",
-      "description": "Confidence scores must be justified with specific criteria: technical confluence count (20%), macro environment alignment (30%), risk/reward ratio (25%), and invalidation clarity (25%). Document the calculation.",
+      "description": "Confidence scores must include the mathematical breakdown: Technical confluence (X/5 patterns * 20% = Y%), Macro alignment (strong/weak/conflicting * 30% = Z%), Risk/reward clarity (ratio * 25% = A%), Invalidation levels defined (yes/no * 25% = B%). Total = Y+Z+A+B%. No session completion without th",
       "weight": 8,
       "addedSession": 2,
-      "lastModifiedSession": 2
+      "lastModifiedSession": 3
+    },
+    {
+      "id": "r015",
+      "category": "bias_classification",
+      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding 2 standard deviations from norm. Otherwise, assign directional bias based on preponderance of evidence weighted by asset class importance.",
+      "weight": 8,
+      "addedSession": 3,
+      "lastModifiedSession": 3
     }
   ],
-  "version": 4,
-  "lastUpdated": "2026-03-09T03:05:08.104Z",
+  "version": 5,
+  "lastUpdated": "2026-03-09T07:09:53.081Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -122,5 +130,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #2"
+  "sessionNotes": "Last updated: Session #3"
 }
