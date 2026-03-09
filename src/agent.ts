@@ -3,17 +3,18 @@
 // Runs the full ORACLE → AXIOM → JOURNAL cycle
 // ============================================================
 
-import Anthropic from "@anthropic-ai/sdk";
-import chalk from "chalk";
-import ora from "ora";
-import * as fs from "fs";
-import * as path from "path";
+import Anthropic  from "@anthropic-ai/sdk";
+import chalk      from "chalk";
+import ora        from "ora";
+import * as fs    from "fs";
+import * as path  from "path";
 import { format } from "date-fns";
-import { fetchAllMarkets, printMarketsTable } from "./markets";
-import { fetchCommunityIssues, formatIssuesForPrompt } from "./issues";
-import { fetchOpenSelfTasks, formatSelfTasksForPrompt } from "./self-tasks";
-import { runOracleAnalysis } from "./oracle";
-import { runAxiomReflection, initMemoryIfNeeded } from "./axiom";
+import { fetchAllMarkets, printMarketsTable }                     from "./markets";
+import { fetchCommunityIssues, formatIssuesForPrompt }             from "./issues";
+import { fetchOpenSelfTasks, formatSelfTasksForPrompt }           from "./self-tasks";
+import { runOracleAnalysis }                                       from "./oracle";
+import { runAxiomReflection, initMemoryIfNeeded }                  from "./axiom";
+import { runForge, formatForgeResults }                             from "./forge";
 import {
   buildJournalEntry,
   writeJournalMarkdown,
@@ -23,8 +24,8 @@ import {
 } from "./journal";
 import type { AnalysisRules } from "./types";
 
-const MEMORY_DIR = path.join(process.cwd(), "memory");
-const ANALYSIS_RULES_PATH = path.join(MEMORY_DIR, "analysis-rules.json");
+const MEMORY_DIR           = path.join(process.cwd(), "memory");
+const ANALYSIS_RULES_PATH  = path.join(MEMORY_DIR, "analysis-rules.json");
 
 // ── Session ID generator ───────────────────────────────────
 
@@ -74,15 +75,15 @@ export async function runSession(force = false): Promise<void> {
 
   // Weekend guard
   if (!isTradingDay(force)) {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     console.log(chalk.yellow(`  ⚠  Today is ${days[new Date().getDay()]} — markets are closed.`));
     console.log(chalk.dim("  NEXUS only runs Monday–Friday."));
     console.log(chalk.dim("  To run anyway: npm run run:session -- --force\n"));
     return;
   }
 
-  const startTime = new Date();
-  const sessionId = generateSessionId();
+  const startTime     = new Date();
+  const sessionId     = generateSessionId();
   const sessionNumber = getSessionNumber();
 
   console.log(chalk.dim(`  Session:   `) + chalk.cyan(`#${sessionNumber}`));
@@ -136,7 +137,7 @@ export async function runSession(force = false): Promise<void> {
   }
 
   // ── Phase 1c: Open self-tasks ──
-  let selfTasksText = "";
+  let selfTasksText    = "";
   let selfTaskNumbers: number[] = [];
   try {
     const selfTasks = await fetchOpenSelfTasks();
@@ -190,10 +191,12 @@ export async function runSession(force = false): Promise<void> {
   const axiomSpinner = ora({ text: "AXIOM reflecting on cognitive performance...", color: "magenta" }).start();
 
   let reflection;
+  let axiomResult: Awaited<ReturnType<typeof runAxiomReflection>>;
   const prevContext = buildPreviousSessionsContext();
 
   try {
-    reflection = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, selfTaskNumbers);
+    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, selfTaskNumbers);
+    reflection = axiomResult.reflection;
     axiomSpinner.succeed(
       chalk.green(`Reflection complete — ${reflection.ruleUpdates.length} rule updates, mind evolved`)
     );
@@ -212,13 +215,30 @@ export async function runSession(force = false): Promise<void> {
     console.log("");
   }
 
+  // ── Phase 3b: FORGE — code evolution ──
+  let forgeResults: import("./types").ForgeResult[] = [];
+  if (axiomResult.forgeRequests.length > 0) {
+    console.log(chalk.bold.yellow("  ── PHASE 3b: FORGE CODE EVOLUTION ──\n"));
+    const forgeSpinner = ora({ text: "FORGE applying code changes...", color: "cyan" }).start();
+    try {
+      forgeResults = await runForge(client, axiomResult.forgeRequests, sessionNumber);
+      const succeeded = forgeResults.filter(r => r.success).length;
+      const failed    = forgeResults.filter(r => !r.success).length;
+      forgeSpinner.succeed(chalk.green(`FORGE complete — ${succeeded} patched, ${failed} failed/reverted`));
+    } catch (err) {
+      forgeSpinner.fail("FORGE failed");
+      console.warn(chalk.yellow(`  ⚠ FORGE error (non-fatal): ${err}`));
+    }
+    console.log("");
+  }
+
   // ── Phase 4: Journal ──
   console.log(chalk.bold.yellow("  ── PHASE 4: JOURNAL ──\n"));
   const journalSpinner = ora({ text: "Writing journal entry...", color: "cyan" }).start();
 
-  const rules = loadRules();
-  const entry = buildJournalEntry(sessionNumber, oracle, reflection, rules);
-  const mdPath = writeJournalMarkdown(entry);
+  const rules   = loadRules();
+  const entry   = buildJournalEntry(sessionNumber, oracle, reflection, rules);
+  const mdPath  = writeJournalMarkdown(entry);
   saveJournalEntry(entry);
 
   const allEntries = loadAllJournalEntries();
