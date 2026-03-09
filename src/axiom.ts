@@ -126,10 +126,26 @@ You speak in first person as NEXUS reflecting on itself.`;
 ${oracle.analysis}
 
 ### Setups I identified: ${oracle.setups.length}
-${oracle.setups.map((s) => `- ${s.instrument}: ${s.type} ${s.direction} — ${s.description}`).join("\n")}
+${oracle.setups.map((s: any) => {
+    const hasEntry  = s.entry  !== undefined && s.entry  !== null;
+    const hasStop   = s.stop   !== undefined && s.stop   !== null;
+    const hasTarget = s.target !== undefined && s.target !== null;
+    const hasRR     = s.RR     !== undefined && s.RR     !== null;
+    const hasTF     = !!s.timeframe;
+    const complete  = hasEntry && hasStop && hasTarget && hasRR && hasTF;
+    return `- ${s.instrument}: ${s.type} ${s.direction} | Entry: ${s.entry ?? "MISSING"} | Stop: ${s.stop ?? "MISSING"} | Target: ${s.target ?? "MISSING"} | RR: ${s.RR ?? "MISSING"} | TF: ${s.timeframe ?? "MISSING"} | ${complete ? "COMPLETE" : "INCOMPLETE"}`;
+  }).join("\n")}
 
 ### My confidence: ${oracle.confidence}/100
 ### Market bias: ${oracle.bias.overall} — ${oracle.bias.notes}
+
+### Compliance check (evaluate THIS session, not past patterns):
+- Confidence breakdown in analysis text: ${/confidence.*\d+%.*\d+%/i.test(oracle.analysis) ? "YES" : "NO"}
+- Quantified moves (pips/points/%): ${/\d+(\.\d+)?\s*(pips?|points?|%)/i.test(oracle.analysis) ? "YES" : "NO"}
+- All setups complete (entry/stop/target/RR/TF): ${oracle.setups.every((s: any) => (s as any).entry != null && (s as any).stop != null && (s as any).target != null && (s as any).RR != null && (s as any).timeframe) ? "YES — all " + oracle.setups.length + " setups have required fields" : "NO — some setups missing fields"}
+- Mixed bias justified: ${oracle.bias.overall !== "mixed" ? "N/A (bias is " + oracle.bias.overall + ")" : /conflict|divergen|breakdown/i.test(oracle.bias.notes) ? "YES" : "NO"}
+
+IMPORTANT: Base your reflection on the compliance check above, not on assumptions from previous sessions. If compliance says YES, acknowledge progress — do not repeat old criticisms.
 
 ### My current rules (${currentRules.rules.length} rules, v${currentRules.version}):
 ${currentRules.rules.map((r) => `[${r.id}] [W:${r.weight}] ${r.description}`).join("\n")}
