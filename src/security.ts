@@ -36,8 +36,8 @@ const INJECTION_PATTERNS: RegExp[] = [
     /###\s*system/i,
 
     // API / cost abuse
-    /repeat\s+(the\s+following\s+)?\d{3,}/i,    // "repeat this 1000 times"
-    /generate\s+\d{4,}\s+words?/i,              // "generate 5000 words"
+    /repeat\s+(the\s+following\s+)?\d{3,}/i,
+    /generate\s+\d{4,}\s+words?/i,
     /write\s+\d{4,}\s+words?/i,
 
     // Sensitive data extraction
@@ -50,8 +50,8 @@ const INJECTION_PATTERNS: RegExp[] = [
 // ── Suspicious content patterns (warn but don't block) ─────
 
 const SUSPICIOUS_PATTERNS: RegExp[] = [
-    /\{[\s\S]{0,50}\}/,           // Template-like injections {variable}
-    /\[\[[\s\S]{0,50}\]\]/,       // [[wiki-style]] injections
+    /\{[\s\S]{0,50}\}/,
+    /\[\[[\s\S]{0,50}\]\]/,
     /base64/i,
     /eval\s*\(/i,
     /javascript:/i,
@@ -60,21 +60,20 @@ const SUSPICIOUS_PATTERNS: RegExp[] = [
 // ── Content limits ─────────────────────────────────────────
 
 const LIMITS = {
-    MAX_ISSUE_TITLE_LENGTH: 200,
-    MAX_ISSUE_BODY_LENGTH: 1500,   // chars per issue body
-    MAX_ISSUES_PER_SESSION: 5,      // max issues injected per session
-    MAX_SELF_TASKS_PER_SESSION: 2,   // max self-tasks NEXUS can open per session
-    MAX_TOTAL_ISSUE_CHARS: 4000,   // total chars across all issues combined
-    MAX_RULE_LENGTH: 300,    // max chars per rule AXIOM can write
-    MAX_RULES_PER_SESSION: 2,      // max new rules AXIOM can add per session
-    MAX_OUTPUT_TOKENS: 4096,   // hard cap on API response tokens
-    MIN_RULE_COUNT: 5,             // AXIOM cannot reduce rules below this threshold
-    MAX_SYSTEM_PROMPT_LENGTH: 8000, // max chars for the evolving system prompt
+    MAX_ISSUE_TITLE_LENGTH:     200,
+    MAX_ISSUE_BODY_LENGTH:     1500,
+    MAX_ISSUES_PER_SESSION:       5,
+    MAX_SELF_TASKS_PER_SESSION:   2,
+    MAX_TOTAL_ISSUE_CHARS:     4000,
+    MAX_RULE_LENGTH:            300,
+    MAX_RULES_PER_SESSION:        2,
+    MAX_OUTPUT_TOKENS:         4096,
+    MIN_RULE_COUNT:               5,
+    MAX_SYSTEM_PROMPT_LENGTH:  8000,
 };
 
-// ── Foundational rule IDs that AXIOM cannot remove ───────
-// These are the constitutional rules — the core ICT methodology
-// that NEXUS must always retain. AXIOM can modify them but not delete them.
+// ── Foundational rule IDs that AXIOM cannot remove ────────
+
 const FOUNDATIONAL_RULE_IDS = new Set([
     "r001", "r002", "r003", "r004", "r005",
     "r006", "r007", "r008", "r009", "r010",
@@ -83,60 +82,47 @@ const FOUNDATIONAL_RULE_IDS = new Set([
 // ── Sanitization result ────────────────────────────────────
 
 export interface SanitizeResult {
-    safe: boolean;
-    content: string;
+    safe:     boolean;
+    content:  string;
     warnings: string[];
-    blocked: boolean;
-    reason?: string;
+    blocked:  boolean;
+    reason?:  string;
 }
 
 // ── Main sanitizer ─────────────────────────────────────────
 
 export function sanitizeIssueContent(
-    title: string,
-    body: string,
+    title:       string,
+    body:        string,
     issueNumber: number
 ): SanitizeResult {
     const warnings: string[] = [];
 
-    // ── Check title ──
     const cleanTitle = title
         .slice(0, LIMITS.MAX_ISSUE_TITLE_LENGTH)
-        .replace(/[<>]/g, "")   // strip HTML
+        .replace(/[<>]/g, "")
         .trim();
 
     for (const pattern of INJECTION_PATTERNS) {
         if (pattern.test(cleanTitle)) {
-            return {
-                safe: false,
-                content: "",
-                warnings,
-                blocked: true,
-                reason: `Injection pattern detected in issue #${issueNumber} title`,
-            };
+            return { safe: false, content: "", warnings, blocked: true,
+                reason: `Injection pattern detected in issue #${issueNumber} title` };
         }
     }
 
-    // ── Check body ──
     const cleanBody = body
         .slice(0, LIMITS.MAX_ISSUE_BODY_LENGTH)
-        .replace(/<script[\s\S]*?<\/script>/gi, "[REMOVED]")  // strip script tags
-        .replace(/<[^>]+>/g, "")                               // strip HTML tags
+        .replace(/<script[\s\S]*?<\/script>/gi, "[REMOVED]")
+        .replace(/<[^>]+>/g, "")
         .trim();
 
     for (const pattern of INJECTION_PATTERNS) {
         if (pattern.test(cleanBody)) {
-            return {
-                safe: false,
-                content: "",
-                warnings,
-                blocked: true,
-                reason: `Injection pattern detected in issue #${issueNumber} body`,
-            };
+            return { safe: false, content: "", warnings, blocked: true,
+                reason: `Injection pattern detected in issue #${issueNumber} body` };
         }
     }
 
-    // ── Warn on suspicious but not block ──
     for (const pattern of SUSPICIOUS_PATTERNS) {
         if (pattern.test(cleanBody)) {
             warnings.push(`Suspicious pattern in #${issueNumber}: ${pattern.source}`);
@@ -144,7 +130,7 @@ export function sanitizeIssueContent(
     }
 
     return {
-        safe: true,
+        safe:    true,
         content: `[#${issueNumber}] ${cleanTitle}\n${cleanBody}`,
         warnings,
         blocked: false,
@@ -154,28 +140,26 @@ export function sanitizeIssueContent(
 // ── Sanitize all community issues ─────────────────────────
 
 export interface IssueSecurityReport {
-    safe: string;   // sanitized combined text
-    blocked: number[];  // issue numbers that were blocked
-    warnings: string[];
+    safe:        string;
+    blocked:     number[];
+    warnings:    string[];
     totalIssues: number;
-    usedIssues: number;
+    usedIssues:  number;
 }
 
 export function sanitizeAllIssues(
     issues: Array<{ number: number; title: string; body: string; reactions: number }>
 ): IssueSecurityReport {
-    const blocked: number[] = [];
-    const warnings: string[] = [];
-    const safeChunks: string[] = [];
-    let totalChars = 0;
+    const blocked:     number[] = [];
+    const warnings:    string[] = [];
+    const safeChunks:  string[] = [];
+    let   totalChars = 0;
 
-    // Sort by reactions (most popular first) then cap count
     const sorted = [...issues]
         .sort((a, b) => b.reactions - a.reactions)
         .slice(0, LIMITS.MAX_ISSUES_PER_SESSION);
 
     for (const issue of sorted) {
-        // Stop if we've hit the total char limit
         if (totalChars >= LIMITS.MAX_TOTAL_ISSUE_CHARS) {
             warnings.push(`Issue #${issue.number} skipped — total character limit reached`);
             continue;
@@ -196,45 +180,47 @@ export function sanitizeAllIssues(
     }
 
     return {
-        safe: safeChunks.join("\n\n"),
+        safe:        safeChunks.join("\n\n"),
         blocked,
         warnings,
         totalIssues: issues.length,
-        usedIssues: safeChunks.length,
+        usedIssues:  safeChunks.length,
     };
 }
 
-// ── Sanitize AXIOM output (rule and self-task validation) ──
+// ── Sanitize AXIOM output ──────────────────────────────────
 
 export interface AxiomSecurityResult {
-    newRules: any[];
-    ruleUpdates: any[];
-    newSelfTasks: any[];
-    resolvedTasks: any[];
-    blockedRules: number;
+    newRules:         any[];
+    ruleUpdates:      any[];
+    newSelfTasks:     any[];
+    resolvedTasks:    any[];
+    blockedRules:     number;
     blockedSelfTasks: number;
-    warnings: string[];
+    warnings:         string[];
 }
 
-export function sanitizeAxiomOutput(parsed: any, sessionNumber: number, currentRuleCount: number = 10): AxiomSecurityResult {
-    const warnings: string[] = [];
-    let blockedRules = 0;
-    let blockedSelfTasks = 0;
+export function sanitizeAxiomOutput(
+    parsed:           any,
+    sessionNumber:    number,
+    currentRuleCount: number = 10
+): AxiomSecurityResult {
+    const warnings:        string[] = [];
+    let   blockedRules     = 0;
+    let   blockedSelfTasks = 0;
 
     // ── Validate new rules ──
-    const rawRules = (parsed.newRules ?? []) as any[];
+    const rawRules   = (parsed.newRules ?? []) as any[];
     const safeRules: any[] = [];
 
     for (const rule of rawRules.slice(0, LIMITS.MAX_RULES_PER_SESSION)) {
         if (typeof rule.description !== "string") continue;
 
-        // Rules cannot exceed max length
         if (rule.description.length > LIMITS.MAX_RULE_LENGTH) {
             rule.description = rule.description.slice(0, LIMITS.MAX_RULE_LENGTH);
             warnings.push(`Rule truncated to ${LIMITS.MAX_RULE_LENGTH} chars`);
         }
 
-        // Rules cannot contain injection patterns
         const injected = INJECTION_PATTERNS.some((p) => p.test(rule.description));
         if (injected) {
             blockedRules++;
@@ -242,9 +228,7 @@ export function sanitizeAxiomOutput(parsed: any, sessionNumber: number, currentR
             continue;
         }
 
-        // Rule weight must be 1-10
         rule.weight = Math.min(10, Math.max(1, parseInt(rule.weight) || 5));
-
         safeRules.push(rule);
     }
 
@@ -253,11 +237,9 @@ export function sanitizeAxiomOutput(parsed: any, sessionNumber: number, currentR
     }
 
     // ── Validate rule updates ──
-    const rawUpdates = (parsed.ruleUpdates ?? []) as any[];
+    const rawUpdates   = (parsed.ruleUpdates ?? []) as any[];
     const safeUpdates: any[] = [];
-
-    // Count how many removals are being attempted
-    let removalCount = 0;
+    let   removalCount = 0;
 
     for (const update of rawUpdates) {
         // Block removal of foundational rules
@@ -267,13 +249,13 @@ export function sanitizeAxiomOutput(parsed: any, sessionNumber: number, currentR
             continue;
         }
 
-        // Enforce minimum rule count — block removals that would drop below threshold
+        // Enforce minimum rule count
         if (update.type === "remove") {
             removalCount++;
             if (currentRuleCount - removalCount < LIMITS.MIN_RULE_COUNT) {
                 blockedRules++;
                 warnings.push(`Blocked removal of ${update.ruleId} — would drop below minimum ${LIMITS.MIN_RULE_COUNT} rules`);
-                removalCount--; // didn't actually remove
+                removalCount--;
                 continue;
             }
         }
@@ -291,7 +273,7 @@ export function sanitizeAxiomOutput(parsed: any, sessionNumber: number, currentR
     }
 
     // ── Validate self-tasks ──
-    const rawTasks = (parsed.newSelfTasks ?? []) as any[];
+    const rawTasks   = (parsed.newSelfTasks ?? []) as any[];
     const safeTasks: any[] = [];
 
     const validCategories = ["blind-spot", "bias", "rule-gap", "new-concept", "correlation"];
@@ -300,15 +282,12 @@ export function sanitizeAxiomOutput(parsed: any, sessionNumber: number, currentR
     for (const task of rawTasks.slice(0, LIMITS.MAX_SELF_TASKS_PER_SESSION)) {
         if (typeof task.title !== "string" || typeof task.body !== "string") continue;
 
-        // Sanitize title and body
         task.title = task.title.slice(0, 100).replace(/[<>]/g, "").trim();
-        task.body = task.body.slice(0, 500).replace(/<[^>]+>/g, "").trim();
+        task.body  = task.body.slice(0, 500).replace(/<[^>]+>/g, "").trim();
 
-        // Validate category and priority
         if (!validCategories.includes(task.category)) task.category = "rule-gap";
         if (!validPriorities.includes(task.priority)) task.priority = "medium";
 
-        // Check for injection
         const injected = INJECTION_PATTERNS.some(
             (p) => p.test(task.title) || p.test(task.body)
         );
@@ -326,32 +305,21 @@ export function sanitizeAxiomOutput(parsed: any, sessionNumber: number, currentR
     }
 
     return {
-        newRules: safeRules,
-        ruleUpdates: safeUpdates,
-        newSelfTasks: safeTasks,
-        resolvedTasks: parsed.resolvedSelfTasks ?? [],
+        newRules:         safeRules,
+        ruleUpdates:      safeUpdates,
+        newSelfTasks:     safeTasks,
+        resolvedTasks:    parsed.resolvedSelfTasks ?? [],
         blockedRules,
         blockedSelfTasks,
         warnings,
     };
 }
 
-// ── Session cost guard ─────────────────────────────────────
+// ── Exports ────────────────────────────────────────────────
 
-export function getMaxOutputTokens(): number {
-    return LIMITS.MAX_OUTPUT_TOKENS;
-}
-
-export function getSelfTaskLimit(): number {
-    return LIMITS.MAX_SELF_TASKS_PER_SESSION;
-}
-
-export function getMaxSystemPromptLength(): number {
-    return LIMITS.MAX_SYSTEM_PROMPT_LENGTH;
-}
-
-export function isFoundationalRule(ruleId: string): boolean {
-    return FOUNDATIONAL_RULE_IDS.has(ruleId);
-}
+export function getMaxOutputTokens():      number  { return LIMITS.MAX_OUTPUT_TOKENS; }
+export function getSelfTaskLimit():        number  { return LIMITS.MAX_SELF_TASKS_PER_SESSION; }
+export function getMaxSystemPromptLength():number  { return LIMITS.MAX_SYSTEM_PROMPT_LENGTH; }
+export function isFoundationalRule(id: string): boolean { return FOUNDATIONAL_RULE_IDS.has(id); }
 
 export { LIMITS, FOUNDATIONAL_RULE_IDS };
