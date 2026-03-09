@@ -91,10 +91,10 @@
     {
       "id": "r012",
       "category": "technical_precision",
-      "description": "When analyzing cross-asset divergences, quantify the divergence strength and provide historical context for whether this magnitude is significant.",
+      "description": "When analyzing cross-asset divergences, provide specific correlation data, timeframes, and percentile rankings of current moves vs historical ranges. State explicitly when historical context is unavailable.",
       "weight": 7,
       "addedSession": 1,
-      "lastModifiedSession": 1
+      "lastModifiedSession": 2
     },
     {
       "id": "r013",
@@ -103,10 +103,24 @@
       "weight": 8,
       "addedSession": 1,
       "lastModifiedSession": 1
+    },
+    {
+      "id": "r014",
+      "category": "confidence_methodology",
+      "description": "Confidence scores must be justified with specific criteria: technical confluence count (20%), macro environment alignment (30%), risk/reward ratio (25%), and invalidation clarity (25%). Document the calculation.",
+      "weight": 8,
+      "addedSession": 2,
+      "lastModifiedSession": 2
     }
   ],
-  "version": 3,
-  "lastUpdated": "2026-03-07T16:00:00.000Z",
-  "focusInstruments": ["NAS100", "EUR/USD", "GBP/JPY", "Gold", "BTC"],
-  "sessionNotes": "Last updated: Session #1 — foundational rules restored, session 1 learnings preserved as r011-r013"
+  "version": 4,
+  "lastUpdated": "2026-03-09T03:05:08.104Z",
+  "focusInstruments": [
+    "NAS100",
+    "EUR/USD",
+    "GBP/JPY",
+    "Gold",
+    "BTC"
+  ],
+  "sessionNotes": "Last updated: Session #2"
 }
