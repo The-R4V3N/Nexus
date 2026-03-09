@@ -39,12 +39,53 @@ function getRepo(): string {
   return process.env.GITHUB_REPOSITORY ?? "The-R4V3N/Nexus";
 }
 
+// ── Duplicate detection ─────────────────────────────────────
+
+function isDuplicate(
+  newTitle: string,
+  existingTasks: OpenSelfTask[]
+): boolean {
+  const normalize = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9]/g, " ").replace(/\s+/g, " ").trim();
+
+  const newNorm = normalize(newTitle);
+
+  for (const t of existingTasks) {
+    const existNorm = normalize(t.title);
+
+    // Exact match after normalization
+    if (newNorm === existNorm) return true;
+
+    // High word overlap (>70% of words shared)
+    const newWords  = new Set(newNorm.split(" "));
+    const existWords = new Set(existNorm.split(" "));
+    const shared = [...newWords].filter((w) => existWords.has(w) && w.length > 2).length;
+    const maxWords = Math.max(newWords.size, existWords.size);
+    if (maxWords > 0 && shared / maxWords > 0.7) return true;
+  }
+
+  return false;
+}
+
 // ── Create a self-task issue ───────────────────────────────
+
+let _cachedOpenTasks: OpenSelfTask[] | null = null;
+
+export function setCachedOpenTasks(tasks: OpenSelfTask[]): void {
+  _cachedOpenTasks = tasks;
+}
 
 export async function createSelfTask(
   task: SelfTask,
   sessionNumber: number
 ): Promise<number | null> {
+  // Dedup: skip if a similar task already exists
+  const existing = _cachedOpenTasks ?? await fetchOpenSelfTasks();
+  if (isDuplicate(task.title, existing)) {
+    console.log(`    ⏭ Skipped duplicate self-task: "${task.title}"`);
+    return null;
+  }
+
   const repo    = getRepo();
   const headers = getHeaders();
 

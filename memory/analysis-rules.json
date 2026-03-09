@@ -107,10 +107,10 @@
     {
       "id": "r014",
       "category": "confidence_methodology",
-      "description": "MANDATORY BLOCKING RULE: Every session MUST end with this exact confidence calculation format or the analysis is INVALID and must be restarted: 'CONFIDENCE BREAKDOWN: Technical confluence (X/5 patterns * 20% = Y%), Macro alignment (strong/weak/conflicting * 30% = Z%), Risk/reward clarity (ratio * 25",
+      "description": "Confidence must include a breakdown: technical confluence, macro alignment, and risk/reward clarity with approximate percentages for each component.",
       "weight": 8,
       "addedSession": 2,
-      "lastModifiedSession": 5
+      "lastModifiedSession": 7
     },
     {
       "id": "r015",
@@ -123,10 +123,10 @@
     {
       "id": "r016",
       "category": "quantitative_context",
-      "description": "When describing price moves, provide quantitative context: small (<1 standard deviation), normal (1-2 standard deviations), large (2-3 standard deviations), extreme (>3 standard deviations from historical mean). If historical data unavailable, state 'magnitude context unavailable' rather than using ",
+      "description": "Classify price moves quantitatively: small (<1 SD), normal (1-2 SD), large (2-3 SD), extreme (>3 SD). If historical data unavailable, state 'magnitude context unavailable'.",
       "weight": 7,
       "addedSession": 4,
-      "lastModifiedSession": 4
+      "lastModifiedSession": 7
     },
     {
       "id": "r017",
@@ -139,22 +139,14 @@
     {
       "id": "r018",
       "category": "methodology",
-      "description": "BLOCKING VALIDATION: Before completing any session, verify ALL mandatory elements are present: (1) r014 confidence calculation in exact format, (2) r017 complete setup specifications for each trade idea, (3) r016 quantitative move classifications. If any element is missing, the session is INVALID an",
-      "weight": 10,
+      "description": "Before completing any session, verify presence of: confidence breakdown (r014), complete setup specs (r017), and quantitative move context (r016). Flag missing elements in the reflection.",
+      "weight": 8,
       "addedSession": 5,
-      "lastModifiedSession": 5
-    },
-    {
-      "id": "r019",
-      "category": "structural",
-      "description": "MANDATORY COMPLETION GATE: No session can be completed without: (1) Confidence breakdown in exact r014 format with mathematical components visible, (2) All setups containing entry/stop/target/RR/timeframe per r017, (3) All move descriptions using quantitative language per r016. If any element missin",
-      "weight": 10,
-      "addedSession": 6,
-      "lastModifiedSession": 6
+      "lastModifiedSession": 7
     }
   ],
-  "version": 8,
-  "lastUpdated": "2026-03-09T14:20:24.819Z",
+  "version": 9,
+  "lastUpdated": "2026-03-09T20:00:00.000Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",

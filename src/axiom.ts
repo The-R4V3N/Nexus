@@ -196,8 +196,14 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
   ]
 }
 
-FORGE rules — IMPORTANT:
-- If you have open self-tasks, you MUST attempt to resolve them this session. Use codeChanges for anything requiring code, rules/prompt for analytical gaps.
+SELF-TASK POLICY — CRITICAL:
+- CLOSING existing self-tasks is ALWAYS higher priority than opening new ones.
+- Before opening ANY new self-task, check if a similar one already exists in your open self-tasks list.
+- If you have open self-tasks, you MUST attempt to resolve at least one this session — via codeChanges, rule updates, or resolvedSelfTasks.
+- Only open a new self-task if it covers a genuinely NEW gap not already tracked.
+- Set newSelfTasks to [] if you have 5+ open self-tasks already.
+
+FORGE rules:
 - Do NOT open new self-tasks for problems you can fix right now with codeChanges.
 - Be surgical: describe exactly which function to add/modify, what it should do, and what data it uses.
 - You can see the codebase above — use that context to write precise instructions.

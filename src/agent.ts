@@ -11,7 +11,7 @@ import * as path  from "path";
 import { format } from "date-fns";
 import { fetchAllMarkets, printMarketsTable }                     from "./markets";
 import { fetchCommunityIssues, formatIssuesForPrompt }             from "./issues";
-import { fetchOpenSelfTasks, formatSelfTasksForPrompt }           from "./self-tasks";
+import { fetchOpenSelfTasks, formatSelfTasksForPrompt, setCachedOpenTasks } from "./self-tasks";
 import { runOracleAnalysis }                                       from "./oracle";
 import { runAxiomReflection, initMemoryIfNeeded }                  from "./axiom";
 import { runForge, formatForgeResults }                             from "./forge";
@@ -19,6 +19,7 @@ import {
   buildJournalEntry,
   writeJournalMarkdown,
   updateGithubPages,
+  updateReadmeSessionsTable,
   loadAllJournalEntries,
   saveJournalEntry,
 } from "./journal";
@@ -141,6 +142,7 @@ export async function runSession(force = false): Promise<void> {
   let selfTaskNumbers: number[] = [];
   try {
     const selfTasks = await fetchOpenSelfTasks();
+    setCachedOpenTasks(selfTasks);
     selfTaskNumbers = selfTasks.map((t) => t.number);
     if (selfTasks.length > 0) {
       console.log(chalk.dim(`  Open self-tasks: `) + chalk.yellow(`${selfTasks.length} pending`));
@@ -258,8 +260,9 @@ export async function runSession(force = false): Promise<void> {
 
   const allEntries = loadAllJournalEntries();
   updateGithubPages(allEntries);
+  updateReadmeSessionsTable(allEntries);
 
-  journalSpinner.succeed(chalk.green("Journal written, GitHub Pages updated"));
+  journalSpinner.succeed(chalk.green("Journal written, GitHub Pages updated, README updated"));
   console.log(chalk.dim(`  Markdown: ${mdPath}`));
   console.log(chalk.dim(`  Site:     ${path.join(process.cwd(), "docs", "index.html")}\n`));
 

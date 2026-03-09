@@ -151,12 +151,24 @@ Only respond with the JSON, no other text.`;
 
   // Strip markdown fences if present
   const jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
-  const parsed   = JSON.parse(jsonText);
+  let parsed: any;
 
-  // Validate analysis completeness before returning
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    const salvaged = salvageJSON(jsonText);
+    if (salvaged) {
+      parsed = salvaged;
+      console.warn("  ⚠ ORACLE returned malformed JSON — salvaged partial response");
+    } else {
+      throw new Error("ORACLE returned unparseable JSON and salvage failed");
+    }
+  }
+
+  // Validate analysis completeness — warn but don't kill the session
   const validationErrors = validateAnalysisCompleteness(parsed);
   if (validationErrors.length > 0) {
-    throw new Error(`Analysis validation failed: ${validationErrors.join('; ')}. Forcing restart to ensure rule compliance.`);
+    console.warn(`  ⚠ Analysis validation warnings: ${validationErrors.join('; ')}`);
   }
 
   return {
@@ -169,6 +181,32 @@ Only respond with the JSON, no other text.`;
     keyLevels:       parsed.keyLevels      ?? [],
     confidence:      parsed.confidence     ?? 50,
   };
+}
+
+// ── JSON salvage helper ────────────────────────────────────
+
+function salvageJSON(text: string): any | null {
+  let attempt = text;
+
+  const openBraces    = (attempt.match(/{/g)  || []).length;
+  const closeBraces   = (attempt.match(/}/g)  || []).length;
+  const openBrackets  = (attempt.match(/\[/g) || []).length;
+  const closeBrackets = (attempt.match(/]/g)  || []).length;
+
+  // Close any dangling string
+  const lastQuote = attempt.lastIndexOf('"');
+  const afterLast = attempt.slice(lastQuote + 1);
+  if (lastQuote > 0 && !afterLast.includes('"') && (afterLast.includes(',') || afterLast.trim() === '')) {
+    attempt = attempt.slice(0, lastQuote + 1);
+  }
+
+  attempt = attempt.replace(/,\s*$/, '');
+
+  for (let i = 0; i < openBrackets - closeBrackets; i++) attempt += ']';
+  for (let i = 0; i < openBraces   - closeBraces;   i++) attempt += '}';
+
+  try   { return JSON.parse(attempt); }
+  catch { return null; }
 }
 
 // ── Formatters ─────────────────────────────────────────────

@@ -149,6 +149,41 @@ export function saveJournalEntry(entry: JournalEntry): void {
   fs.writeFileSync(stored, JSON.stringify(entries, null, 2));
 }
 
+// ── README sessions table auto-update ─────────────────────
+
+export function updateReadmeSessionsTable(entries: JournalEntry[]): void {
+  const readmePath = path.join(process.cwd(), "README.md");
+  if (!fs.existsSync(readmePath)) return;
+
+  let readme = fs.readFileSync(readmePath, "utf-8");
+
+  const tableHeader = "| # | Date | Bias | Setups | Confidence | Rule Δ |";
+  const tableSep    = "|---|------|------|--------|------------|--------|";
+  const tableEnd    = "*This table will be updated automatically each session.*";
+
+  const startIdx = readme.indexOf(tableHeader);
+  const endIdx   = readme.indexOf(tableEnd);
+  if (startIdx === -1 || endIdx === -1) return;
+
+  // Build table rows from last 10 sessions (newest first)
+  const recent = [...entries].sort((a, b) => b.sessionNumber - a.sessionNumber).slice(0, 10);
+  const rows = recent.map((e) => {
+    const bias   = e.fullAnalysis.bias.overall;
+    const setups = e.fullAnalysis.setups.length;
+    const conf   = e.fullAnalysis.confidence;
+    const rules  = e.ruleCount;
+    const date   = e.date.split(" ")[0];
+    return `| ${e.sessionNumber} | ${date} | ${bias} | ${setups} | ${conf}% | ${rules} rules |`;
+  });
+
+  const newTable = [tableHeader, tableSep, ...rows, ""].join("\n");
+  const before = readme.slice(0, startIdx);
+  const after  = readme.slice(endIdx);
+
+  readme = before + newTable + "\n" + after;
+  fs.writeFileSync(readmePath, readme);
+}
+
 // ── HTML helpers ──────────────────────────────────────────
 
 function escapeHTML(str: string): string {
