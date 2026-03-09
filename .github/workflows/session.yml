@@ -53,7 +53,7 @@ jobs:
         run: |
           git config user.name "NEXUS"
           git config user.email "nexus-bot@users.noreply.github.com"
-          git pull --rebase origin main
+          git pull --rebase --autostash origin main
           git add memory/ journal/ docs/ src/ README.md
           git diff --staged --quiet || git commit -m "session: $(date -u +'%Y-%m-%d %H:%M UTC') [${{ github.event_name }}]"
           git push
