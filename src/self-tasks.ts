@@ -48,14 +48,6 @@ export async function createSelfTask(
   const repo    = getRepo();
   const headers = getHeaders();
 
-  const emoji = {
-    "blind-spot":   "🕳️",
-    "bias":         "🧠",
-    "rule-gap":     "📋",
-    "new-concept":  "💡",
-    "correlation":  "🔗",
-  }[task.category];
-
   const body = `${task.body}
 
 ---
@@ -70,7 +62,7 @@ export async function createSelfTask(
       method: "POST",
       headers,
       body: JSON.stringify({
-        title:  `${emoji} [SELF-TASK] ${task.title}`,
+        title:  `[SELF-TASK] ${task.title}`,
         body,
         labels: ["nexus-self-task", task.category, `priority-${task.priority}`],
       }),
