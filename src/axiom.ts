@@ -198,8 +198,12 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
 
 SELF-TASK POLICY — CRITICAL:
 - CLOSING existing self-tasks is ALWAYS higher priority than opening new ones.
+- You can close a self-task in THREE ways:
+  1. codeChanges — if it needs a code fix
+  2. resolvedSelfTasks — if the gap is already addressed by an existing rule, prompt improvement, or this session's analysis
+  3. Rule update — if you modified/added a rule that covers the gap
+- If an open self-task describes an analytical gap and a corresponding rule already exists (e.g. "build confidence template" → r014 exists), CLOSE IT via resolvedSelfTasks with a comment explaining which rule addresses it.
 - Before opening ANY new self-task, check if a similar one already exists in your open self-tasks list.
-- If you have open self-tasks, you MUST attempt to resolve at least one this session — via codeChanges, rule updates, or resolvedSelfTasks.
 - Only open a new self-task if it covers a genuinely NEW gap not already tracked.
 - Set newSelfTasks to [] if you have 5+ open self-tasks already.
 

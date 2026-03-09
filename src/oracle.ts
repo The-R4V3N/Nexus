@@ -99,21 +99,40 @@ ${rulesText}
 ${communityIssues ? communityIssues + "\n\n" : ""}SESSION: #${sessionNumber}
 TIMESTAMP: ${new Date().toISOString()}
 
-Analyze the current market conditions. Follow your analysis rules and system instructions exactly.
-Respond in the following JSON structure:
+Analyze the current market conditions. Follow your analysis rules exactly.
+
+FORMAT REQUIREMENTS — your analysis MUST include these elements:
+
+1. NARRATIVE (analysis field): 3-5 paragraphs covering:
+   - Higher timeframe (daily) bias FIRST, then intraday (per r001)
+   - Quantify moves: "X moved Y pips/points/%" — not just "moved higher" (per r016)
+   - State DXY direction and its correlation impact (per r005)
+   - If attributing moves to events, say "assuming" or "if confirmed" (per r011)
+
+2. SETUPS: Every setup must have ALL fields filled — entry, stop, target, RR, timeframe.
+   If you can't specify precise levels, mark the setup as "incomplete" in the description.
+   If fewer than 2 confluences align, set confidence below 40 (per r010).
+
+3. CONFIDENCE: Include a breakdown in your analysis text:
+   "Confidence: X% — technical confluence (Y%), macro alignment (Z%), risk/reward clarity (W%)"
+
+4. BIAS: "mixed" requires specific justification — conflicting signals across 3+ asset classes
+   or correlation breakdown. Otherwise pick a direction (per r015).
+
+Respond in this JSON structure:
 
 {
-  "analysis": "Your full narrative market analysis (3-5 paragraphs)",
+  "analysis": "Full narrative with quantified moves, HTF-first structure, and confidence breakdown",
   "bias": {
     "overall": "bullish|bearish|neutral|mixed",
-    "notes": "Brief explanation of overall bias"
+    "notes": "Brief explanation — if mixed, state which signals conflict"
   },
   "setups": [
     {
       "instrument": "Name",
       "type": "FVG|OB|Liquidity Sweep|MSS|CISD|PDH/PDL|Other",
       "direction": "bullish|bearish|neutral",
-      "description": "What you see",
+      "description": "What you see and why — include confluences",
       "invalidation": "What would invalidate this",
       "entry": 1234.56,
       "stop": 1230.00,
