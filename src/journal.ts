@@ -316,7 +316,12 @@ function buildPageHTML(
     --grid:      rgba(245,166,35,0.04);
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; max-width: 100%; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
+    overflow-x: hidden;
+    width: 100%;
+  }
 
   body {
     background: var(--bg);
@@ -326,6 +331,10 @@ function buildPageHTML(
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 100%;
+    max-width: 100vw;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -358,7 +367,7 @@ function buildPageHTML(
     z-index: 0;
   }
 
-  .container { max-width: 1200px; margin: 0 auto; padding: 0 10px; position: relative; z-index: 1; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 10px; position: relative; z-index: 1; overflow-x: hidden; }
 
   /* ── Header (mobile-first) ── */
   header {
