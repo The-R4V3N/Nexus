@@ -143,10 +143,18 @@
       "weight": 8,
       "addedSession": 5,
       "lastModifiedSession": 7
+    },
+    {
+      "id": "r019",
+      "category": "systematic_analysis",
+      "description": "When primary data unavailable (DXY, VIX, etc.), automatically deploy r012 proxy measures in this order: (1) currency cross-rates, (2) sector rotation, (3) yield differentials, (4) volatility proxies. State which proxy used and confidence level.",
+      "weight": 8,
+      "addedSession": 18,
+      "lastModifiedSession": 18
     }
   ],
-  "version": 21,
-  "lastUpdated": "2026-03-10T19:26:44.431Z",
+  "version": 22,
+  "lastUpdated": "2026-03-10T21:07:06.562Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -154,5 +162,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #17"
+  "sessionNotes": "Last updated: Session #18"
 }
