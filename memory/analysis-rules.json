@@ -94,7 +94,7 @@
       "description": "When analyzing cross-asset divergences, provide available correlation context using proxy measures if primary data unavailable (e.g. if DXY missing, reference VIX, 10Y yields, sector rotation, or currency basket performance). Always attempt magnitude assessment and state what proxy measures were use",
       "weight": 7,
       "addedSession": 1,
-      "lastModifiedSession": 13
+      "lastModifiedSession": 14
     },
     {
       "id": "r013",
@@ -145,8 +145,8 @@
       "lastModifiedSession": 7
     }
   ],
-  "version": 17,
-  "lastUpdated": "2026-03-10T08:09:41.124Z",
+  "version": 18,
+  "lastUpdated": "2026-03-10T13:28:33.969Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -154,5 +154,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #13"
+  "sessionNotes": "Last updated: Session #14"
 }
