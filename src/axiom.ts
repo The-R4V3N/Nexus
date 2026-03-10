@@ -239,6 +239,8 @@ RULE POLICY — CRITICAL:
 - DO NOT create rules with words like MANDATORY, BLOCKING, INVALID, or MUST RESTART. Rules are guidelines, not kill switches.
 - DO NOT duplicate existing rules in different words. Before adding a rule, check your current rules list above.
 - If you have 15+ rules already, prefer modifying existing rules over adding new ones.
+- COOLDOWN: You cannot modify a rule that was modified within the last 3 sessions. If you try, it will be blocked. Focus on other improvements instead.
+- Max rule length is 500 characters. Keep rules concise — one clear idea per rule.
 - Be surgical. Quality over quantity.`;
 
   // Strip lone surrogates before serializing to JSON — broken emoji in issue titles

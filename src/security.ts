@@ -65,7 +65,7 @@ const LIMITS = {
     MAX_ISSUES_PER_SESSION:       5,
     MAX_SELF_TASKS_PER_SESSION:   2,
     MAX_TOTAL_ISSUE_CHARS:     4000,
-    MAX_RULE_LENGTH:            300,
+    MAX_RULE_LENGTH:            500,
     MAX_RULES_PER_SESSION:        2,
     MAX_OUTPUT_TOKENS:         4096,
     MIN_RULE_COUNT:               5,
@@ -250,7 +250,27 @@ export function sanitizeAxiomOutput(
     const safeUpdates: any[] = [];
     let   removalCount = 0;
 
+    // Load current rules for cooldown check
+    const COOLDOWN_SESSIONS = 3;
+    let currentRulesForCooldown: any[] = [];
+    try {
+        const rulesPath = require("path").join(process.cwd(), "memory", "analysis-rules.json");
+        const rulesData = JSON.parse(require("fs").readFileSync(rulesPath, "utf-8"));
+        currentRulesForCooldown = rulesData.rules ?? [];
+    } catch { /* ignore */ }
+
     for (const update of rawUpdates) {
+        // Block re-modifying a rule that was changed within the last N sessions
+        if (update.type === "modify") {
+            const existingRule = currentRulesForCooldown.find((r: any) => r.id === update.ruleId);
+            if (existingRule && existingRule.lastModifiedSession > 0 &&
+                sessionNumber - existingRule.lastModifiedSession < COOLDOWN_SESSIONS) {
+                blockedRules++;
+                warnings.push(`Blocked modification of ${update.ruleId} — cooldown (modified ${sessionNumber - existingRule.lastModifiedSession} session(s) ago, must wait ${COOLDOWN_SESSIONS})`);
+                continue;
+            }
+        }
+
         // Block removal of foundational rules
         if (update.type === "remove" && FOUNDATIONAL_RULE_IDS.has(update.ruleId)) {
             blockedRules++;

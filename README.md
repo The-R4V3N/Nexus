@@ -129,7 +129,7 @@ NEXUS is open to community input — but that input passes through a security la
 | Max new rules AXIOM can write per session | 2 |
 | Max self-tasks NEXUS can open per session | 2 |
 | Max FORGE code changes per session | 2 |
-| Max chars per rule | 300 |
+| Max chars per rule | 500 |
 | Min rules (cannot drop below) | 5 |
 | Max system prompt length | 8,000 chars |
 

@@ -109,12 +109,22 @@ FORMAT REQUIREMENTS — your analysis MUST include these elements:
    - State DXY direction and its correlation impact (per r005)
    - If attributing moves to events, say "assuming" or "if confirmed" (per r011)
 
-2. SETUPS: Every setup must have ALL fields filled — entry, stop, target, RR, timeframe.
-   If you can't specify precise levels, mark the setup as "incomplete" in the description.
+2. SETUPS: Every setup MUST have ALL numeric fields filled with REAL price levels:
+   - entry: actual price (e.g. 25050.00), NOT 0
+   - stop: actual price below/above entry
+   - target: actual price for profit target
+   - RR: calculated as |target - entry| / |entry - stop| (must be > 0)
+   - timeframe: one of "15m", "1H", "4H", "1D"
+   If you cannot determine precise levels for a setup, DO NOT include it. Only include setups
+   where you can specify all five fields. Fewer complete setups beats more incomplete ones.
    If fewer than 2 confluences align, set confidence below 40 (per r010).
 
-3. CONFIDENCE: Include a breakdown in your analysis text:
-   "Confidence: X% — technical confluence (Y%), macro alignment (Z%), risk/reward clarity (W%)"
+3. CONFIDENCE: Calculate using this formula — do NOT invent your own:
+   - Score three components independently (0-100 each):
+     technical confluence (TC), macro alignment (MA), risk/reward clarity (RR)
+   - Overall = (TC × 0.4) + (MA × 0.3) + (RR × 0.3), rounded to nearest integer
+   - Write in your analysis: "Confidence: X% — TC (Y%), MA (Z%), RR (W%)"
+   - Example: TC=70, MA=50, RR=60 → (70×0.4)+(50×0.3)+(60×0.3) = 28+15+18 = 61%
 
 4. BIAS: "mixed" requires specific justification — conflicting signals across 3+ asset classes
    or correlation breakdown. Otherwise pick a direction (per r015).
@@ -190,12 +200,31 @@ Only respond with the JSON, no other text.`;
     console.warn(`  ⚠ Analysis validation warnings: ${validationErrors.join('; ')}`);
   }
 
+  // Filter out setups with missing or zero numeric fields
+  const rawSetups = parsed.setups ?? [];
+  const validSetups = rawSetups.filter((s: any) => {
+    const hasEntry  = typeof s.entry  === "number" && s.entry  !== 0;
+    const hasStop   = typeof s.stop   === "number" && s.stop   !== 0;
+    const hasTarget = typeof s.target === "number" && s.target !== 0;
+    const hasRR     = typeof s.RR     === "number" && s.RR     > 0;
+    const hasTF     = typeof s.timeframe === "string" && s.timeframe.length > 0;
+    if (!hasEntry || !hasStop || !hasTarget || !hasRR || !hasTF) {
+      console.warn(`  ⚠ Dropped incomplete setup: ${s.instrument ?? "unknown"} (entry=${s.entry}, stop=${s.stop}, target=${s.target}, RR=${s.RR}, TF=${s.timeframe})`);
+      return false;
+    }
+    return true;
+  });
+
+  if (validSetups.length < rawSetups.length) {
+    console.warn(`  ⚠ ${rawSetups.length - validSetups.length} setup(s) dropped for missing entry/stop/target/RR/timeframe`);
+  }
+
   return {
     timestamp:       new Date(),
     sessionId,
     marketSnapshots: snapshots,
     analysis:        parsed.analysis,
-    setups:          parsed.setups         ?? [],
+    setups:          validSetups,
     bias:            parsed.bias           ?? { overall: "neutral", notes: "" },
     keyLevels:       parsed.keyLevels      ?? [],
     confidence:      parsed.confidence     ?? 50,

@@ -46,6 +46,11 @@ export interface TradingSetup {
   direction: "bullish" | "bearish" | "neutral";
   description: string;
   invalidation: string;
+  entry?: number;
+  stop?: number;
+  target?: number;
+  RR?: number;
+  timeframe?: string;
 }
 
 export interface MarketBias {

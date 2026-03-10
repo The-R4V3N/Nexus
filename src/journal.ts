@@ -721,6 +721,48 @@ function buildPageHTML(
   .entry:nth-child(3) { animation-delay: 0.15s; }
   .entry:nth-child(4) { animation-delay: 0.20s; }
   .entry:nth-child(5) { animation-delay: 0.25s; }
+
+  /* ── Mobile responsive ── */
+  .analysis-text, .evolution-text, .bias-note, .rule-reason {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  @media (max-width: 600px) {
+    body { font-size: 12px; }
+    .container { padding: 0 12px; }
+
+    header { padding: 24px 0 20px; }
+    h1 { font-size: 36px; }
+    .tagline { font-size: 11px; }
+
+    .status-grid {
+      grid-template-columns: repeat(3, 1fr);
+      min-width: auto;
+      width: 100%;
+    }
+    .stat-cell { padding: 8px 6px; }
+    .stat-label { font-size: 8px; }
+    .stat-val { font-size: 16px; }
+
+    .identity-strip { font-size: 10px; padding: 14px 0; }
+
+    .entry-header { padding: 14px 12px 12px 16px; }
+    .entry-title { font-size: 14px; }
+    .session-meta { gap: 8px; }
+
+    .bias-line { flex-wrap: wrap; }
+    .bias-note { font-size: 10px; }
+
+    .oracle-col, .axiom-col { padding: 14px 12px 14px 16px; }
+    .analysis-text, .evolution-text { font-size: 11px; line-height: 1.7; }
+
+    .setup-chip { font-size: 9px; padding: 2px 6px; }
+    .rule-update { flex-wrap: wrap; font-size: 9px; }
+    .rule-reason { flex-basis: 100%; }
+
+    footer { font-size: 9px; padding: 16px 0; }
+  }
 </style>
 </head>
 <body>
@@ -747,7 +789,7 @@ function buildPageHTML(
         </div>
         <div class="stat-cell">
           <span class="stat-label">last run</span>
-          <span class="stat-val" style="font-size:11px">${latestDate.split(" ")[0]}</span>
+          <span class="stat-val" style="font-size:11px">${latestDate.split(" ")[0]}<br>${latestDate.split(" ")[1] ?? ""}</span>
         </div>
         <div class="stat-cell">
           <span class="stat-label">bias</span>
