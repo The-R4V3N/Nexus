@@ -109,6 +109,39 @@ Recommendation: **Hybrid** — code finds FVGs and OBs mechanically, ORACLE deci
 
 ---
 
+## Cost Management Strategy
+
+### Current cost (~$11–16/month)
+- 3 API calls per session: ORACLE + AXIOM + FORGE (Sonnet for all)
+- ~4K output tokens, ~8-10K input tokens per call
+- ~$0.10–0.15 per session × 5/day × 22 weekdays
+
+### Projected cost with historical candles (~$33–55/month)
+- Input tokens jump significantly with candle data
+- ~$0.30–0.50 per session
+
+### Cost reduction strategies (implement as we scale)
+
+1. **Haiku for ORACLE, Sonnet for AXIOM** — market analysis is formulaic pattern matching, reflection needs deeper reasoning. Cuts ORACLE cost by ~80%.
+
+2. **Reduce sessions to 3/day** — Asia open (00:00 UTC), London open (08:00 UTC), NY open (13:00 UTC) are the three that matter most. Cuts cost by 40%.
+
+3. **Conditional FORGE** — only run FORGE API call when AXIOM actually produces code change requests. Currently runs every session regardless.
+
+4. **Cache candle data** — fetch historical candles once per day, reuse across sessions. Only fetch fresh current-session data each run.
+
+5. **Code-based pattern detection (critical for Phase 2)** — detect FVGs, order blocks, MSS in TypeScript before the prompt. Send ORACLE a summary like "3 bullish FVGs found on NAS100 1H at levels X, Y, Z" instead of raw candle data. Massively reduces input tokens — potentially 10x cheaper than sending raw candles.
+
+6. **Revenue model** — if NEXUS proves valuable, even $10/month from a handful of subscribers covers API costs. Potential models:
+   - GitHub Sponsors (already set up)
+   - Premium tier with alerts/notifications
+   - API access for other tools to consume NEXUS signals
+
+### Priority order
+Strategy 5 (code-based detection) is the highest priority — it's not just cheaper, it produces better results because the AI reasons about patterns, not raw data. Strategy 1 (Haiku for ORACLE) is the easiest quick win. Strategy 3 (conditional FORGE) is trivial to implement.
+
+---
+
 ## Future Ideas (not planned yet)
 - Real-time data via WebSocket for intraday sessions
 - Economic calendar integration (NFP, CPI, FOMC dates)
@@ -116,3 +149,4 @@ Recommendation: **Hybrid** — code finds FVGs and OBs mechanically, ORACLE deci
 - Multiple AI models — use different models for ORACLE vs AXIOM
 - Alert system — notify when a high-confidence setup is identified
 - Dashboard — real-time web UI showing current state and active setups
+- Subscription/API tier for traders who want NEXUS signals programmatically
