@@ -76,11 +76,14 @@ ${entry.fullAnalysis.bias.overall.toUpperCase()} — ${entry.fullAnalysis.bias.n
 ### Setups Identified (${entry.fullAnalysis.setups.length})
 
 ${entry.fullAnalysis.setups.length === 0 ? "_No high-probability setups this session._" :
-      entry.fullAnalysis.setups.map((s) => `
-**${s.instrument}** — ${s.type} (${s.direction.toUpperCase()})  
-${s.description}  
+      entry.fullAnalysis.setups.map((s: any) => {
+        const specs = s.entry ? `  \nEntry: **${s.entry}** | Stoploss: **${s.stop}** | Target: **${s.target}** | Risk/Reward: **${s.RR}** | Timeframe: **${s.timeframe}**` : "";
+        return `
+**${s.instrument}** — ${s.type} (${s.direction.toUpperCase()})
+${s.description}${specs}
 _Invalidated if: ${s.invalidation}_
-`).join("\n---\n")}
+`;
+      }).join("\n---\n")}
 
 ### Key Levels
 
@@ -205,12 +208,19 @@ function buildEntryHTML(entry: JournalEntry, index: number): string {
   const biasClass = escapeHTML(entry.fullAnalysis.bias.overall);
   const isFirst = index === 0; // newest entry starts expanded
 
-  const setupsHTML = entry.fullAnalysis.setups.map((s) => `
+  const setupsHTML = entry.fullAnalysis.setups.map((s: any) => {
+    const hasSpecs = s.entry && s.entry !== 0;
+    const specsLine = hasSpecs
+      ? `<div class="setup-specs">Entry: ${s.entry} &middot; Stoploss: ${s.stop} &middot; Target: ${s.target} &middot; Risk/Reward: ${s.RR} &middot; ${escapeHTML(s.timeframe ?? "")}</div>`
+      : "";
+    return `
     <div class="setup-chip ${escapeHTML(s.direction)}">
       <span class="setup-name">${escapeHTML(s.instrument)}</span>
       <span class="setup-type">${escapeHTML(s.type)}</span>
       <span class="setup-dir">${s.direction === "bullish" ? "&#x2191;" : s.direction === "bearish" ? "&#x2193;" : "&#x2014;"}</span>
-    </div>`).join("");
+      ${specsLine}
+    </div>`;
+  }).join("");
 
   const rulesHTML = entry.reflection.ruleUpdates.length > 0
     ? entry.reflection.ruleUpdates.map((u) => `
@@ -636,6 +646,18 @@ function buildPageHTML(
 
   .setup-chip.bullish .setup-dir { color: var(--green); }
   .setup-chip.bearish .setup-dir { color: var(--red); }
+
+  .setup-specs {
+    width: 100%;
+    font-size: 9px;
+    color: var(--amber-dim);
+    margin-top: 3px;
+    padding-top: 3px;
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.02em;
+  }
+
+  .setup-chip { flex-wrap: wrap; }
 
   .no-setup { font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
 
