@@ -2,7 +2,7 @@
 
 ## Current State (v1 — Sessions 1–17)
 
-NEXUS receives one **price snapshot** per instrument per session: price, previous close, change%, high, low, volume. It runs 5 sessions per day aligned to market opens.
+NEXUS receives one **price snapshot** per instrument per session: price, previous close, change%, high, low, volume. It runs 3 sessions per day aligned to major market opens (Asia, London, NY).
 
 ### What works now
 - Cross-asset sentiment analysis (risk-on/risk-off classification)
@@ -114,7 +114,7 @@ Recommendation: **Hybrid** — code finds FVGs and OBs mechanically, ORACLE deci
 ### Current cost (~$11–16/month)
 - 3 API calls per session: ORACLE + AXIOM + FORGE (Sonnet for all)
 - ~4K output tokens, ~8-10K input tokens per call
-- ~$0.10–0.15 per session × 5/day × 22 weekdays
+- ~$0.10–0.15 per session × 3/day × 22 weekdays
 
 ### Projected cost with historical candles (~$33–55/month)
 - Input tokens jump significantly with candle data

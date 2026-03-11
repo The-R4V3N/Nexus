@@ -217,7 +217,7 @@ export async function runSession(force = false): Promise<void> {
     console.log("");
   }
 
-  // ── Phase 3b: FORGE — code evolution ──
+  // ── Phase 3b: FORGE — code evolution (only runs when AXIOM requests changes) ──
   let forgeResults: import("./types").ForgeResult[] = [];
   if (axiomResult.forgeRequests.length > 0) {
     console.log(chalk.bold.yellow("  ── PHASE 3b: FORGE CODE EVOLUTION ──\n"));

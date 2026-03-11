@@ -64,14 +64,9 @@ function validateAnalysisCompleteness(analysis: any): string[] {
     });
   }
 
-  // 3. Check quantitative move classifications (r016 format)
-  if (analysis.analysis) {
-    const hasQuantitative = /\b(move|swing|impulse|retracement)\s+of\s+\d+(?:\.\d+)?\s*(pips?|points?|%|ticks?)\b/i.test(analysis.analysis);
-    if (!hasQuantitative) {
-      errors.push("Missing quantitative move classifications per r016 (must specify move sizes in pips/points/%)");
-    }
-  } else {
-    errors.push("Missing analysis text for quantitative classification check");
+  // 3. Basic analysis text check
+  if (!analysis.analysis) {
+    errors.push("Missing analysis text");
   }
 
   return errors;
@@ -105,7 +100,7 @@ FORMAT REQUIREMENTS — your analysis MUST include these elements:
 
 1. NARRATIVE (analysis field): 3-5 paragraphs covering:
    - Higher timeframe (daily) bias FIRST, then intraday (per r001)
-   - Quantify moves: "X moved Y pips/points/%" — not just "moved higher" (per r016)
+   - Quantify moves: "X moved Y pips/points/%" — not just "moved higher"
    - State DXY direction and its correlation impact (per r005)
    - If attributing moves to events, say "assuming" or "if confirmed" (per r011)
 
@@ -266,6 +261,7 @@ function formatRulesForPrompt(rules: AnalysisRules): string {
 
   const byCategory: Record<string, typeof rules.rules> = {};
   for (const r of rules.rules) {
+    if ((r as any).disabled) continue; // skip disabled rules
     if (!byCategory[r.category]) byCategory[r.category] = [];
     byCategory[r.category].push(r);
   }

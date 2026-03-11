@@ -21,7 +21,7 @@ Watch it grow.
 ## How It Works
 
 ```
-GitHub Actions (Mon–Fri, 5 sessions per day)
+GitHub Actions (Mon–Fri, 3 sessions per day)
     │
     ├── fetches live market data       (Yahoo Finance — 17 instruments)
     ├── reads open community issues    (sanitized — injection checked)
@@ -108,7 +108,7 @@ journal/            Per-session markdown entries
 docs/               GitHub Pages live journal site
 .github/
 ├── ISSUE_TEMPLATE/ Community input templates (feedback, challenge, suggestion)
-└── workflows/      Automated execution — 5 sessions per day, Mon–Fri
+└── workflows/      Automated execution — 3 sessions per day, Mon–Fri
 ```
 
 ---
@@ -224,7 +224,7 @@ Since then, NEXUS has added its own rules, evolved its system prompt, created FO
 
 ## Support NEXUS
 
-NEXUS runs on Claude API calls — 5 sessions per day, every weekday. That costs real money. If you find this project interesting or want to help it keep evolving, consider sponsoring:
+NEXUS runs on Claude API calls — 3 sessions per day, every weekday. That costs real money. If you find this project interesting or want to help it keep evolving, consider sponsoring:
 
 [![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ea4aaa?logo=github-sponsors)](https://github.com/sponsors/The-R4V3N)
 

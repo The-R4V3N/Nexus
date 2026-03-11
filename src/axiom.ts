@@ -145,10 +145,16 @@ ${oracle.setups.map((s: any) => {
 - All setups complete (entry/stop/target/RR/TF): ${oracle.setups.every((s: any) => (s as any).entry != null && (s as any).stop != null && (s as any).target != null && (s as any).RR != null && (s as any).timeframe) ? "YES — all " + oracle.setups.length + " setups have required fields" : "NO — some setups missing fields"}
 - Mixed bias justified: ${oracle.bias.overall !== "mixed" ? "N/A (bias is " + oracle.bias.overall + ")" : /conflict|divergen|breakdown/i.test(oracle.bias.notes) ? "YES" : "NO"}
 
-IMPORTANT: Base your reflection on the compliance check above, not on assumptions from previous sessions. If compliance says YES, acknowledge progress — do not repeat old criticisms.
+IMPORTANT ANTI-REPETITION RULES:
+- Base your reflection on the compliance check above, not on assumptions from previous sessions.
+- If compliance says YES, acknowledge progress — do not repeat old criticisms.
+- BEFORE writing your reflection, review the "Recent session history" below. If your reflection would say the same thing as a previous session, you MUST either (a) find a genuinely NEW insight, or (b) say "No new insights this session — market conditions and analysis quality unchanged."
+- DO NOT use these phrases (they have appeared in every recent session): "compliance evolution is complete", "analytical depth era", "next frontier", "systematic rigor". Find fresh language or say nothing.
+- If market data is substantially the same as the previous session, say so explicitly: "Market data largely unchanged from session #X — no new analysis warranted."
 
-### My current rules (${currentRules.rules.length} rules, v${currentRules.version}):
-${currentRules.rules.map((r) => `[${r.id}] [W:${r.weight}] ${r.description}`).join("\n")}
+### My current rules (${currentRules.rules.filter((r: any) => !r.disabled).length} active rules, v${currentRules.version}):
+${currentRules.rules.filter((r: any) => !r.disabled).map((r) => `[${r.id}] [W:${r.weight}] ${r.description}`).join("\n")}
+${currentRules.rules.filter((r: any) => r.disabled).length > 0 ? "\nDisabled rules (awaiting historical data): " + currentRules.rules.filter((r: any) => r.disabled).map((r) => r.id).join(", ") : ""}
 
 ### Recent session history:
 ${previousSessions || "No previous sessions."}
@@ -235,7 +241,7 @@ RULE POLICY — CRITICAL:
 - Rules r001–r010 are FOUNDATIONAL — you can modify their wording but you CANNOT remove them.
 - When adding new rules, use IDs that continue from the highest existing ID.
 - Only create new rules if the session revealed a genuine gap not covered by ANY existing rule.
-- DO NOT create "meta-rules" that just enforce other rules (e.g. "verify r014/r016/r017 are followed"). That is validation logic, not an analysis rule. If you want validation, use codeChanges instead.
+- DO NOT create "meta-rules" that just enforce other rules. This includes: rules that reference another rule by ID (e.g. "deploy r012", "per r016"), rules that say "verify/check/ensure rule X is followed", and rules whose only purpose is to add process around an existing rule. That is validation logic, not an analysis rule. If you want validation, use codeChanges instead.
 - DO NOT create rules with words like MANDATORY, BLOCKING, INVALID, or MUST RESTART. Rules are guidelines, not kill switches.
 - DO NOT duplicate existing rules in different words. Before adding a rule, check your current rules list above.
 - If you have 15+ rules already, prefer modifying existing rules over adding new ones.

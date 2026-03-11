@@ -126,7 +126,9 @@
       "description": "Classify price moves quantitatively: small (<1 SD), normal (1-2 SD), large (2-3 SD), extreme (>3 SD). If historical data unavailable, state 'magnitude context unavailable'.",
       "weight": 7,
       "addedSession": 4,
-      "lastModifiedSession": 7
+      "lastModifiedSession": 7,
+      "disabled": true,
+      "disabledReason": "Requires historical candle data (Phase 1 of roadmap) — re-enable when OHLCV data is available"
     },
     {
       "id": "r017",
@@ -139,7 +141,7 @@
     {
       "id": "r018",
       "category": "methodology",
-      "description": "Before completing any session, verify presence of: confidence breakdown (r014), complete setup specs (r017), and quantitative move context (r016). Flag missing elements in the reflection.",
+      "description": "Before completing any session, verify presence of: confidence breakdown (r014), complete setup specs (r017). Flag missing elements in the reflection.",
       "weight": 8,
       "addedSession": 5,
       "lastModifiedSession": 7
@@ -150,7 +152,9 @@
       "description": "When primary data unavailable (DXY, VIX, etc.), automatically deploy r012 proxy measures in this order: (1) currency cross-rates, (2) sector rotation, (3) yield differentials, (4) volatility proxies. State which proxy used and confidence level.",
       "weight": 8,
       "addedSession": 18,
-      "lastModifiedSession": 18
+      "lastModifiedSession": 18,
+      "disabled": true,
+      "disabledReason": "Meta-rule that just references r012 — creates self-criticism loops without adding value"
     },
     {
       "id": "r020",
@@ -158,7 +162,9 @@
       "description": "When stating moves as 'normal', 'large', or 'extreme' per r016, attempt to provide statistical anchor: either reference recent X-day volatility ranges, compare to typical session ranges for that instrument, or state 'historical context unavailable' if data insufficient. Never use magnitude descriptors in isolation.",
       "weight": 7,
       "addedSession": 20,
-      "lastModifiedSession": 20
+      "lastModifiedSession": 20,
+      "disabled": true,
+      "disabledReason": "Depends on r016 which requires historical candle data — re-enable when Phase 1 is implemented"
     }
   ],
   "version": 26,

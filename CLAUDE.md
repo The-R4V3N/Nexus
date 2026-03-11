@@ -2,7 +2,7 @@
 
 ## What This Is
 
-NEXUS is a self-evolving market intelligence AI. It runs 5 automated sessions per day (Mon-Fri, aligned to market opens via GitHub Actions) that analyze 17 financial instruments using ICT methodology, then reflects on its own reasoning, rewrites its own rules and system prompt, and can even rewrite its own source code.
+NEXUS is a self-evolving market intelligence AI. It runs 3 automated sessions per day (Mon-Fri, aligned to market opens via GitHub Actions) that analyze 17 financial instruments using ICT methodology, then reflects on its own reasoning, rewrites its own rules and system prompt, and can even rewrite its own source code.
 
 ## Architecture
 
