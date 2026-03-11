@@ -151,10 +151,18 @@
       "weight": 8,
       "addedSession": 18,
       "lastModifiedSession": 18
+    },
+    {
+      "id": "r020",
+      "category": "statistical_context",
+      "description": "When stating moves as 'normal', 'large', or 'extreme' per r016, attempt to provide statistical anchor: either reference recent X-day volatility ranges, compare to typical session ranges for that instrument, or state 'historical context unavailable' if data insufficient. Never use magnitude descriptors in isolation.",
+      "weight": 7,
+      "addedSession": 20,
+      "lastModifiedSession": 20
     }
   ],
-  "version": 23,
-  "lastUpdated": "2026-03-11T00:19:35.119Z",
+  "version": 24,
+  "lastUpdated": "2026-03-11T08:10:16.899Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -162,5 +170,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #19"
+  "sessionNotes": "Last updated: Session #20"
 }
