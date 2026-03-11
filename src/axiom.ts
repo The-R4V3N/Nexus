@@ -266,7 +266,18 @@ RULE POLICY — CRITICAL:
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  const jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
+  let jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
+
+  // Extract JSON object if model returned text around it
+  const firstBrace = jsonText.indexOf("{");
+  const lastBrace  = jsonText.lastIndexOf("}");
+  if (firstBrace > 0 || (lastBrace !== -1 && lastBrace < jsonText.length - 1)) {
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      console.warn("  ⚠ AXIOM returned text around JSON — extracting object");
+      jsonText = jsonText.slice(firstBrace, lastBrace + 1);
+    }
+  }
+
   let rawParsed: any;
 
   try {

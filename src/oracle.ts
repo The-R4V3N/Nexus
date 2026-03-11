@@ -173,8 +173,19 @@ Only respond with the JSON, no other text.`;
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  // Strip markdown fences if present
-  const jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
+  // Extract JSON from response — handle markdown fences, preamble text, trailing text
+  let jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
+
+  // If the response has text before/after the JSON, extract just the JSON object
+  const firstBrace = jsonText.indexOf("{");
+  const lastBrace  = jsonText.lastIndexOf("}");
+  if (firstBrace > 0 || (lastBrace !== -1 && lastBrace < jsonText.length - 1)) {
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      console.warn("  ⚠ ORACLE returned text around JSON — extracting object");
+      jsonText = jsonText.slice(firstBrace, lastBrace + 1);
+    }
+  }
+
   let parsed: any;
 
   try {
@@ -185,6 +196,8 @@ Only respond with the JSON, no other text.`;
       parsed = salvaged;
       console.warn("  ⚠ ORACLE returned malformed JSON — salvaged partial response");
     } else {
+      // Log first 500 chars for debugging
+      console.error(`  ✗ ORACLE raw response (first 500 chars): ${rawText.slice(0, 500)}`);
       throw new Error("ORACLE returned unparseable JSON and salvage failed");
     }
   }
