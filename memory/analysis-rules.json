@@ -91,10 +91,10 @@
     {
       "id": "r012",
       "category": "technical_precision",
-      "description": "When analyzing cross-asset divergences, use proxy measures if primary data unavailable (e.g. if DXY missing, reference VIX, 10Y yields, sector rotation, or currency basket performance). Always attempt magnitude assessment using available data and state which proxy measures were used or why none were available.",
+      "description": "When analyzing cross-asset divergences, use proxy measures if primary data unavailable (e.g. if DXY missing, reference VIX, 10Y yields, sector rotation, or currency basket performance). Always attempt magnitude assessment using available data, state which proxy measures were used, and quantify the divergence relative to historical norms or provide directional context.",
       "weight": 7,
       "addedSession": 1,
-      "lastModifiedSession": 14
+      "lastModifiedSession": 19
     },
     {
       "id": "r013",
@@ -153,8 +153,8 @@
       "lastModifiedSession": 18
     }
   ],
-  "version": 22,
-  "lastUpdated": "2026-03-10T21:07:06.562Z",
+  "version": 23,
+  "lastUpdated": "2026-03-11T00:19:35.119Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -162,5 +162,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #18"
+  "sessionNotes": "Last updated: Session #19"
 }
