@@ -167,8 +167,8 @@
       "disabledReason": "Depends on r016 which requires historical candle data — re-enable when Phase 1 is implemented"
     }
   ],
-  "version": 28,
-  "lastUpdated": "2026-03-12T00:19:10.227Z",
+  "version": 29,
+  "lastUpdated": "2026-03-12T08:11:30.260Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -176,5 +176,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #24"
+  "sessionNotes": "Last updated: Session #25"
 }
