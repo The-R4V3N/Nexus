@@ -104,7 +104,9 @@ export async function runAxiomReflection(
   previousSessions:       string,
   communityIssues:        string = "",
   openSelfTasksText:      string = "",
-  openSelfTaskNumbers:    number[] = []
+  openSelfTaskNumbers:    number[] = [],
+  noChangeStreak:         number = 0,
+  setupOutcomes:          string = ""
 ): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
   const currentSystemPrompt = fs.existsSync(SYSTEM_PROMPT_PATH)
     ? fs.readFileSync(SYSTEM_PROMPT_PATH, "utf-8")
@@ -163,6 +165,14 @@ ${communityIssues ? "### Community input this session:\n" + communityIssues : "#
 
 ${openSelfTasksText ? openSelfTasksText : "### My open self-tasks: none."}
 
+${setupOutcomes ? "### Setup outcome tracking:\n" + setupOutcomes : ""}
+
+${noChangeStreak >= 3 ? `### STAGNATION ALERT
+You have not modified any rules in ${noChangeStreak} consecutive sessions.
+Your self-critiques are repeating without action. This session, you MUST propose
+at least ONE concrete change — a rule weight adjustment, wording refinement,
+new rule, system prompt addition, or code change. Reflection without action is not evolution.
+` : ""}
 ### Codebase context (so you can write precise codeChanges):
 ${buildCodebaseContext(openSelfTasksText)}
 
@@ -244,7 +254,7 @@ RULE POLICY — CRITICAL:
 - DO NOT create "meta-rules" that just enforce other rules. This includes: rules that reference another rule by ID (e.g. "deploy r012", "per r016"), rules that say "verify/check/ensure rule X is followed", and rules whose only purpose is to add process around an existing rule. That is validation logic, not an analysis rule. If you want validation, use codeChanges instead.
 - DO NOT create rules with words like MANDATORY, BLOCKING, INVALID, or MUST RESTART. Rules are guidelines, not kill switches.
 - DO NOT duplicate existing rules in different words. Before adding a rule, check your current rules list above.
-- If you have 15+ rules already, prefer modifying existing rules over adding new ones.
+- If you have 25+ rules already, prefer modifying existing rules over adding new ones.
 - COOLDOWN: You cannot modify a rule that was modified within the last 3 sessions. If you try, it will be blocked. Focus on other improvements instead.
 - Max rule length is 500 characters. Keep rules concise — one clear idea per rule.
 - Be surgical. Quality over quantity.`;
@@ -405,6 +415,7 @@ async function evolveMemory(
 
   // ── Update rules ──
   const updatedRules = { ...currentRules };
+  let rulesChanged = false;
 
   if (axiomOutput.ruleUpdates) {
     for (const update of axiomOutput.ruleUpdates) {
@@ -413,12 +424,14 @@ async function evolveMemory(
 
       if (update.type === "remove") {
         updatedRules.rules.splice(idx, 1);
+        rulesChanged = true;
       } else if (update.type === "modify" && update.after) {
         updatedRules.rules[idx] = {
           ...updatedRules.rules[idx],
           description:          update.after,
           lastModifiedSession:  sessionNumber,
         };
+        rulesChanged = true;
       }
     }
   }
@@ -434,13 +447,16 @@ async function evolveMemory(
           addedSession:        sessionNumber,
           lastModifiedSession: sessionNumber,
         });
+        rulesChanged = true;
       }
     }
   }
 
-  updatedRules.version     = currentRules.version + 1;
-  updatedRules.lastUpdated = new Date().toISOString();
-  updatedRules.sessionNotes= `Last updated: Session #${sessionNumber}`;
+  if (rulesChanged) {
+    updatedRules.version     = currentRules.version + 1;
+    updatedRules.lastUpdated = new Date().toISOString();
+    updatedRules.sessionNotes= `Last updated: Session #${sessionNumber}`;
+  }
 
   fs.writeFileSync(ANALYSIS_RULES_PATH, JSON.stringify(updatedRules, null, 2));
 

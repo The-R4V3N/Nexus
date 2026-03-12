@@ -40,15 +40,97 @@ function getSessionNumber(): number {
 }
 
 function buildPreviousSessionsContext(): string {
-  const entries = loadAllJournalEntries().slice(-3); // last 3
-  if (entries.length === 0) return "";
+  const allEntries = loadAllJournalEntries();
+  const recent = allEntries.slice(-3); // last 3
+  if (recent.length === 0) return "";
 
-  return entries
-    .map(
-      (e) =>
-        `Session #${e.sessionNumber} (${e.date}): ${e.oracleSummary}\nReflection: ${e.axiomSummary}`
-    )
-    .join("\n\n");
+  // Count consecutive sessions with zero rule changes (from most recent backwards)
+  let noChangeStreak = 0;
+  for (let i = allEntries.length - 1; i >= 0; i--) {
+    const ruleUpdates = allEntries[i].reflection?.ruleUpdates ?? [];
+    if (ruleUpdates.length === 0) {
+      noChangeStreak++;
+    } else {
+      break;
+    }
+  }
+
+  const sessionLines = recent.map((e) => {
+    const ruleChangeCount = e.reflection?.ruleUpdates?.length ?? 0;
+    return `Session #${e.sessionNumber} (${e.date}): ${e.oracleSummary}\nReflection: ${e.axiomSummary}\nRule changes this session: ${ruleChangeCount}`;
+  }).join("\n\n");
+
+  const streakLine = `\n\nEvolution status: ${noChangeStreak} consecutive session(s) with ZERO rule changes.`;
+
+  return sessionLines + streakLine;
+}
+
+function getNoChangeStreak(): number {
+  const allEntries = loadAllJournalEntries();
+  let streak = 0;
+  for (let i = allEntries.length - 1; i >= 0; i--) {
+    const ruleUpdates = allEntries[i].reflection?.ruleUpdates ?? [];
+    if (ruleUpdates.length === 0) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function buildSetupOutcomes(snapshots: import("./types").MarketSnapshot[]): string {
+  const allEntries = loadAllJournalEntries();
+  if (allEntries.length === 0) return "";
+
+  const lastEntry = allEntries[allEntries.length - 1];
+  const setups = lastEntry.fullAnalysis?.setups;
+  if (!setups || setups.length === 0) return "";
+
+  // Build a price lookup from current snapshots
+  const priceMap: Record<string, number> = {};
+  for (const snap of snapshots) {
+    priceMap[snap.symbol] = snap.price;
+    priceMap[snap.name] = snap.price;
+    // Also store lowercase name for fuzzy matching
+    priceMap[snap.name.toLowerCase()] = snap.price;
+  }
+
+  const lines: string[] = [];
+  for (const setup of setups) {
+    // Try to find current price by instrument name or symbol
+    const currentPrice = priceMap[setup.instrument]
+      ?? priceMap[setup.instrument.toLowerCase()]
+      ?? null;
+
+    if (currentPrice === null || setup.entry == null) continue;
+
+    const direction = setup.direction ?? "unknown";
+    const entry  = setup.entry;
+    const stop   = setup.stop;
+    const target = setup.target;
+
+    let status = "UNKNOWN";
+    if (stop != null && target != null) {
+      if (direction === "bullish") {
+        if (currentPrice <= stop)        status = "STOPPED OUT";
+        else if (currentPrice >= target) status = "TARGET HIT";
+        else                             status = "OPEN";
+      } else if (direction === "bearish") {
+        if (currentPrice >= stop)        status = "STOPPED OUT";
+        else if (currentPrice <= target) status = "TARGET HIT";
+        else                             status = "OPEN";
+      }
+    }
+
+    lines.push(
+      `Previous session setup: ${setup.instrument} ${direction.toUpperCase()} ` +
+      `entry ${entry}, stop ${stop ?? "N/A"}, target ${target ?? "N/A"}. ` +
+      `Current price: ${currentPrice}. Status: ${status}`
+    );
+  }
+
+  return lines.length > 0 ? lines.join("\n") : "";
 }
 
 function loadRules(): AnalysisRules {
@@ -197,7 +279,9 @@ export async function runSession(force = false): Promise<void> {
   const prevContext = buildPreviousSessionsContext();
 
   try {
-    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, selfTaskNumbers);
+    const noChangeStreak = getNoChangeStreak();
+    const setupOutcomes  = buildSetupOutcomes(snapshots);
+    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, selfTaskNumbers, noChangeStreak, setupOutcomes);
     reflection = axiomResult.reflection;
     axiomSpinner.succeed(
       chalk.green(`Reflection complete — ${reflection.ruleUpdates.length} rule updates, mind evolved`)
