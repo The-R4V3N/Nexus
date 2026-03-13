@@ -1,0 +1,12 @@
+[
+  {
+    "sessionNumber": 30,
+    "timestamp": "2026-03-13T17:52:58.041Z",
+    "phase": "oracle",
+    "errors": [
+      "Error: ORACLE returned unparseable JSON and salvage failed"
+    ],
+    "warnings": [],
+    "action": "skipped"
+  }
+]
