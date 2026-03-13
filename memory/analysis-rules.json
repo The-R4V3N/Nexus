@@ -173,10 +173,18 @@
       "weight": 8,
       "addedSession": 27,
       "lastModifiedSession": 27
+    },
+    {
+      "id": "r022",
+      "category": "confidence_calibration",
+      "description": "Technical confluence scoring: 1 confluence=20%, 2=40%, 3=60%, 4+=80%. Confluences include: trend alignment, structure break, liquidity level, volume confirmation, momentum divergence, key level test. Score only verified confluences, not assumptions.",
+      "weight": 9,
+      "addedSession": 28,
+      "lastModifiedSession": 28
     }
   ],
-  "version": 31,
-  "lastUpdated": "2026-03-13T00:22:09.094Z",
+  "version": 32,
+  "lastUpdated": "2026-03-13T08:10:50.649Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -184,5 +192,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #27"
+  "sessionNotes": "Last updated: Session #28"
 }
