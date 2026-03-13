@@ -9,10 +9,11 @@ NEXUS is a self-evolving market intelligence AI. It runs 3 automated sessions pe
 ```
 src/
   index.ts        CLI entry point (commander)
-  agent.ts        Session orchestrator — runs the full pipeline
+  agent.ts        Session orchestrator — runs the full defensive pipeline
   oracle.ts       Market analysis engine (calls Claude API with ICT methodology)
   axiom.ts        Self-reflection engine — rewrites rules + system prompt
   forge.ts        Code evolution engine (self-modifying source via Claude API)
+  validate.ts     Quality gates — ORACLE + AXIOM output validation, recycled content detection
   markets.ts      Live data via Yahoo Finance v8 API (no package, raw HTTP)
   issues.ts       Community GitHub issues reader (nexus-input label)
   self-tasks.ts   Autonomous issue creation + resolution (nexus-self-task label, with dedup)
@@ -24,21 +25,29 @@ memory/           NEXUS's evolving mind (committed to git)
   system-prompt.md    Base + evolved system prompt (grows each session, capped at 8000 chars)
   analysis-rules.json Evolving ruleset (JSON, versioned)
   sessions.json       Full session history (array of JournalEntry)
+  failures.json       Persistent failure log (capped at 20, fed back to AXIOM)
 
 journal/          Per-session markdown files
 docs/             GitHub Pages site (index.html regenerated each session)
+NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM prompt)
 ```
 
 ## Session Pipeline
 
-1. **Market Data** — `fetchAllMarkets()` pulls 17 instruments from Yahoo Finance
-2. **Community Issues** — fetches GitHub issues labeled `nexus-input`, sanitized through security
-3. **Self-Tasks** — fetches open issues labeled `nexus-self-task` (deduplicated)
-4. **ORACLE** — Claude API call with market data + rules + system prompt → structured JSON analysis (rules embedded in prompt)
-5. **AXIOM** — Claude API call reflecting on ORACLE's output → rule updates, new rules, system prompt additions, self-tasks, FORGE change requests. Includes compliance check summary to prevent stale self-criticism.
-6. **FORGE** — Applies AXIOM's code change requests. Patches `src/` files via Claude API, validates with `tsc`, reverts on failure. Protected files: `security.ts`, `forge.ts`, `session.yml`, `README.md`. Max 2 changes per session. Code changes go through PRs, not direct main commits.
-7. **Journal** — writes markdown + updates GitHub Pages HTML + auto-updates README sessions table
-8. **Commit** — GitHub Actions commits memory/journal/docs changes to main; FORGE src/ changes go to a dedicated branch with a PR
+1. **Pre-flight Check** — `tsc --noEmit` validates the codebase compiles before anything runs
+2. **Git Snapshot** — captures `HEAD` SHA for session-level rollback on unhandled crashes
+3. **Market Data** — `fetchAllMarkets()` pulls 17 instruments from Yahoo Finance
+4. **Community Issues** — fetches GitHub issues labeled `nexus-input`, sanitized through security
+5. **Self-Tasks** — fetches open issues labeled `nexus-self-task` (deduplicated)
+6. **ORACLE** — Claude API call with market data + rules + system prompt → structured JSON analysis (rules embedded in prompt). Max 8192 output tokens. Truncated responses are salvaged via field-boundary cut points.
+7. **ORACLE Validation Gate** — `validateOracleOutput()` checks analysis length, confidence range, bias validity, setup sanity, and recycled content detection (>80% Jaccard similarity blocks). Session halts on failure.
+8. **AXIOM** — Claude API call reflecting on ORACLE's output → rule updates, new rules, system prompt additions, self-tasks, FORGE change requests. Receives failure history (last 5 failures from `memory/failures.json`), setup outcome tracking (previous setups vs current prices), stagnation alerts (when 3+ consecutive sessions have zero rule changes), and NEXUS_IDENTITY.md as constitutional context.
+9. **AXIOM Validation Gate** — `validateAxiomOutput()` checks required fields, array types, recycled reflection detection (>70%), and rule ID format. Falls back to empty reflection on failure.
+10. **FORGE** — Applies AXIOM's code change requests. Patches `src/` files via Claude API, validates with `tsc`, reverts on failure. Protected files: `security.ts`, `forge.ts`, `session.yml`, `README.md`. Max 2 changes per session, max 200 lines per patch. Code changes go through PRs, not direct main commits.
+11. **FORGE Protected File Enforcement** — `git diff` verifies no protected files were modified after FORGE runs
+12. **Journal** — writes markdown + updates GitHub Pages HTML + auto-updates README sessions table
+13. **Commit** — GitHub Actions commits memory/journal/docs changes to main; FORGE src/ changes go to a dedicated branch with a PR
+14. **Crash Rollback** — on unhandled exceptions, `git checkout -- .` reverts to the pre-session snapshot and the failure is logged to `memory/failures.json`
 
 ## Key Design Decisions
 
@@ -53,13 +62,21 @@ docs/             GitHub Pages site (index.html regenerated each session)
 - **Self-task deduplication** — normalized word overlap (>70%) prevents duplicate issues from being created
 - **FORGE code changes go through PRs** — src/ changes are committed to a dedicated branch and a PR is opened for review, not pushed directly to main
 - **README.md is FORGE-protected** — FORGE cannot modify the README to prevent formatting damage
+- **Constitutional identity** — `NEXUS_IDENTITY.md` defines immutable boundaries; loaded into AXIOM's system prompt, protected from modification by FORGE and GitHub Actions
+- **Quality gates** — ORACLE and AXIOM outputs are validated before entering memory; recycled content is detected via Jaccard word-overlap similarity
+- **Session-level rollback** — unhandled crashes revert all uncommitted changes via `git checkout -- .`
+- **Failure feedback loop** — `memory/failures.json` stores recent failures (capped at 20) and feeds them back into AXIOM context so NEXUS learns from its own crashes
+- **Stagnation detection** — consecutive no-change streaks are counted from session history; 3+ triggers a mandatory evolution alert in AXIOM's prompt
+- **Setup outcome tracking** — previous session setups are compared against current market prices to report STOPPED OUT / TARGET HIT / OPEN outcomes
+- **Conditional version bumps** — `analysis-rules.json` version and lastUpdated only change when rules actually change, preventing false evolution signals
+- **GitHub Actions retry** — session step retries once with a 2-minute backoff on failure
 
 ## Security Model
 
 All external input passes through `security.ts` before reaching the AI:
 
 - **Prompt injection**: 20+ regex patterns block classic attacks (instruction override, role hijack, jailbreak tokens)
-- **Cost limits**: max 5 issues, 4000 total chars, 4096 output tokens per API call, max 2 FORGE changes per session
+- **Cost limits**: max 5 issues, 4000 total chars, 8192 output tokens for ORACLE, max 2 FORGE changes per session, max 200 lines per FORGE patch
 - **AXIOM output sanitization**: new rules checked for injection, weights clamped 1-10, self-task categories/priorities validated against allowlists
 - **Meta-rule blocking**: rules referencing 2+ other rules with enforcement keywords are blocked to prevent self-referential spirals
 - **Self-task deduplication**: normalized word overlap >70% prevents duplicate issues

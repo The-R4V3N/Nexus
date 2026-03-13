@@ -27,9 +27,11 @@ GitHub Actions (Mon–Fri, 3 sessions per day)
     ├── reads open community issues    (sanitized — injection checked)
     ├── reads open self-tasks          (NEXUS's own to-do list)
     │
+    ├── 🔒 PRE-FLIGHT — TypeScript compilation check before anything runs
+    │
     ├── 🛡️  SECURITY — all external input sanitized before touching the AI
     │       prompt injection detection (20+ patterns)
-    │       max 5 issues · max 4,000 chars total · max 4,096 output tokens
+    │       max 5 issues · max 4,000 chars total · max 8,192 ORACLE tokens
     │       foundational rules (r001–r010) protected from deletion
     │       system prompt capped at 8,000 chars (oldest sections pruned)
     │       every new rule and self-task validated before written to memory
@@ -37,6 +39,9 @@ GitHub Actions (Mon–Fri, 3 sessions per day)
     ├── 🔭 ORACLE — analyzes market structure
     │       bias, FVGs, order blocks, liquidity sweeps, setups
     │       confidence score 0–100
+    │       truncated JSON salvaged via field-boundary cut points
+    │   ✅ ORACLE VALIDATION GATE — blocks bad analysis from entering memory
+    │       recycled content detection (>80% similarity = blocked)
     │
     ├── 🧠 AXIOM — reflects on its own reasoning
     │       what worked, what failed, what biases appeared
@@ -44,17 +49,24 @@ GitHub Actions (Mon–Fri, 3 sessions per day)
     │       appends to memory/system-prompt.md
     │       opens GitHub issues for gaps too big to fix in one session
     │       closes issues it has resolved
+    │       receives failure history + setup outcomes + stagnation alerts
+    │       constitutional identity (NEXUS_IDENTITY.md) loaded into prompt
+    │   ✅ AXIOM VALIDATION GATE — blocks recycled reflections
     │
     ├── ⚒️  FORGE — rewrites its own source code
     │       receives change requests from AXIOM
-    │       patches src/ files via Claude API
+    │       patches src/ files via Claude API (max 200 lines per patch)
     │       validates with tsc, reverts on failure
     │       protected files (security.ts, forge.ts, README.md) can never be touched
+    │       post-FORGE git diff enforces protected file integrity
     │
-    └── 📓 JOURNAL — writes session markdown
-            regenerates GitHub Pages site
-            updates README sessions table
-            commits everything and pushes
+    ├── 📓 JOURNAL — writes session markdown
+    │       regenerates GitHub Pages site
+    │       updates README sessions table
+    │       commits everything and pushes
+    │
+    └── 🔄 CRASH ROLLBACK — on failure, reverts to pre-session state
+            failure logged to memory/failures.json (fed back to AXIOM next session)
 ```
 
 The entire cognitive history is in the git log. Every rule change is versioned. The mind is open source.
@@ -77,9 +89,9 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 
 **ORACLE** applies ICT (Inner Circle Trader) methodology — fair value gaps, order blocks, liquidity sweeps, market structure shifts, session ranges. It identifies the highest-probability setup, states a directional bias, and rates its own confidence from 0–100.
 
-**AXIOM** is the part nobody else builds. After every session it asks: *what biases infected my reasoning? what rule is wrong? what am I missing?* Then it edits its own rulebook. After 50 sessions, `memory/` in this repo is a visible record of an AI mind developing real domain expertise — not from training, but from iterative self-reflection.
+**AXIOM** is the part nobody else builds. After every session it asks: *what biases infected my reasoning? what rule is wrong? what am I missing?* Then it edits its own rulebook. It receives failure history from past crashes, outcome tracking from previous setups, and stagnation alerts when it hasn't evolved in 3+ sessions — so it's always grounded in real results. Its identity is anchored by `NEXUS_IDENTITY.md`, a constitutional document it cannot modify. After 50 sessions, `memory/` in this repo is a visible record of an AI mind developing real domain expertise — not from training, but from iterative self-reflection.
 
-**FORGE** is the code evolution engine. When AXIOM identifies a gap that requires a code change — not just a rule tweak — it sends a precise change request to FORGE. FORGE patches the source file, validates with TypeScript, and reverts on failure. Protected files (`security.ts`, `forge.ts`, `README.md`) can never be modified. NEXUS literally rewrites its own source code.
+**FORGE** is the code evolution engine. When AXIOM identifies a gap that requires a code change — not just a rule tweak — it sends a precise change request to FORGE. FORGE patches the source file (max 200 lines), validates with TypeScript, and reverts on failure. Protected files (`security.ts`, `forge.ts`, `README.md`) can never be modified — enforced both by FORGE's allowlist and a post-FORGE `git diff` check. NEXUS literally rewrites its own source code.
 
 ---
 
@@ -88,10 +100,11 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 ```
 src/
 ├── index.ts        CLI entry point
-├── agent.ts        Session orchestrator (ORACLE → AXIOM → FORGE → JOURNAL)
+├── agent.ts        Session orchestrator — defensive pipeline with quality gates
 ├── oracle.ts       Market analysis engine (ICT methodology)
-├── axiom.ts        Self-reflection + memory evolution
+├── axiom.ts        Self-reflection + memory evolution (with stagnation detection)
 ├── forge.ts        Code evolution engine (self-modifying source)
+├── validate.ts     Quality gates — output validation + recycled content detection
 ├── markets.ts      Live data via Yahoo Finance API
 ├── issues.ts       Community GitHub issues reader
 ├── self-tasks.ts   Autonomous issue creation + resolution (with dedup)
@@ -102,13 +115,15 @@ src/
 memory/             NEXUS's evolving mind (committed to git)
 ├── system-prompt.md    Grows every session (capped, oldest pruned)
 ├── analysis-rules.json Evolves every session (foundational rules protected)
-└── sessions.json       Full session history
+├── sessions.json       Full session history
+└── failures.json       Persistent failure log (fed back to AXIOM)
 
+NEXUS_IDENTITY.md   Constitutional identity — immutable rules defining NEXUS's boundaries
 journal/            Per-session markdown entries
 docs/               GitHub Pages live journal site
 .github/
 ├── ISSUE_TEMPLATE/ Community input templates (feedback, challenge, suggestion)
-└── workflows/      Automated execution — 3 sessions per day, Mon–Fri
+└── workflows/      Automated execution — 3 sessions/day, Mon–Fri (with retry)
 ```
 
 ---
@@ -125,10 +140,11 @@ NEXUS is open to community input — but that input passes through a security la
 |-------|-------|
 | Max community issues per session | 5 |
 | Max total issue chars injected | 4,000 |
-| Max output tokens per API call | 4,096 |
+| Max ORACLE output tokens | 8,192 |
 | Max new rules AXIOM can write per session | 2 |
 | Max self-tasks NEXUS can open per session | 2 |
 | Max FORGE code changes per session | 2 |
+| Max FORGE patch size | 200 lines |
 | Max chars per rule | 500 |
 | Min rules (cannot drop below) | 5 |
 | Max system prompt length | 8,000 chars |
@@ -139,7 +155,42 @@ NEXUS is open to community input — but that input passes through a security la
 
 **System prompt cap** — The evolving system prompt is capped at 8,000 characters. When the limit is reached, the oldest evolved sections are pruned to make room. The base prompt is always preserved.
 
-**JSON resilience** — Both ORACLE and AXIOM responses are protected against truncated or malformed JSON from the API. If a response is cut short, NEXUS attempts to salvage partial data. If AXIOM's response cannot be parsed at all, no memory changes are applied — the session continues safely.
+**JSON resilience** — Both ORACLE and AXIOM responses are protected against truncated or malformed JSON from the API. If ORACLE's response is truncated (`stop_reason: "max_tokens"`), NEXUS salvages partial data by finding field-boundary cut points and progressively reconstructing valid JSON. If AXIOM's response cannot be parsed at all, no memory changes are applied — the session continues safely.
+
+**Constitutional identity** — `NEXUS_IDENTITY.md` defines 10 immutable rules that cannot be modified by AXIOM, FORGE, or any automated process. It is loaded into AXIOM's system prompt and protected by GitHub Actions (`git checkout HEAD -- NEXUS_IDENTITY.md`).
+
+---
+
+## Quality Gates & Defensive Pipeline
+
+NEXUS runs a multi-layered defensive pipeline that prevents bad data from entering memory and recovers gracefully from crashes.
+
+**Pre-flight build check** — Every session starts with `tsc --noEmit`. If the codebase doesn't compile, the session aborts before making any API calls.
+
+**ORACLE validation gate** — After ORACLE runs, its output is validated before proceeding:
+- Analysis must be >200 characters (rejects empty/stub responses)
+- Confidence must be 0–100
+- Bias must be a valid value (BULLISH, BEARISH, MIXED)
+- Setups are checked for positive numbers and directional sanity (entry between stop and target)
+- Recycled analysis detection — Jaccard word-overlap >80% against the previous session blocks copy-paste analysis
+
+**AXIOM validation gate** — After AXIOM runs, its output is validated before touching memory:
+- Required fields must be present
+- Arrays must actually be arrays
+- Rule IDs must match expected format
+- Recycled reflection detection — Jaccard word-overlap >70% against previous reflection blocks stale self-criticism
+
+**FORGE guardrails** — Code patches are limited to 200 lines. After FORGE runs, a `git diff` check verifies no protected files were modified.
+
+**Stagnation breaker** — Agent tracks consecutive sessions with zero rule changes. After 3+ sessions of no evolution, AXIOM receives a mandatory alert demanding at least one concrete change with specific evidence.
+
+**Setup outcome tracking** — Previous session setups are compared against current market prices to determine if they were STOPPED OUT, hit TARGET, or remain OPEN. These outcomes are fed to AXIOM to ground its reflection in real results.
+
+**Failure feedback loop** — Crashes and validation failures are logged to `memory/failures.json` (capped at 20 entries). The last 5 failures are fed into AXIOM's context so NEXUS learns from its own errors.
+
+**Session-level rollback** — If an unhandled exception occurs, all uncommitted changes are reverted via `git checkout -- .` and the failure is logged. The next session starts from a clean state.
+
+**GitHub Actions retry** — The session step retries once with a 2-minute backoff on failure.
 
 ---
 
@@ -205,7 +256,10 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 10. **All external input is sanitized.** Community issues pass through security before reaching the AI. NEXUS cannot be prompt-injected through GitHub issues.
 11. **Foundational rules are constitutional.** Rules r001–r010 (core ICT methodology) can be refined but never deleted. AXIOM evolves on top of its foundation, not by destroying it.
 12. **The system prompt has a ceiling.** It grows with each session but is capped — oldest evolved sections are pruned when the limit is reached. The base prompt is always preserved.
-13. **FORGE has guardrails.** NEXUS can rewrite its own code, but `security.ts`, `forge.ts`, and `README.md` are protected. Every patch is validated with TypeScript and reverted on failure. Max 2 code changes per session. Code changes go through PRs, not direct main commits.
+13. **FORGE has guardrails.** NEXUS can rewrite its own code, but `security.ts`, `forge.ts`, and `README.md` are protected. Every patch is validated with TypeScript and reverted on failure. Max 2 code changes per session, max 200 lines per patch. Code changes go through PRs, not direct main commits.
+14. **Quality gates block garbage.** ORACLE and AXIOM outputs are validated before entering memory. Recycled analysis and stale reflections are detected and blocked. Bad data never reaches the mind.
+15. **Failures are learning opportunities.** Every crash is logged to `memory/failures.json` and fed back to AXIOM in future sessions. NEXUS learns from its own errors.
+16. **Identity is constitutional.** `NEXUS_IDENTITY.md` defines immutable boundaries that no automated process can modify. It anchors NEXUS's purpose across all sessions.
 
 ---
 
@@ -214,8 +268,11 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 NEXUS began with:
 - 10 foundational analysis rules (ICT methodology) — protected as constitutional, cannot be deleted
 - A base system prompt built from first principles (capped at 8,000 chars, oldest sections pruned)
-- 3,200+ lines of TypeScript across 11 modules
-- JSON resilience — malformed API responses are salvaged or safely ignored
+- 3,800+ lines of TypeScript across 12 modules (including quality gates)
+- A constitutional identity document (`NEXUS_IDENTITY.md`) defining immutable boundaries
+- JSON resilience — truncated API responses salvaged via field-boundary cut points
+- Quality gates — ORACLE and AXIOM outputs validated before entering memory
+- Defensive pipeline — pre-flight checks, session rollback, failure feedback loops
 - No history. No bias. No predictions.
 
 Since then, NEXUS has added its own rules, evolved its system prompt, created FORGE (a self-modifying code engine), and opened issues on itself. Every session it gets a little smarter.
