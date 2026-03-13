@@ -83,6 +83,15 @@ export async function runOracleAnalysis(
 ): Promise<OracleAnalysis> {
   const systemPrompt  = loadSystemPrompt();
   const rules         = loadAnalysisRules();
+
+  // Load identity (constitutional rules)
+  const identityPath = path.join(process.cwd(), "NEXUS_IDENTITY.md");
+  let identityContext = "";
+  try {
+    if (fs.existsSync(identityPath)) {
+      identityContext = fs.readFileSync(identityPath, "utf-8");
+    }
+  } catch { /* identity file not required */ }
   const marketData    = formatSnapshotsForPrompt(snapshots);
   const rulesText     = formatRulesForPrompt(rules);
 
@@ -164,7 +173,7 @@ Only respond with the JSON, no other text.`;
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: getMaxOutputTokens(),
-    system: stripSurrogates(systemPrompt),
+    system: stripSurrogates(identityContext ? identityContext + "\n\n" + systemPrompt : systemPrompt),
     messages: [{ role: "user", content: stripSurrogates(userMessage) }],
   });
 

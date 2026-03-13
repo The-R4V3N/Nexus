@@ -118,6 +118,15 @@ export async function runAxiomReflection(
     ? JSON.parse(fs.readFileSync(ANALYSIS_RULES_PATH, "utf-8"))
     : { rules: [], version: 1, lastUpdated: "", focusInstruments: [], sessionNotes: "" };
 
+  // Load identity (constitutional rules)
+  const identityPath = path.join(process.cwd(), "NEXUS_IDENTITY.md");
+  let identityContext = "";
+  try {
+    if (fs.existsSync(identityPath)) {
+      identityContext = fs.readFileSync(identityPath, "utf-8");
+    }
+  } catch { /* identity file not required */ }
+
   const systemMessage = `You are NEXUS AXIOM, the self-reflection engine of the NEXUS market intelligence system.
 Your purpose is to critique the analysis just produced, identify cognitive biases and gaps, then generate precise updates to improve future performance.
 You are honest, ruthless, and specific. You do not tolerate vague analysis or lazy conclusions.
@@ -263,7 +272,11 @@ RULE POLICY — CRITICAL:
 
   // Strip lone surrogates before serializing to JSON — broken emoji in issue titles
   // can survive earlier sanitization and cause a 400 from the Anthropic API
-  const cleanSystem  = systemMessage.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
+  const fullSystemMessage = identityContext
+    ? identityContext + "\n\n" + systemMessage
+    : systemMessage;
+
+  const cleanSystem  = fullSystemMessage.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
   const cleanMessage = userMessage.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
 
   const response = await client.messages.create({

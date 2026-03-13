@@ -8,6 +8,7 @@ import chalk      from "chalk";
 import ora        from "ora";
 import * as fs    from "fs";
 import * as path  from "path";
+import { execSync } from "child_process";
 import { format } from "date-fns";
 import { fetchAllMarkets, printMarketsTable }                     from "./markets";
 import { fetchCommunityIssues, formatIssuesForPrompt }             from "./issues";
@@ -186,7 +187,28 @@ export async function runSession(force = false): Promise<void> {
 
   const client = new Anthropic({ apiKey });
 
+  // Capture git HEAD for session-level rollback on failure
+  let sessionStartSha = "";
+  try {
+    sessionStartSha = execSync("git rev-parse HEAD", { cwd: process.cwd(), stdio: "pipe", encoding: "utf-8" }).trim();
+  } catch { /* not a git repo or git not available */ }
+
  try {
+  // Pre-flight: verify codebase compiles before starting session
+  console.log(chalk.dim("  Pre-flight: checking TypeScript build..."));
+  try {
+    execSync("npx tsc --noEmit", { cwd: process.cwd(), stdio: "pipe", timeout: 30000 });
+    console.log(chalk.dim("  Pre-flight: build OK\n"));
+  } catch (err) {
+    console.error(chalk.red("  ✗ Pre-flight build check FAILED — codebase is broken"));
+    logFailure({
+      sessionNumber, timestamp: new Date().toISOString(),
+      phase: "oracle", errors: ["Pre-flight tsc --noEmit failed — codebase broken before session started"],
+      warnings: [], action: "skipped"
+    });
+    return;
+  }
+
   // ── Phase 1: Fetch market data ──
   console.log(chalk.bold.yellow("  ── PHASE 1: MARKET DATA ──\n"));
   const marketSpinner = ora({ text: "Fetching live market data...", color: "yellow" }).start();
@@ -359,6 +381,35 @@ export async function runSession(force = false): Promise<void> {
       forgeSpinner.fail("FORGE failed");
       console.warn(chalk.yellow(`  ⚠ FORGE error (non-fatal): ${err}`));
     }
+    // Check FORGE diff size — reject patches over 200 lines as likely hallucinated
+    for (let i = 0; i < forgeResults.length; i++) {
+      const result = forgeResults[i];
+      if (result.success && result.linesChanged && result.linesChanged > 200) {
+        console.warn(`  ⚠ FORGE patch too large: ${result.file} changed ${result.linesChanged} lines (max 200)`);
+        try {
+          execSync(`git checkout -- src/${path.basename(result.file)}`, { cwd: process.cwd(), stdio: "pipe" });
+          forgeResults[i] = { ...result, success: false, reason: `Reverted — patch too large (${result.linesChanged} lines, max 200)`, reverted: true };
+        } catch { /* best effort */ }
+      }
+    }
+
+    // After FORGE completes, verify no protected files were touched
+    if (forgeResults.some(r => r.success)) {
+      try {
+        const diffOutput = execSync("git diff --name-only src/security.ts src/forge.ts .github/workflows/session.yml README.md", {
+          cwd: process.cwd(), stdio: "pipe", encoding: "utf-8"
+        }).trim();
+        if (diffOutput) {
+          console.error(`  🛡️ PROTECTED FILE VIOLATION: ${diffOutput}`);
+          console.error(`  Reverting ALL FORGE changes...`);
+          execSync("git checkout -- src/ README.md", { cwd: process.cwd(), stdio: "pipe" });
+          forgeResults = forgeResults.map(r => ({
+            ...r, success: false, reason: "Reverted — protected file violation detected", reverted: true
+          }));
+        }
+      } catch { /* git diff returns non-zero if files don't exist, that's fine */ }
+    }
+
     console.log("");
   }
 
@@ -397,6 +448,13 @@ export async function runSession(force = false): Promise<void> {
       sessionNumber, timestamp: new Date().toISOString(),
       phase: "oracle", errors: [String(err)], warnings: [], action: "skipped"
     });
+    // Rollback any uncommitted changes from this session
+    if (sessionStartSha) {
+      try {
+        execSync("git checkout -- .", { cwd: process.cwd(), stdio: "pipe" });
+        console.log("  ↩ Rolled back uncommitted changes from failed session");
+      } catch { /* best effort */ }
+    }
     // Don't re-throw — let the process exit cleanly so GitHub Actions doesn't fail
   }
 }

@@ -70,6 +70,9 @@ jobs:
           git config user.email "nexus-bot@users.noreply.github.com"
           git pull --rebase --autostash origin main
 
+          # Safety: revert any changes to protected files that shouldn't be modified by sessions
+          git checkout HEAD -- NEXUS_IDENTITY.md 2>/dev/null || true
+
           # Check if FORGE changed any src/ files
           FORGE_CHANGES=$(git diff --name-only src/ 2>/dev/null || true)
 
