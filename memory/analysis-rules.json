@@ -181,10 +181,18 @@
       "weight": 9,
       "addedSession": 28,
       "lastModifiedSession": 28
+    },
+    {
+      "id": "r023",
+      "category": "confidence_calibration",
+      "description": "Confidence scores must reference specific measurable criteria: technical confluence based on counted confluences per r022, macro alignment quantified by correlation coefficients or divergence magnitude, RR clarity by actual ratio values. No arbitrary percentages.",
+      "weight": 9,
+      "addedSession": 29,
+      "lastModifiedSession": 29
     }
   ],
-  "version": 32,
-  "lastUpdated": "2026-03-13T08:10:50.649Z",
+  "version": 33,
+  "lastUpdated": "2026-03-13T13:26:21.201Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -192,5 +200,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #28"
+  "sessionNotes": "Last updated: Session #29"
 }
