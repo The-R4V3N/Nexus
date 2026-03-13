@@ -164,10 +164,15 @@ Only respond with the JSON, no other text.`;
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 6144, // Higher than default 4096 — ORACLE needs room for full JSON analysis
+    max_tokens: 8192, // ORACLE needs room for full JSON analysis with detailed setups
     system: stripSurrogates(systemPrompt),
     messages: [{ role: "user", content: stripSurrogates(userMessage) }],
   });
+
+  const wasTruncated = response.stop_reason === "max_tokens";
+  if (wasTruncated) {
+    console.warn("  ⚠ ORACLE response was truncated (hit max_tokens) — will attempt salvage");
+  }
 
   const rawText = response.content
     .filter((b) => b.type === "text")
@@ -192,7 +197,22 @@ Only respond with the JSON, no other text.`;
   try {
     parsed = JSON.parse(jsonText);
   } catch {
-    const salvaged = salvageJSON(jsonText);
+    // If truncated, try aggressive salvage: find the last complete key-value pair and close everything
+    let salvaged = salvageJSON(jsonText);
+    if (!salvaged && wasTruncated) {
+      // Truncated mid-string: find the last complete JSON value boundary
+      // Remove everything after the last complete "key": "value" or "key": number
+      let truncated = jsonText;
+      // Cut at last comma before a complete field to avoid partial string values
+      const lastCommaBeforeKey = truncated.search(/,\s*"[^"]+"\s*:\s*("[^"]*"|[\d.]+|\[[\s\S]*?\]|\{[\s\S]*?\})\s*,?\s*"[^"]*"?\s*:?\s*"?[^"{}[\]]*$/);
+      if (lastCommaBeforeKey > 0) {
+        truncated = truncated.slice(0, lastCommaBeforeKey);
+      }
+      salvaged = salvageJSON(truncated);
+      if (salvaged) {
+        console.warn("  ⚠ ORACLE response was truncated — aggressively salvaged partial JSON");
+      }
+    }
     if (salvaged) {
       parsed = salvaged;
       console.warn("  ⚠ ORACLE returned malformed JSON — salvaged partial response");
