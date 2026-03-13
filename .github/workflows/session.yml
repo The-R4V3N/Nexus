@@ -77,7 +77,7 @@ jobs:
           FORGE_CHANGES=$(git diff --name-only src/ 2>/dev/null || true)
 
           if [ -n "$FORGE_CHANGES" ]; then
-            echo "🔀 FORGE changed source files — will open PR"
+            echo "FORGE changed source files — will open PR"
             echo "FORGE_CHANGED=true" >> "$GITHUB_ENV"
 
             # Stash src/ changes before committing memory to main
