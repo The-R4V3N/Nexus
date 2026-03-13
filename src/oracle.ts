@@ -197,27 +197,30 @@ Only respond with the JSON, no other text.`;
   try {
     parsed = JSON.parse(jsonText);
   } catch {
-    // If truncated, try aggressive salvage: find the last complete key-value pair and close everything
     let salvaged = salvageJSON(jsonText);
-    if (!salvaged && wasTruncated) {
-      // Truncated mid-string: find the last complete JSON value boundary
-      // Remove everything after the last complete "key": "value" or "key": number
-      let truncated = jsonText;
-      // Cut at last comma before a complete field to avoid partial string values
-      const lastCommaBeforeKey = truncated.search(/,\s*"[^"]+"\s*:\s*("[^"]*"|[\d.]+|\[[\s\S]*?\]|\{[\s\S]*?\})\s*,?\s*"[^"]*"?\s*:?\s*"?[^"{}[\]]*$/);
-      if (lastCommaBeforeKey > 0) {
-        truncated = truncated.slice(0, lastCommaBeforeKey);
+
+    // If basic salvage failed (likely truncated mid-string), try harder:
+    // Find positions where complete "value", patterns end and try salvaging from there
+    if (!salvaged) {
+      const cutPoints: number[] = [];
+      const re = /",\s*"/g;
+      let match;
+      while ((match = re.exec(jsonText)) !== null) {
+        cutPoints.push(match.index + 1);
       }
-      salvaged = salvageJSON(truncated);
-      if (salvaged) {
-        console.warn("  ⚠ ORACLE response was truncated — aggressively salvaged partial JSON");
+      for (let i = cutPoints.length - 1; i >= 0; i--) {
+        salvaged = salvageJSON(jsonText.slice(0, cutPoints[i]));
+        if (salvaged) {
+          console.warn("  ⚠ ORACLE response truncated — salvaged by cutting at field boundary");
+          break;
+        }
       }
     }
+
     if (salvaged) {
       parsed = salvaged;
       console.warn("  ⚠ ORACLE returned malformed JSON — salvaged partial response");
     } else {
-      // Log first 500 chars for debugging
       console.error(`  ✗ ORACLE raw response (first 500 chars): ${rawText.slice(0, 500)}`);
       throw new Error("ORACLE returned unparseable JSON and salvage failed");
     }
