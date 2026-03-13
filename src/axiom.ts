@@ -6,6 +6,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
+import { validateAxiomOutput, logFailure } from "./validate";
+import { loadAllJournalEntries } from "./journal";
 import * as fs from "fs";
 import * as path from "path";
 import type {
@@ -313,6 +315,34 @@ RULE POLICY — CRITICAL:
         codeChanges:            [],
       };
     }
+  }
+
+  // ── Validate AXIOM output ──
+  const axiomEntries = loadAllJournalEntries();
+  const axiomValidation = validateAxiomOutput(rawParsed, sessionNumber, axiomEntries);
+  if (axiomValidation.warnings.length > 0) {
+    for (const w of axiomValidation.warnings) console.warn(`  ⚠ Axiom: ${w}`);
+  }
+  if (!axiomValidation.valid) {
+    console.warn(`  ⚠ AXIOM output failed validation — proceeding with ORACLE results only`);
+    logFailure({
+      sessionNumber, timestamp: new Date().toISOString(),
+      phase: "axiom", errors: axiomValidation.errors,
+      warnings: axiomValidation.warnings, action: "fallback"
+    });
+    // Use empty reflection fallback
+    rawParsed = {
+      whatWorked:             "Validation failed",
+      whatFailed:             "AXIOM output did not pass quality gate",
+      cognitiveBiases:        [],
+      evolutionSummary:       "Reflection skipped due to validation failure — no changes applied.",
+      ruleUpdates:            [],
+      newRules:               [],
+      systemPromptAdditions:  "",
+      newSelfTasks:           [],
+      resolvedSelfTasks:      [],
+      codeChanges:            [],
+    };
   }
 
   // ── Security: sanitize AXIOM output before applying to memory ──

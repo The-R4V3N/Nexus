@@ -23,6 +23,7 @@ import {
   loadAllJournalEntries,
   saveJournalEntry,
 } from "./journal";
+import { validateOracleOutput, logFailure, loadRecentFailures }    from "./validate";
 import type { AnalysisRules } from "./types";
 
 const MEMORY_DIR           = path.join(process.cwd(), "memory");
@@ -185,6 +186,7 @@ export async function runSession(force = false): Promise<void> {
 
   const client = new Anthropic({ apiKey });
 
+ try {
   // ── Phase 1: Fetch market data ──
   console.log(chalk.bold.yellow("  ── PHASE 1: MARKET DATA ──\n"));
   const marketSpinner = ora({ text: "Fetching live market data...", color: "yellow" }).start();
@@ -255,6 +257,23 @@ export async function runSession(force = false): Promise<void> {
     throw err;
   }
 
+  // Validate ORACLE output
+  const allEntries = loadAllJournalEntries();
+  const oracleValidation = validateOracleOutput(oracle, allEntries);
+  if (oracleValidation.warnings.length > 0) {
+    for (const w of oracleValidation.warnings) console.warn(`  ⚠ Oracle: ${w}`);
+  }
+  if (!oracleValidation.valid) {
+    console.error(`  ✗ ORACLE output failed validation: ${oracleValidation.errors.join('; ')}`);
+    logFailure({
+      sessionNumber, timestamp: new Date().toISOString(),
+      phase: "oracle", errors: oracleValidation.errors,
+      warnings: oracleValidation.warnings, action: "skipped"
+    });
+    console.log("  Session skipped — invalid ORACLE output.");
+    return;
+  }
+
   // Print brief summary
   console.log("");
   console.log(chalk.dim("  Analysis preview:"));
@@ -276,7 +295,17 @@ export async function runSession(force = false): Promise<void> {
 
   let reflection;
   let axiomResult: Awaited<ReturnType<typeof runAxiomReflection>>;
-  const prevContext = buildPreviousSessionsContext();
+  let prevContext = buildPreviousSessionsContext();
+
+  // Inject recent failures into AXIOM context
+  const recentFailures = loadRecentFailures();
+  if (recentFailures.length > 0) {
+    const last5 = recentFailures.slice(-5);
+    const failureLines = last5.map((f) =>
+      `- Session #${f.sessionNumber} (${f.timestamp}): ${f.phase} ${f.action} — ${f.errors.join('; ')}`
+    ).join("\n");
+    prevContext += `\n\n### Recent session failures:\n${failureLines}\nConsider these when proposing code changes.`;
+  }
 
   try {
     const noChangeStreak = getNoChangeStreak();
@@ -342,9 +371,9 @@ export async function runSession(force = false): Promise<void> {
   const mdPath  = writeJournalMarkdown(entry);
   saveJournalEntry(entry);
 
-  const allEntries = loadAllJournalEntries();
-  updateGithubPages(allEntries);
-  updateReadmeSessionsTable(allEntries);
+  const updatedEntries = loadAllJournalEntries();
+  updateGithubPages(updatedEntries);
+  updateReadmeSessionsTable(updatedEntries);
 
   journalSpinner.succeed(chalk.green("Journal written, GitHub Pages updated, README updated"));
   console.log(chalk.dim(`  Markdown: ${mdPath}`));
@@ -361,4 +390,13 @@ export async function runSession(force = false): Promise<void> {
   console.log(chalk.bold.white("║  ") + chalk.dim("Setups:    ") + chalk.white(String(oracle.setups.length).padEnd(25)) + chalk.bold.white("║"));
   console.log(chalk.bold.white("║  ") + chalk.dim("Rules now: ") + chalk.white(String(rules.rules.length).padEnd(25)) + chalk.bold.white("║"));
   console.log(chalk.bold.white("╚══════════════════════════════════════╝\n"));
+
+ } catch (err) {
+    console.error(`  ✗ Session failed with unhandled error: ${err}`);
+    logFailure({
+      sessionNumber, timestamp: new Date().toISOString(),
+      phase: "oracle", errors: [String(err)], warnings: [], action: "skipped"
+    });
+    // Don't re-throw — let the process exit cleanly so GitHub Actions doesn't fail
+  }
 }

@@ -34,10 +34,27 @@ jobs:
         run: npm install
 
       - name: Run NEXUS session
+        id: attempt1
+        continue-on-error: true
         run: |
           # Manual triggers always force-run, scheduled runs respect weekday guard
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Manual trigger — bypassing weekday guard"
+            npm run run:session -- --force
+          else
+            npm run run:session
+          fi
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Retry session after 2 minutes
+        if: steps.attempt1.outcome == 'failure'
+        run: |
+          echo "First attempt failed, retrying after 2 minutes..."
+          sleep 120
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             npm run run:session -- --force
           else
             npm run run:session
