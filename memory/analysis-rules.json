@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding 2 standard deviations from norm. Otherwise, assign directional bias based on preponderance of evidence weighted by asset class importance.",
+      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms (bonds/stocks selling together, gold falling in risk-off). When correlation breakdown occurs, analyze as potential regime shift requiring different framework rather than temporary anomaly.",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 3
+      "lastModifiedSession": 34
     },
     {
       "id": "r016",
@@ -191,8 +191,8 @@
       "lastModifiedSession": 29
     }
   ],
-  "version": 34,
-  "lastUpdated": "2026-03-14T17:48:51.005Z",
+  "version": 35,
+  "lastUpdated": "2026-03-14T18:03:55.392Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -200,5 +200,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #31"
+  "sessionNotes": "Last updated: Session #34"
 }
