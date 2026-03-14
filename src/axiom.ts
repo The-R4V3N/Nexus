@@ -214,7 +214,7 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
       "reason": "Why I'm adding this"
     }
   ],
-  "systemPromptAdditions": "Any new section or modification to add to the system prompt (empty string if none)",
+  "systemPromptAdditions": "A concrete addition to your system prompt that captures a lasting insight from this session — a new analytical principle, market regime observation, or methodology refinement that should persist across all future sessions. This is your long-term memory. Only use empty string if this session genuinely produced no new lasting insight.",
   "newSelfTasks": [
     {
       "title": "Short title for the gap I identified",
