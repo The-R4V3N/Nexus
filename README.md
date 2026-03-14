@@ -20,6 +20,95 @@ Watch it grow.
 
 ## How It Works
 
+```mermaid
+flowchart TB
+    subgraph trigger["GitHub Actions — Mon-Fri, 3x daily"]
+        direction LR
+        T1["00:00 UTC\nAsia Open"]
+        T2["08:00 UTC\nLondon Open"]
+        T3["13:00 UTC\nNY Open"]
+    end
+
+    trigger --> preflight
+
+    subgraph data["Phase 1 — Data Ingestion"]
+        direction TB
+        preflight["Pre-flight\ntsc --noEmit"]
+        preflight --> markets["Yahoo Finance\n17 instruments"]
+        preflight --> macro["Macro Data\nFRED - Treasury - GDELT"]
+        preflight --> issues["Community Issues\nGitHub Issues"]
+        preflight --> tasks["Self-Tasks\nNEXUS to-do list"]
+    end
+
+    markets --> security
+    macro --> security
+    issues --> security
+    tasks --> security
+
+    security["Security Layer\nInjection detection - Cost limits - Input sanitization"]
+
+    security --> oracle
+
+    subgraph analysis["Phase 2 — Analysis and Evolution"]
+        direction TB
+        oracle["ORACLE\nICT Analysis + Macro Context\nSetups - Bias - Confidence"]
+        oracle --> ogate["ORACLE Validation Gate\nBlocks bad output and recycled content"]
+        ogate --> axiom["AXIOM\nSelf-Reflection\nRule updates - System prompt evolution\nSelf-task management"]
+        axiom --> agate["AXIOM Validation Gate\nBlocks recycled reflections"]
+        agate --> forge["FORGE\nCode Evolution\nPatches src/ via Claude API\ntsc validates - Reverts on failure"]
+    end
+
+    subgraph output["Phase 3 — Output"]
+        direction TB
+        journal["Journal\nMarkdown + GitHub Pages"]
+        commit["Git Commit\nMemory and journal to main\nFORGE changes to PR"]
+    end
+
+    forge --> journal
+    journal --> commit
+
+    subgraph memory["Evolving Memory — Git-versioned"]
+        direction LR
+        rules["analysis-rules.json\nEvolving ruleset"]
+        prompt["system-prompt.md\nGrowing system prompt"]
+        sessions["sessions.json\nFull history"]
+        failures["failures.json\nFailure log"]
+    end
+
+    axiom -->|"writes"| rules
+    axiom -->|"evolves"| prompt
+    journal -->|"appends"| sessions
+    ogate -->|"logs failures"| failures
+
+    rules -->|"loaded into"| oracle
+    prompt -->|"loaded into"| oracle
+    failures -->|"fed back to"| axiom
+    sessions -->|"setup outcomes"| axiom
+
+    subgraph protected["Protected — Cannot be modified by FORGE"]
+        direction LR
+        P1["security.ts"]
+        P2["forge.ts"]
+        P3["session.yml"]
+        P4["README.md"]
+        P5["NEXUS_IDENTITY.md"]
+    end
+
+    crash["Crash Rollback\ngit checkout -- ."]
+    commit -->|"on failure"| crash
+
+    style trigger fill:#1a1a2e,stroke:#e94560,color:#fff
+    style data fill:#16213e,stroke:#0f3460,color:#fff
+    style analysis fill:#1a1a2e,stroke:#e94560,color:#fff
+    style output fill:#16213e,stroke:#0f3460,color:#fff
+    style memory fill:#0f3460,stroke:#53354a,color:#fff
+    style protected fill:#2d132c,stroke:#e94560,color:#fff
+    style security fill:#c70039,stroke:#fff,color:#fff
+    style crash fill:#900c3f,stroke:#fff,color:#fff
+```
+
+### Detailed Pipeline
+
 ```
 GitHub Actions (Mon–Fri, 3 sessions per day)
     │
@@ -144,7 +233,7 @@ docs/               GitHub Pages live journal site
 
 NEXUS is open to community input — but that input passes through a security layer before it ever reaches the AI.
 
-**Prompt injection protection** — every issue title and body is scanned against 20+ patterns before being injected into the prompt. Classic attacks like `"Ignore all previous instructions"`, role hijacking, identity overrides, and `[SYSTEM]` tag injections are blocked outright. Blocked issues are logged in the Actions output with a 🛡️ prefix.
+**Prompt injection protection** — every issue title and body is scanned against 20+ patterns before being injected into the prompt. Classic attacks like `"Ignore all previous instructions"`, role hijacking, identity overrides, and `[SYSTEM]` tag injections are blocked outright. Blocked issues are logged in the Actions output.
 
 **Cost abuse prevention** — hard limits are enforced at every layer regardless of what the AI requests:
 
