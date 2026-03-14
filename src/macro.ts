@@ -117,7 +117,15 @@ async function fetchGdeltEvents(): Promise<{ total: number; conflicts: GdeltEven
   }
   if (!res.ok) throw new Error(`GDELT HTTP ${res.status}`);
 
-  const data = await res.json() as any;
+  // GDELT sometimes returns HTML/text even on 200 — guard against bad JSON
+  const contentType = res.headers.get("content-type") ?? "";
+  const rawText = await res.text();
+  if (!contentType.includes("json") && !rawText.startsWith("{") && !rawText.startsWith("[")) {
+    throw new Error(`GDELT returned non-JSON: ${rawText.slice(0, 60)}`);
+  }
+
+  let data: any;
+  try { data = JSON.parse(rawText); } catch { throw new Error(`GDELT JSON parse failed: ${rawText.slice(0, 60)}`); }
   const articles: any[] = data?.articles ?? [];
 
   const conflicts: GdeltEvent[] = [];

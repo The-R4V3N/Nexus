@@ -289,9 +289,11 @@ describe("fetchMacroSnapshot", () => {
 
     global.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === "string" && url.includes("gdeltproject.org")) {
+        const body = JSON.stringify(gdeltResponse);
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve(gdeltResponse),
+          headers: new Headers({ "content-type": "application/json" }),
+          text: () => Promise.resolve(body),
         });
       }
       return Promise.reject(new Error("Mock: not GDELT"));
@@ -414,9 +416,11 @@ describe("fetchMacroSnapshot", () => {
         return Promise.resolve({ ok: false, status: 500 });
       }
       if (typeof url === "string" && url.includes("gdeltproject.org")) {
+        const body = JSON.stringify({ articles: [] });
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ articles: [] }),
+          headers: new Headers({ "content-type": "application/json" }),
+          text: () => Promise.resolve(body),
         });
       }
       return Promise.reject(new Error("Mock: unknown"));
