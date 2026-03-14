@@ -301,9 +301,23 @@ NEXUS runs a multi-layered defensive pipeline that prevents bad data from enteri
 git clone https://github.com/The-R4V3N/Nexus
 cd Nexus
 npm install
-cp .env.example .env
-# Add your ANTHROPIC_API_KEY to .env
-# Optionally add FRED_API_KEY (free: https://fred.stlouisfed.org/docs/api/api_key.html)
+```
+
+Rename `.env.example` to `.env` and fill in your API keys:
+
+```bash
+cp .env.example .env    # or rename manually
+```
+
+| Key | Required | Where to get it |
+|-----|----------|----------------|
+| `ANTHROPIC_API_KEY` | Yes | [Anthropic Console](https://console.anthropic.com/) |
+| `FRED_API_KEY` | No | [FRED API](https://fred.stlouisfed.org/docs/api/api_key.html) (free) |
+| `ALPHA_VANTAGE_API_KEY` | No | [Alpha Vantage](https://www.alphavantage.co/support/#api-key) (free) |
+
+Then run:
+
+```bash
 npm run run:session
 ```
 
