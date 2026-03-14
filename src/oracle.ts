@@ -100,11 +100,12 @@ Analyze the current market conditions. Follow your analysis rules exactly.
 
 FORMAT REQUIREMENTS — your analysis MUST include these elements:
 
-1. NARRATIVE (analysis field): 3-5 paragraphs covering:
-   - Higher timeframe (daily) bias FIRST, then intraday (per r001)
-   - Quantify moves: "X moved Y pips/points/%" — not just "moved higher"
-   - State DXY direction and its correlation impact (per r005)
-   - If attributing moves to events, say "assuming" or "if confirmed" (per r011)
+1. NARRATIVE (analysis field): Structure as 4 labeled sections using **Bold:** headers:
+   **Higher Timeframe Context:** Daily bias, major index/forex moves with magnitude (pips/points/%)
+   **Intraday Analysis:** Session-level price action, DXY direction and correlation impact (per r005). If attributing moves to events, say "assuming" or "if confirmed" (per r011)
+   **Cross-Asset Dynamics:** Intermarket correlations, divergences, risk-on/risk-off assessment
+   **Technical Confluence Analysis:** Enumerate confluences per r022, then state confidence breakdown
+   Each section should be its own paragraph. Do NOT merge them into a single block of text.
 
 2. SETUPS: Every setup MUST have ALL numeric fields filled with REAL price levels:
    - entry: actual price (e.g. 25050.00), NOT 0
