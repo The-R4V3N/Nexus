@@ -99,7 +99,7 @@ async function fetchTreasuryDebt(): Promise<{ date: string; totalDebt: string; p
 
 async function fetchGdeltEvents(): Promise<{ total: number; conflicts: GdeltEvent[]; economy: GdeltEvent[] }> {
   const params = new URLSearchParams({
-    query:      "conflict OR military OR economy OR crisis OR sanctions OR tariff",
+    query:      "(conflict OR military OR economy OR crisis OR sanctions OR tariff)",
     mode:       "ArtList",
     maxrecords: "25",
     timespan:   "24h",
