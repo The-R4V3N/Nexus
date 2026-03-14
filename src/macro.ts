@@ -108,7 +108,13 @@ async function fetchGdeltEvents(): Promise<{ total: number; conflicts: GdeltEven
   });
 
   const url = `https://api.gdeltproject.org/api/v2/doc/doc?${params}`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  let res = await fetch(url, { headers: { "Accept": "application/json" } });
+
+  // GDELT rate-limits aggressively (1 req/5s) — retry once after delay on 429
+  if (res.status === 429) {
+    await new Promise((r) => setTimeout(r, 6000));
+    res = await fetch(url, { headers: { "Accept": "application/json" } });
+  }
   if (!res.ok) throw new Error(`GDELT HTTP ${res.status}`);
 
   const data = await res.json() as any;
