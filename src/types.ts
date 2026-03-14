@@ -137,3 +137,40 @@ export interface ForgeResult {
   reverted:  boolean;
   linesChanged?: number;
 }
+
+// ── Macro Data Types ─────────────────────────────────────
+
+export interface MacroIndicator {
+  id: string;
+  label: string;
+  value: number | null;
+  date: string | null;
+  trend: number[];  // last few values for direction
+}
+
+export interface MacroSignal {
+  source: string;
+  signal: string;
+  severity: "info" | "warning" | "critical";
+}
+
+export interface GdeltEvent {
+  title: string;
+  url: string;
+  date: string;
+  domain: string;
+  country: string;
+}
+
+export interface MacroSnapshot {
+  timestamp: Date;
+  indicators: MacroIndicator[];
+  signals: MacroSignal[];
+  treasuryDebt: { date: string; totalDebt: string; publicDebt: string }[];
+  geopoliticalEvents: {
+    total: number;
+    conflicts: GdeltEvent[];
+    economy: GdeltEvent[];
+  };
+  errors: string[];  // sources that failed (for logging, not fatal)
+}

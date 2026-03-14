@@ -11,6 +11,7 @@ import * as path  from "path";
 import { execSync } from "child_process";
 import { format } from "date-fns";
 import { fetchAllMarkets, printMarketsTable }                     from "./markets";
+import { fetchMacroSnapshot, formatMacroForPrompt, printMacroSummary } from "./macro";
 import { fetchCommunityIssues, formatIssuesForPrompt }             from "./issues";
 import { fetchOpenSelfTasks, formatSelfTasksForPrompt, setCachedOpenTasks } from "./self-tasks";
 import { runOracleAnalysis }                                       from "./oracle";
@@ -224,6 +225,26 @@ export async function runSession(force = false): Promise<void> {
 
   printMarketsTable(snapshots);
 
+  // ── Phase 1d: Macro & geopolitical context ──
+  let macroText = "";
+  try {
+    const macroSpinner = ora({ text: "Fetching macro & geopolitical data...", color: "yellow" }).start();
+    const macroSnapshot = await fetchMacroSnapshot();
+    const sourceCount = macroSnapshot.indicators.length + (macroSnapshot.treasuryDebt.length > 0 ? 1 : 0) + (macroSnapshot.geopoliticalEvents.total > 0 ? 1 : 0);
+    if (sourceCount > 0) {
+      macroSpinner.succeed(chalk.green(`Macro context: ${macroSnapshot.indicators.length} indicators, ${macroSnapshot.signals.length} signals, ${macroSnapshot.geopoliticalEvents.total} events`));
+      printMacroSummary(macroSnapshot);
+      macroText = formatMacroForPrompt(macroSnapshot);
+    } else {
+      macroSpinner.info(chalk.dim("Macro data: no sources available"));
+    }
+    if (macroSnapshot.errors.length > 0) {
+      for (const e of macroSnapshot.errors) console.log(chalk.dim(`    ⚠ ${e}`));
+    }
+  } catch {
+    console.log(chalk.dim("  Macro data: unavailable\n"));
+  }
+
   // ── Phase 1b: Community issues ──
   let issuesText = "";
   try {
@@ -270,7 +291,7 @@ export async function runSession(force = false): Promise<void> {
 
   let oracle;
   try {
-    oracle = await runOracleAnalysis(client, snapshots, sessionId, sessionNumber, issuesText);
+    oracle = await runOracleAnalysis(client, snapshots, sessionId, sessionNumber, issuesText, macroText);
     oracleSpinner.succeed(
       chalk.green(`Analysis complete — ${oracle.bias.overall.toUpperCase()} bias, ${oracle.setups.length} setups, ${oracle.confidence}% confidence`)
     );

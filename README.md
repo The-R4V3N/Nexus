@@ -24,6 +24,7 @@ Watch it grow.
 GitHub Actions (Mon–Fri, 3 sessions per day)
     │
     ├── fetches live market data       (Yahoo Finance — 17 instruments)
+    ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT — optional)
     ├── reads open community issues    (sanitized — injection checked)
     ├── reads open self-tasks          (NEXUS's own to-do list)
     │
@@ -36,7 +37,14 @@ GitHub Actions (Mon–Fri, 3 sessions per day)
     │       system prompt capped at 8,000 chars (oldest sections pruned)
     │       every new rule and self-task validated before written to memory
     │
-    ├── 🔭 ORACLE — analyzes market structure
+    ├── 🌐 MACRO — fetches macro & geopolitical context
+    │       FRED: Fed Funds Rate, yield curve, VIX, CPI, unemployment, credit spreads
+    │       US Treasury: national debt figures (no auth required)
+    │       GDELT: last 24h geopolitical & economic headlines (no auth required)
+    │       derives signals: yield curve inversion, VIX elevation, credit stress
+    │       graceful degradation — missing keys or failed fetches don't break the session
+    │
+    ├── 🔭 ORACLE — analyzes market structure (now with macro context)
     │       bias, FVGs, order blocks, liquidity sweeps, setups
     │       confidence score 0–100
     │       truncated JSON salvaged via field-boundary cut points
@@ -82,12 +90,15 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 | **Crypto** | Bitcoin · Ethereum |
 | **Metals** | Gold · Silver |
 | **Commodities** | Crude Oil · Natural Gas |
+| **Macro (FRED)** | Fed Funds Rate · 10Y Yield · Yield Curve · VIX · Unemployment · CPI · HY Spread · USD Index |
+| **Fiscal** | US Treasury national debt (total + public held) |
+| **Geopolitical** | GDELT: conflict, military, economic, trade headlines (last 24h) |
 
 ---
 
 ## The Three Minds
 
-**ORACLE** applies ICT (Inner Circle Trader) methodology — fair value gaps, order blocks, liquidity sweeps, market structure shifts, session ranges. It identifies the highest-probability setup, states a directional bias, and rates its own confidence from 0–100.
+**ORACLE** applies ICT (Inner Circle Trader) methodology — fair value gaps, order blocks, liquidity sweeps, market structure shifts, session ranges. It now receives macro-economic context (FRED indicators, Treasury data, geopolitical events) alongside live prices, giving it real data for the macro alignment component of its confidence score. It identifies the highest-probability setup, states a directional bias, and rates its own confidence from 0–100.
 
 **AXIOM** is the part nobody else builds. After every session it asks: *what biases infected my reasoning? what rule is wrong? what am I missing?* Then it edits its own rulebook. It receives failure history from past crashes, outcome tracking from previous setups, and stagnation alerts when it hasn't evolved in 3+ sessions — so it's always grounded in real results. Its identity is anchored by `NEXUS_IDENTITY.md`, a constitutional document it cannot modify. After 50 sessions, `memory/` in this repo is a visible record of an AI mind developing real domain expertise — not from training, but from iterative self-reflection.
 
@@ -106,6 +117,7 @@ src/
 ├── forge.ts        Code evolution engine (self-modifying source)
 ├── validate.ts     Quality gates — output validation + recycled content detection
 ├── markets.ts      Live data via Yahoo Finance API
+├── macro.ts        Macro & geopolitical data (FRED, Treasury, GDELT)
 ├── issues.ts       Community GitHub issues reader
 ├── self-tasks.ts   Autonomous issue creation + resolution (with dedup)
 ├── security.ts     Prompt injection + cost abuse protection
@@ -202,6 +214,7 @@ cd Nexus
 npm install
 cp .env.example .env
 # Add your ANTHROPIC_API_KEY to .env
+# Optionally add FRED_API_KEY (free: https://fred.stlouisfed.org/docs/api/api_key.html)
 npm run run:session
 ```
 

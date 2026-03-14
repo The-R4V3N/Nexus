@@ -15,6 +15,7 @@ src/
   forge.ts        Code evolution engine (self-modifying source via Claude API)
   validate.ts     Quality gates — ORACLE + AXIOM output validation, recycled content detection
   markets.ts      Live data via Yahoo Finance v8 API (no package, raw HTTP)
+  macro.ts        Macro & geopolitical data (FRED, US Treasury, GDELT — all raw HTTP)
   issues.ts       Community GitHub issues reader (nexus-input label)
   self-tasks.ts   Autonomous issue creation + resolution (nexus-self-task label, with dedup)
   security.ts     Prompt injection detection, cost guards, output sanitization, meta-rule blocking
@@ -37,22 +38,24 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 1. **Pre-flight Check** — `tsc --noEmit` validates the codebase compiles before anything runs
 2. **Git Snapshot** — captures `HEAD` SHA for session-level rollback on unhandled crashes
 3. **Market Data** — `fetchAllMarkets()` pulls 17 instruments from Yahoo Finance
-4. **Community Issues** — fetches GitHub issues labeled `nexus-input`, sanitized through security
-5. **Self-Tasks** — fetches open issues labeled `nexus-self-task` (deduplicated)
-6. **ORACLE** — Claude API call with market data + rules + system prompt → structured JSON analysis (rules embedded in prompt). Max 8192 output tokens. Truncated responses are salvaged via field-boundary cut points.
-7. **ORACLE Validation Gate** — `validateOracleOutput()` checks analysis length, confidence range, bias validity, setup sanity, and recycled content detection (>80% Jaccard similarity blocks). Session halts on failure.
-8. **AXIOM** — Claude API call reflecting on ORACLE's output → rule updates, new rules, system prompt additions, self-tasks, FORGE change requests. Receives failure history (last 5 failures from `memory/failures.json`), setup outcome tracking (previous setups vs current prices), stagnation alerts (when 3+ consecutive sessions have zero rule changes), and NEXUS_IDENTITY.md as constitutional context.
-9. **AXIOM Validation Gate** — `validateAxiomOutput()` checks required fields, array types, recycled reflection detection (>70%), and rule ID format. Falls back to empty reflection on failure.
-10. **FORGE** — Applies AXIOM's code change requests. Patches `src/` files via Claude API, validates with `tsc`, reverts on failure. Protected files: `security.ts`, `forge.ts`, `session.yml`, `README.md`. Max 2 changes per session, max 200 lines per patch. Code changes go through PRs, not direct main commits.
-11. **FORGE Protected File Enforcement** — `git diff` verifies no protected files were modified after FORGE runs
-12. **Journal** — writes markdown + updates GitHub Pages HTML + auto-updates README sessions table
-13. **Commit** — GitHub Actions commits memory/journal/docs changes to main; FORGE src/ changes go to a dedicated branch with a PR
-14. **Crash Rollback** — on unhandled exceptions, `git checkout -- .` reverts to the pre-session snapshot and the failure is logged to `memory/failures.json`
+4. **Macro & Geopolitical Data** — `fetchMacroSnapshot()` pulls FRED indicators (Fed Funds Rate, yield curve, VIX, CPI, unemployment, credit spreads, USD index), US Treasury debt figures, and GDELT geopolitical events in parallel. Gracefully degrades — missing API keys or failed fetches don't break the session. Derives signals (yield curve inversion, VIX elevation, credit stress).
+5. **Community Issues** — fetches GitHub issues labeled `nexus-input`, sanitized through security
+6. **Self-Tasks** — fetches open issues labeled `nexus-self-task` (deduplicated)
+7. **ORACLE** — Claude API call with market data + macro context + rules + system prompt → structured JSON analysis (rules embedded in prompt). Max 8192 output tokens. Truncated responses are salvaged via field-boundary cut points.
+8. **ORACLE Validation Gate** — `validateOracleOutput()` checks analysis length, confidence range, bias validity, setup sanity, and recycled content detection (>80% Jaccard similarity blocks). Session halts on failure.
+9. **AXIOM** — Claude API call reflecting on ORACLE's output → rule updates, new rules, system prompt additions, self-tasks, FORGE change requests. Receives failure history (last 5 failures from `memory/failures.json`), setup outcome tracking (previous setups vs current prices), stagnation alerts (when 3+ consecutive sessions have zero rule changes), and NEXUS_IDENTITY.md as constitutional context.
+10. **AXIOM Validation Gate** — `validateAxiomOutput()` checks required fields, array types, recycled reflection detection (>70%), and rule ID format. Falls back to empty reflection on failure.
+11. **FORGE** — Applies AXIOM's code change requests. Patches `src/` files via Claude API, validates with `tsc`, reverts on failure. Protected files: `security.ts`, `forge.ts`, `session.yml`, `README.md`. Max 2 changes per session, max 200 lines per patch. Code changes go through PRs, not direct main commits.
+12. **FORGE Protected File Enforcement** — `git diff` verifies no protected files were modified after FORGE runs
+13. **Journal** — writes markdown + updates GitHub Pages HTML + auto-updates README sessions table
+14. **Commit** — GitHub Actions commits memory/journal/docs changes to main; FORGE src/ changes go to a dedicated branch with a PR
+15. **Crash Rollback** — on unhandled exceptions, `git checkout -- .` reverts to the pre-session snapshot and the failure is logged to `memory/failures.json`
 
 ## Key Design Decisions
 
 - **Claude Sonnet** is used for ORACLE, AXIOM, and FORGE calls (`claude-sonnet-4-20250514`)
-- **No external market data packages** — raw Yahoo Finance v8 API via `fetch()`
+- **No external market data packages** — raw Yahoo Finance v8 API, FRED, US Treasury, and GDELT APIs via `fetch()`
+- **Macro data is optional** — FRED requires a free API key (`FRED_API_KEY`), Treasury and GDELT need no auth. All sources degrade gracefully on failure
 - **Memory is git-versioned** — every cognitive change is a commit
 - **Security-first community input** — all issues pass through `sanitizeAllIssues()` before touching the prompt
 - **Foundational rules (r001-r010)** are constitutional — AXIOM can modify their wording but cannot delete them
@@ -97,6 +100,7 @@ npm run rebuild-site         # Regenerate GitHub Pages
 
 ### Environment
 - Requires `ANTHROPIC_API_KEY` in `.env`
+- Optional `FRED_API_KEY` for macro economic indicators (free at https://fred.stlouisfed.org/docs/api/api_key.html)
 - Optional `GITHUB_TOKEN` for issue reading/writing
 - Optional `GITHUB_REPOSITORY` (defaults to `The-R4V3N/Nexus`)
 
@@ -104,6 +108,13 @@ npm run rebuild-site         # Regenerate GitHub Pages
 - `strict: false` in tsconfig — the codebase uses `any` for API responses
 - Run with `ts-node` (transpileOnly, commonjs)
 - Target: ES2020
+
+## Bug Fixing Protocol
+
+When a bug is reported, do not start by trying to fix it. Instead:
+1. Write a test that reproduces the bug (prove it fails)
+2. Delegate the fix to subagents who must prove their fix works by making the test pass
+3. Only consider the bug fixed when the reproduction test passes
 
 ## Rules for Contributing
 

@@ -79,7 +79,8 @@ export async function runOracleAnalysis(
   snapshots: MarketSnapshot[],
   sessionId: string,
   sessionNumber: number,
-  communityIssues: string = ""
+  communityIssues: string = "",
+  macroContext: string = ""
 ): Promise<OracleAnalysis> {
   const systemPrompt  = loadSystemPrompt();
   const rules         = loadAnalysisRules();
@@ -90,7 +91,7 @@ export async function runOracleAnalysis(
   const userMessage = `
 ${marketData}
 
-${rulesText}
+${macroContext ? macroContext + "\n\n" : ""}${rulesText}
 
 ${communityIssues ? communityIssues + "\n\n" : ""}SESSION: #${sessionNumber}
 TIMESTAMP: ${new Date().toISOString()}
