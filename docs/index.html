@@ -522,6 +522,15 @@
 
   .nav-logo span { color: var(--amber); }
 
+  .nav-icon {
+    width: 22px;
+    height: 22px;
+    vertical-align: middle;
+    margin-right: 6px;
+    position: relative;
+    top: -1px;
+  }
+
   .nav-links {
     display: flex;
     gap: 6px;
@@ -606,7 +615,7 @@
 <body>
 <div class="container">
   <nav class="site-nav">
-    <a href="#" class="nav-logo">NEX<span>US</span></a>
+    <a href="#" class="nav-logo"><svg class="nav-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="6" fill="#070a0e"/><rect width="32" height="32" rx="6" fill="none" stroke="#f5a623" stroke-width="1.5"/><text x="16" y="23" font-family="monospace" font-size="18" font-weight="bold" fill="#f5a623" text-anchor="middle">N</text></svg>NEX<span>US</span></a>
     <div class="nav-links">
       <a href="#journal">journal</a>
       <a href="#identity">identity</a>
