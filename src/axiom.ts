@@ -8,6 +8,10 @@ import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
 import { validateAxiomOutput, logFailure } from "./validate";
 import { loadAllJournalEntries } from "./journal";
+import {
+  salvageJSON, stripSurrogates, extractJSONFromResponse,
+  MEMORY_DIR, SYSTEM_PROMPT_PATH, ANALYSIS_RULES_PATH,
+} from "./utils";
 import * as fs from "fs";
 import * as path from "path";
 import type {
@@ -17,10 +21,6 @@ import type {
   RuleUpdate,
   ForgeRequest,
 } from "./types";
-
-const MEMORY_DIR         = path.join(process.cwd(), "memory");
-const SYSTEM_PROMPT_PATH = path.join(MEMORY_DIR, "system-prompt.md");
-const ANALYSIS_RULES_PATH= path.join(MEMORY_DIR, "analysis-rules.json");
 
 
 // ── Build codebase context for AXIOM ──────────────────────
@@ -276,8 +276,8 @@ RULE POLICY — CRITICAL:
     ? identityContext + "\n\n" + systemMessage
     : systemMessage;
 
-  const cleanSystem  = fullSystemMessage.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
-  const cleanMessage = userMessage.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
+  const cleanSystem  = stripSurrogates(fullSystemMessage);
+  const cleanMessage = stripSurrogates(userMessage);
 
   const response = await client.messages.create({
     model:      "claude-sonnet-4-20250514",
@@ -291,17 +291,7 @@ RULE POLICY — CRITICAL:
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  let jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
-
-  // Extract JSON object if model returned text around it
-  const firstBrace = jsonText.indexOf("{");
-  const lastBrace  = jsonText.lastIndexOf("}");
-  if (firstBrace > 0 || (lastBrace !== -1 && lastBrace < jsonText.length - 1)) {
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      console.warn("  ⚠ AXIOM returned text around JSON — extracting object");
-      jsonText = jsonText.slice(firstBrace, lastBrace + 1);
-    }
-  }
+  const jsonText = extractJSONFromResponse(rawText);
 
   let rawParsed: any;
 
@@ -414,32 +404,6 @@ RULE POLICY — CRITICAL:
   })).filter((r: ForgeRequest) => r.file && r.description);
 
   return { reflection, forgeRequests };
-}
-
-// ── JSON salvage helper ────────────────────────────────────
-
-function salvageJSON(text: string): any | null {
-  let attempt = text;
-
-  const openBraces   = (attempt.match(/{/g)  || []).length;
-  const closeBraces  = (attempt.match(/}/g)  || []).length;
-  const openBrackets = (attempt.match(/\[/g) || []).length;
-  const closeBrackets= (attempt.match(/]/g)  || []).length;
-
-  // Close any dangling string
-  const lastQuote = attempt.lastIndexOf('"');
-  const afterLast = attempt.slice(lastQuote + 1);
-  if (lastQuote > 0 && !afterLast.includes('"') && (afterLast.includes(',') || afterLast.trim() === '')) {
-    attempt = attempt.slice(0, lastQuote + 1);
-  }
-
-  attempt = attempt.replace(/,\s*$/, '');
-
-  for (let i = 0; i < openBrackets - closeBrackets; i++) attempt += ']';
-  for (let i = 0; i < openBraces   - closeBraces;   i++) attempt += '}';
-
-  try   { return JSON.parse(attempt); }
-  catch { return null; }
 }
 
 // ── Memory Evolution ───────────────────────────────────────

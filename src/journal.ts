@@ -142,12 +142,20 @@ export function updateGithubPages(entries: JournalEntry[]): void {
   fs.writeFileSync(path.join(DOCS_DIR, "index.html"), html);
 }
 
-// ── Load all journal entries ───────────────────────────────
+// ── Load all journal entries (cached per session) ─────────
+
+let _entriesCache: JournalEntry[] | null = null;
 
 export function loadAllJournalEntries(): JournalEntry[] {
+  if (_entriesCache !== null) return _entriesCache;
   const stored = path.join(process.cwd(), "memory", "sessions.json");
   if (!fs.existsSync(stored)) return [];
-  return JSON.parse(fs.readFileSync(stored, "utf-8"));
+  _entriesCache = JSON.parse(fs.readFileSync(stored, "utf-8"));
+  return _entriesCache!;
+}
+
+export function invalidateEntriesCache(): void {
+  _entriesCache = null;
 }
 
 export function saveJournalEntry(entry: JournalEntry): void {
@@ -155,6 +163,7 @@ export function saveJournalEntry(entry: JournalEntry): void {
   const entries = loadAllJournalEntries();
   entries.push(entry);
   fs.writeFileSync(stored, JSON.stringify(entries, null, 2));
+  invalidateEntriesCache();
 }
 
 // ── README sessions table auto-update ─────────────────────

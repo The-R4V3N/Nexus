@@ -5,10 +5,12 @@ import {
   sanitizeAxiomOutput,
   isFoundationalRule,
   getMaxOutputTokens,
+  getMaxOracleOutputTokens,
   getSelfTaskLimit,
   getMaxSystemPromptLength,
   LIMITS,
   FOUNDATIONAL_RULE_IDS,
+  INJECTION_PATTERNS,
 } from "../src/security";
 
 // ── sanitizeIssueContent ────────────────────────────────────
@@ -442,12 +444,33 @@ describe("limit getters", () => {
     expect(typeof getMaxOutputTokens()).toBe("number");
   });
 
+  it("getMaxOracleOutputTokens returns 8192", () => {
+    expect(getMaxOracleOutputTokens()).toBe(8192);
+    expect(getMaxOracleOutputTokens()).toBe(LIMITS.MAX_ORACLE_OUTPUT_TOKENS);
+  });
+
+  it("getMaxOracleOutputTokens is larger than getMaxOutputTokens", () => {
+    expect(getMaxOracleOutputTokens()).toBeGreaterThan(getMaxOutputTokens());
+  });
+
   it("getSelfTaskLimit returns expected value", () => {
     expect(getSelfTaskLimit()).toBe(LIMITS.MAX_SELF_TASKS_PER_SESSION);
   });
 
   it("getMaxSystemPromptLength returns expected value", () => {
     expect(getMaxSystemPromptLength()).toBe(LIMITS.MAX_SYSTEM_PROMPT_LENGTH);
+  });
+});
+
+// ── INJECTION_PATTERNS export ───────────────────────────────
+
+describe("INJECTION_PATTERNS", () => {
+  it("is exported as a non-empty array of RegExp", () => {
+    expect(Array.isArray(INJECTION_PATTERNS)).toBe(true);
+    expect(INJECTION_PATTERNS.length).toBeGreaterThan(0);
+    for (const p of INJECTION_PATTERNS) {
+      expect(p).toBeInstanceOf(RegExp);
+    }
   });
 });
 

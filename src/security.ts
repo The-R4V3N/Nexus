@@ -68,6 +68,7 @@ const LIMITS = {
     MAX_RULE_LENGTH:            500,
     MAX_RULES_PER_SESSION:        2,
     MAX_OUTPUT_TOKENS:         4096,
+    MAX_ORACLE_OUTPUT_TOKENS:  8192,
     MIN_RULE_COUNT:               5,
     MAX_SYSTEM_PROMPT_LENGTH:  8000,
 };
@@ -347,8 +348,9 @@ export function sanitizeAxiomOutput(
 // ── Exports ────────────────────────────────────────────────
 
 export function getMaxOutputTokens():      number  { return LIMITS.MAX_OUTPUT_TOKENS; }
+export function getMaxOracleOutputTokens():number  { return LIMITS.MAX_ORACLE_OUTPUT_TOKENS; }
 export function getSelfTaskLimit():        number  { return LIMITS.MAX_SELF_TASKS_PER_SESSION; }
 export function getMaxSystemPromptLength():number  { return LIMITS.MAX_SYSTEM_PROMPT_LENGTH; }
 export function isFoundationalRule(id: string): boolean { return FOUNDATIONAL_RULE_IDS.has(id); }
 
-export { LIMITS, FOUNDATIONAL_RULE_IDS };
+export { LIMITS, FOUNDATIONAL_RULE_IDS, INJECTION_PATTERNS };

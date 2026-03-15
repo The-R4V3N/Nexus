@@ -79,12 +79,16 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 All external input passes through `security.ts` before reaching the AI:
 
 - **Prompt injection**: 20+ regex patterns block classic attacks (instruction override, role hijack, jailbreak tokens)
-- **Cost limits**: max 5 issues, 4000 total chars, 8192 output tokens for ORACLE, max 2 FORGE changes per session, max 200 lines per FORGE patch
+- **Cost limits**: max 5 issues, 4000 total chars, max 2 FORGE changes per session, max 200 lines per FORGE patch
+- **ORACLE token limit**: ORACLE has its own centralized token limit (`MAX_ORACLE_OUTPUT_TOKENS = 8192`) via `getMaxOracleOutputTokens()` in `security.ts`, separate from the default `MAX_OUTPUT_TOKENS = 4096` used by AXIOM/FORGE
 - **AXIOM output sanitization**: new rules checked for injection, weights clamped 1-10, self-task categories/priorities validated against allowlists
 - **Meta-rule blocking**: rules referencing 2+ other rules with enforcement keywords are blocked to prevent self-referential spirals
 - **Self-task deduplication**: normalized word overlap >70% prevents duplicate issues
 - **Foundational rule protection**: rules r001-r010 cannot be removed, minimum rule count enforced
-- **FORGE file protection**: `security.ts`, `forge.ts`, `session.yml`, `README.md` can never be modified by FORGE
+- **FORGE file protection**: `security.ts`, `forge.ts`, `session.yml`, `README.md` can never be modified by FORGE; files with `security` or `forge` prefixes are also blocked
+- **FORGE content safety**: AI-generated code is scanned by `isCodeSafe()` before writing to disk — blocks secret exfiltration, child_process, exec, filesystem mutations, and eval
+- **Macro data sanitization**: GDELT article fields and Alpha Vantage ticker data are sanitized via `sanitizeMacroText()` against injection patterns before entering the ORACLE prompt
+- **Error log sanitization**: API keys are stripped from error messages via `sanitizeErrorMessage()` before logging
 
 ## Working With the Code
 

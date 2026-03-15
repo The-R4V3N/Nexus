@@ -8,15 +8,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import * as fs from "fs";
 import * as path from "path";
 import { formatSnapshotsForPrompt } from "./markets";
+import { getMaxOracleOutputTokens } from "./security";
+import {
+  salvageJSON, stripSurrogates, extractJSONFromResponse, groupBy,
+  MEMORY_DIR, SYSTEM_PROMPT_PATH, ANALYSIS_RULES_PATH,
+} from "./utils";
 import type {
   MarketSnapshot,
   OracleAnalysis,
   AnalysisRules,
 } from "./types";
-
-const MEMORY_DIR = path.join(process.cwd(), "memory");
-const SYSTEM_PROMPT_PATH  = path.join(MEMORY_DIR, "system-prompt.md");
-const ANALYSIS_RULES_PATH = path.join(MEMORY_DIR, "analysis-rules.json");
 
 // ── Load evolving memory ───────────────────────────────────
 
@@ -162,11 +163,9 @@ Respond in this JSON structure:
 
 Only respond with the JSON, no other text.`;
 
-  const stripSurrogates = (s: string) => s.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
-
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 8192, // ORACLE needs room for full JSON analysis with detailed setups
+    max_tokens: getMaxOracleOutputTokens(), // ORACLE needs room for full JSON analysis with detailed setups
     system: stripSurrogates(systemPrompt),
     messages: [{ role: "user", content: stripSurrogates(userMessage) }],
   });
@@ -182,17 +181,7 @@ Only respond with the JSON, no other text.`;
     .join("");
 
   // Extract JSON from response — handle markdown fences, preamble text, trailing text
-  let jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
-
-  // If the response has text before/after the JSON, extract just the JSON object
-  const firstBrace = jsonText.indexOf("{");
-  const lastBrace  = jsonText.lastIndexOf("}");
-  if (firstBrace > 0 || (lastBrace !== -1 && lastBrace < jsonText.length - 1)) {
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      console.warn("  ⚠ ORACLE returned text around JSON — extracting object");
-      jsonText = jsonText.slice(firstBrace, lastBrace + 1);
-    }
-  }
+  const jsonText = extractJSONFromResponse(rawText);
 
   let parsed: any;
 
@@ -265,32 +254,6 @@ Only respond with the JSON, no other text.`;
   };
 }
 
-// ── JSON salvage helper ────────────────────────────────────
-
-function salvageJSON(text: string): any | null {
-  let attempt = text;
-
-  const openBraces    = (attempt.match(/{/g)  || []).length;
-  const closeBraces   = (attempt.match(/}/g)  || []).length;
-  const openBrackets  = (attempt.match(/\[/g) || []).length;
-  const closeBrackets = (attempt.match(/]/g)  || []).length;
-
-  // Close any dangling string
-  const lastQuote = attempt.lastIndexOf('"');
-  const afterLast = attempt.slice(lastQuote + 1);
-  if (lastQuote > 0 && !afterLast.includes('"') && (afterLast.includes(',') || afterLast.trim() === '')) {
-    attempt = attempt.slice(0, lastQuote + 1);
-  }
-
-  attempt = attempt.replace(/,\s*$/, '');
-
-  for (let i = 0; i < openBrackets - closeBrackets; i++) attempt += ']';
-  for (let i = 0; i < openBraces   - closeBraces;   i++) attempt += '}';
-
-  try   { return JSON.parse(attempt); }
-  catch { return null; }
-}
-
 // ── Formatters ─────────────────────────────────────────────
 
 function formatRulesForPrompt(rules: AnalysisRules): string {
@@ -298,12 +261,8 @@ function formatRulesForPrompt(rules: AnalysisRules): string {
   lines.push(`Rules version: ${rules.version} | Last updated: ${rules.lastUpdated}`);
   lines.push(`Focus instruments: ${rules.focusInstruments.join(", ")}\n`);
 
-  const byCategory: Record<string, typeof rules.rules> = {};
-  for (const r of rules.rules) {
-    if ((r as any).disabled) continue; // skip disabled rules
-    if (!byCategory[r.category]) byCategory[r.category] = [];
-    byCategory[r.category].push(r);
-  }
+  const activeRules = rules.rules.filter((r: any) => !r.disabled);
+  const byCategory = groupBy(activeRules, (r) => r.category);
 
   for (const [cat, items] of Object.entries(byCategory)) {
     lines.push(`[${cat.toUpperCase()}]`);

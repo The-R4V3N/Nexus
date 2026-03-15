@@ -8,12 +8,8 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { runSession } from "./agent";
 import { loadAllJournalEntries, updateGithubPages } from "./journal";
+import { MEMORY_DIR, ANALYSIS_RULES_PATH, SYSTEM_PROMPT_PATH, groupBy } from "./utils";
 import * as fs from "fs";
-import * as path from "path";
-
-const MEMORY_DIR = path.join(process.cwd(), "memory");
-const ANALYSIS_RULES_PATH = path.join(MEMORY_DIR, "analysis-rules.json");
-const SYSTEM_PROMPT_PATH = path.join(MEMORY_DIR, "system-prompt.md");
 
 const program = new Command();
 
@@ -108,11 +104,7 @@ program
     console.log(chalk.bold.yellow(`\n  NEXUS MIND — ${rules.rules.length} rules (v${rules.version})\n`));
     console.log(chalk.dim(`  Focus: ${rules.focusInstruments.join(", ")}\n`));
 
-    const byCategory: Record<string, typeof rules.rules> = {};
-    for (const r of rules.rules) {
-      if (!byCategory[r.category]) byCategory[r.category] = [];
-      byCategory[r.category].push(r);
-    }
+    const byCategory = groupBy(rules.rules, (r: any) => r.category);
 
     for (const [cat, items] of Object.entries(byCategory) as [string, typeof rules.rules][]) {
       console.log(chalk.dim(`  ── ${cat.toUpperCase()} ──`));

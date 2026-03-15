@@ -4,6 +4,7 @@
 // ============================================================
 
 import { sanitizeAllIssues, IssueSecurityReport } from "./security";
+import { stripSurrogates } from "./utils";
 
 export interface CommunityIssue {
   number:    number;
@@ -31,7 +32,7 @@ export async function fetchCommunityIssues(): Promise<CommunityIssue[]> {
 
   try {
     const url = `https://api.github.com/repos/${repo}/issues?labels=nexus-input&state=open&per_page=20&sort=reactions&direction=desc`;
-    const res = await fetch(url, { headers });
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(20000) });
 
     if (!res.ok) {
       console.warn(`  ⚠ GitHub API returned ${res.status} — skipping community issues`);
@@ -101,13 +102,7 @@ export function formatIssuesForPrompt(issues: CommunityIssue[]): string {
   return lines.join("\n");
 }
 
-// ── Unicode sanitizer (used internally) ───────────────────
-// Exported so other modules can reuse it
+// ── Unicode sanitizer (used internally + by self-tasks) ───
 export function sanitizeUnicode(str: string): string {
-  // Remove lone UTF-16 surrogates — these break JSON serialization
-  // and can appear when emoji are partially stripped from GitHub text
-  return str
-    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, "")
-    .replace(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "")
-    .trim();
+  return stripSurrogates(str).trim();
 }
