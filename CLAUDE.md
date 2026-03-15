@@ -21,6 +21,10 @@ src/
   security.ts     Prompt injection detection, cost guards, output sanitization, meta-rule blocking
   journal.ts      Markdown journal + GitHub Pages HTML + README table auto-update
   types.ts        All TypeScript interfaces
+  utils.ts        Shared utilities (salvageJSON, stripSurrogates, extractJSON, path constants, groupBy)
+
+config/
+  instruments.json    Externalized instrument definitions (17 instruments, editable without code changes)
 
 memory/           NEXUS's evolving mind (committed to git)
   system-prompt.md    Base + evolved system prompt (grows each session, capped at 8000 chars)
@@ -37,19 +41,16 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 
 1. **Pre-flight Check** — `tsc --noEmit` validates the codebase compiles before anything runs
 2. **Git Snapshot** — captures `HEAD` SHA for session-level rollback on unhandled crashes
-3. **Market Data** — `fetchAllMarkets()` pulls 17 instruments from Yahoo Finance
-4. **Macro & Geopolitical Data** — `fetchMacroSnapshot()` pulls FRED indicators (Fed Funds Rate, yield curve, VIX, CPI, unemployment, credit spreads, USD index), US Treasury debt figures, GDELT geopolitical events, and Alpha Vantage technicals (RSI, ATR for key instruments, top US gainers/losers) in parallel. Gracefully degrades — missing API keys or failed fetches don't break the session. Derives signals (yield curve inversion, VIX elevation, credit stress, overbought/oversold).
-5. **Community Issues** — fetches GitHub issues labeled `nexus-input`, sanitized through security
-6. **Self-Tasks** — fetches open issues labeled `nexus-self-task` (deduplicated)
-7. **ORACLE** — Claude API call with market data + macro context + rules + system prompt → structured JSON analysis (rules embedded in prompt). Max 8192 output tokens. Truncated responses are salvaged via field-boundary cut points.
-8. **ORACLE Validation Gate** — `validateOracleOutput()` checks analysis length, confidence range, bias validity, setup sanity, and recycled content detection (>80% Jaccard similarity blocks). Session halts on failure.
-9. **AXIOM** — Claude API call reflecting on ORACLE's output → rule updates, new rules, system prompt additions, self-tasks, FORGE change requests. Receives failure history (last 5 failures from `memory/failures.json`), setup outcome tracking (previous setups vs current prices), stagnation alerts (when 3+ consecutive sessions have zero rule changes), and NEXUS_IDENTITY.md as constitutional context.
-10. **AXIOM Validation Gate** — `validateAxiomOutput()` checks required fields, array types, recycled reflection detection (>70%), and rule ID format. Falls back to empty reflection on failure.
-11. **FORGE** — Applies AXIOM's code change requests. Patches `src/` files via Claude API, validates with `tsc`, reverts on failure. Protected files: `security.ts`, `forge.ts`, `session.yml`, `README.md`. Max 2 changes per session, max 200 lines per patch. Code changes go through PRs, not direct main commits.
-12. **FORGE Protected File Enforcement** — `git diff` verifies no protected files were modified after FORGE runs
-13. **Journal** — writes markdown + updates GitHub Pages HTML + auto-updates README sessions table
-14. **Commit** — GitHub Actions commits memory/journal/docs changes to main; FORGE src/ changes go to a dedicated branch with a PR
-15. **Crash Rollback** — on unhandled exceptions, `git checkout -- .` reverts to the pre-session snapshot and the failure is logged to `memory/failures.json`
+3. **Data Fetch (parallel)** — `fetchAllInputData()` pulls market data (17 instruments from Yahoo Finance), macro data (FRED, Treasury, GDELT, Alpha Vantage), community issues, and self-tasks simultaneously via `Promise.allSettled()`. Market data failure halts the session; other sources degrade gracefully.
+4. **ORACLE** — Claude API call with market data + macro context + rules + system prompt → structured JSON analysis (rules embedded in prompt). Max 8192 output tokens. Truncated responses are salvaged via field-boundary cut points.
+5. **ORACLE Validation Gate** — `validateOracleOutput()` checks analysis length, confidence range, bias validity, setup sanity, and recycled content detection (>80% Jaccard similarity blocks). Session halts on failure.
+6. **AXIOM** — Claude API call reflecting on ORACLE's output → rule updates, new rules, system prompt additions, self-tasks, FORGE change requests. Receives failure history (last 5 failures from `memory/failures.json`), setup outcome tracking (previous setups vs current prices), stagnation alerts (when 3+ consecutive sessions have zero rule changes), and NEXUS_IDENTITY.md as constitutional context.
+7. **AXIOM Validation Gate** — `validateAxiomOutput()` checks required fields, array types, recycled reflection detection (>70%), and rule ID format. Falls back to empty reflection on failure.
+8. **FORGE** — Applies AXIOM's code change requests. Patches `src/` files via Claude API, validates with `tsc`, reverts on failure. Protected files: `security.ts`, `forge.ts`, `session.yml`, `README.md`. Max 2 changes per session, max 200 lines per patch. Code changes go through PRs, not direct main commits.
+9. **FORGE Protected File Enforcement** — `git diff` verifies no protected files were modified after FORGE runs
+10. **Journal** — writes markdown + updates GitHub Pages HTML + auto-updates README sessions table
+11. **Commit** — GitHub Actions commits memory/journal/docs changes to main; FORGE src/ changes go to a dedicated branch with a PR
+12. **Crash Rollback** — on unhandled exceptions, `git checkout -- .` reverts to the pre-session snapshot and the failure is logged to `memory/failures.json`
 
 ## Key Design Decisions
 
@@ -73,6 +74,11 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 - **Setup outcome tracking** — previous session setups are compared against current market prices to report STOPPED OUT / TARGET HIT / OPEN outcomes
 - **Conditional version bumps** — `analysis-rules.json` version and lastUpdated only change when rules actually change, preventing false evolution signals
 - **GitHub Actions retry** — session step retries once with a 2-minute backoff on failure
+- **Sessions.json capped at 500 entries** — prevents unbounded growth; oldest entries pruned when limit exceeded
+- **Journal entries cached per session** — `loadAllJournalEntries()` uses in-process cache, invalidated on save, eliminating redundant disk reads
+- **Externalized instruments** — `config/instruments.json` defines the 17 tracked instruments; `markets.ts` falls back to hardcoded defaults if the file is missing
+- **Fetch timeouts on all external calls** — 10s for market data, 15s for macro data, 20s for GitHub API; prevents session hangs when APIs are unresponsive
+- **Phase 1 data fetches parallelized** — market data, macro data, community issues, and self-tasks are fetched simultaneously via `Promise.allSettled()`
 
 ## Security Model
 

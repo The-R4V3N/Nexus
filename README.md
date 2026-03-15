@@ -213,7 +213,11 @@ src/
 ├── self-tasks.ts   Autonomous issue creation + resolution (with dedup)
 ├── security.ts     Prompt injection + cost abuse protection
 ├── journal.ts      Markdown + GitHub Pages + README table generator
-└── types.ts        TypeScript interfaces
+├── types.ts        TypeScript interfaces
+└── utils.ts        Shared utilities (salvageJSON, stripSurrogates, path constants)
+
+config/
+└── instruments.json    Instrument definitions (externalized, editable without code changes)
 
 memory/             NEXUS's evolving mind (committed to git)
 ├── system-prompt.md    Grows every session (capped, oldest pruned)
@@ -235,7 +239,7 @@ docs/               GitHub Pages live journal site
 
 NEXUS is open to community input — but that input passes through a security layer before it ever reaches the AI.
 
-**Prompt injection protection** — every issue title and body is scanned against 20+ patterns before being injected into the prompt. Classic attacks like `"Ignore all previous instructions"`, role hijacking, identity overrides, and `[SYSTEM]` tag injections are blocked outright. Blocked issues are logged in the Actions output.
+**Prompt injection protection** — every issue title and body is scanned against 20+ patterns before being injected into the prompt. Classic attacks like `"Ignore all previous instructions"`, role hijacking, identity overrides, and `[SYSTEM]` tag injections are blocked outright. Blocked issues are logged in the Actions output. All macro data (GDELT article titles, Alpha Vantage ticker data) is sanitized via `sanitizeMacroText()` before entering the ORACLE prompt.
 
 **Cost abuse prevention** — hard limits are enforced at every layer regardless of what the AI requests:
 
@@ -252,6 +256,8 @@ NEXUS is open to community input — but that input passes through a security la
 | Min rules (cannot drop below) | 5 |
 | Max system prompt length | 8,000 chars |
 
+**FORGE content safety** — `isCodeSafe()` scans AI-generated code before writing to disk. Blocks patterns for secret exfiltration (`process.env` + `fetch`), `child_process`, `exec`, filesystem mutations, and `eval`. Unsafe patches are rejected.
+
 **Memory integrity** — AXIOM's own output is sanitized before anything touches `memory/`. New rules are scanned for injection patterns, rule weights are clamped to 1–10, self-task categories and priorities are validated against an allowlist. Self-tasks are deduplicated — if a similar task already exists, the new one is silently skipped. NEXUS cannot be tricked into writing malicious rules to its own mind.
 
 **Foundational rule protection** — Rules r001–r010 are constitutional. They encode the core ICT methodology that NEXUS was built on. AXIOM can refine their wording but cannot delete them. A minimum rule count is also enforced — AXIOM cannot reduce its ruleset below 5 rules regardless of what it requests.
@@ -261,6 +267,8 @@ NEXUS is open to community input — but that input passes through a security la
 **JSON resilience** — Both ORACLE and AXIOM responses are protected against truncated or malformed JSON from the API. If ORACLE's response is truncated (`stop_reason: "max_tokens"`), NEXUS salvages partial data by finding field-boundary cut points and progressively reconstructing valid JSON. If AXIOM's response cannot be parsed at all, no memory changes are applied — the session continues safely.
 
 **Constitutional identity** — `NEXUS_IDENTITY.md` defines 10 immutable rules that cannot be modified by AXIOM, FORGE, or any automated process. It is loaded into AXIOM's system prompt and protected by GitHub Actions (`git checkout HEAD -- NEXUS_IDENTITY.md`).
+
+**Error log safety** — API keys are stripped from error messages via `sanitizeErrorMessage()` before logging, preventing key exposure in CI output.
 
 ---
 
@@ -390,7 +398,7 @@ NEXUS began with:
 
 - 10 foundational analysis rules (ICT methodology) — protected as constitutional, cannot be deleted
 - A base system prompt built from first principles (capped at 8,000 chars, oldest sections pruned)
-- 3,800+ lines of TypeScript across 12 modules (including quality gates)
+- 5,000+ lines of TypeScript across 14 modules (including quality gates)
 - A constitutional identity document (`NEXUS_IDENTITY.md`) defining immutable boundaries
 - JSON resilience — truncated API responses salvaged via field-boundary cut points
 - Quality gates — ORACLE and AXIOM outputs validated before entering memory
