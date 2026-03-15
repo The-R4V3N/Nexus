@@ -45,7 +45,7 @@ function generateSessionTitle(oracle: OracleAnalysis, reflection: AxiomReflectio
   if (topSetup) {
     return `${emoji} ${topSetup.instrument} ${topSetup.type} + ${reflection.ruleUpdates.length > 0 ? "rule evolution" : "no rule changes"}`;
   }
-  return `${emoji} No clear setups — ${reflection.whatFailed.split(".")[0]}`;
+  return `${emoji} No clear setups — ${(reflection.whatFailed ?? "").split(".")[0]}`;
 }
 
 // ── Write Markdown Journal ─────────────────────────────────
@@ -53,7 +53,7 @@ function generateSessionTitle(oracle: OracleAnalysis, reflection: AxiomReflectio
 export function writeJournalMarkdown(entry: JournalEntry): string {
   fs.mkdirSync(JOURNAL_DIR, { recursive: true });
 
-  const filename = `session-${String(entry.sessionNumber).padStart(4, "0")}-${entry.date.replace(/[: ]/g, "-")}.md`;
+  const filename = `session-${String(entry.sessionNumber).padStart(4, "0")}-${(entry.date ?? "unknown").replace(/[: ]/g, "-")}.md`;
   const filepath = path.join(JOURNAL_DIR, filename);
 
   const biasIcon = { bullish: "🟢", bearish: "🔴", neutral: "⚪", mixed: "🟡" };
@@ -209,7 +209,7 @@ export function updateReadmeSessionsTable(entries: JournalEntry[]): void {
 // ── HTML helpers ──────────────────────────────────────────
 
 function escapeHTML(str: string): string {
-  return str
+  return (str ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

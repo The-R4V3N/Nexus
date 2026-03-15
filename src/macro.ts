@@ -520,12 +520,12 @@ export function formatMacroForPrompt(snapshot: MacroSnapshot): string {
 
     if (snapshot.alphaVantage.topGainers.length > 0) {
       lines.push("");
-      const gainers = snapshot.alphaVantage.topGainers.map((g) => `${g.ticker} +${g.changePercent.replace("+", "")}`).join(", ");
+      const gainers = snapshot.alphaVantage.topGainers.map((g) => `${g.ticker ?? "?"} +${(g.changePercent ?? "").replace("+", "")}`).join(", ");
       lines.push(`Top US Gainers: ${gainers}`);
     }
 
     if (snapshot.alphaVantage.topLosers.length > 0) {
-      const losers = snapshot.alphaVantage.topLosers.map((l) => `${l.ticker} ${l.changePercent}`).join(", ");
+      const losers = snapshot.alphaVantage.topLosers.map((l) => `${l.ticker ?? "?"} ${l.changePercent ?? ""}`).join(", ");
       lines.push(`Top US Losers: ${losers}`);
     }
 
