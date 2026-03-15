@@ -190,8 +190,11 @@ export async function runSession(force = false): Promise<void> {
   let sessionStartSha = "";
   try {
     sessionStartSha = execSync("git rev-parse HEAD", { cwd: process.cwd(), stdio: "pipe", encoding: "utf-8" }).trim();
-  } catch { /* not a git repo or git not available */ }
+  } catch (err) {
+    console.debug(chalk.dim(`  [debug] git SHA capture failed: ${err}`));
+  }
 
+ let currentPhase: "oracle" | "axiom" | "forge" | "journal" = "oracle";
  try {
   // Pre-flight: verify codebase compiles before starting session
   console.log(chalk.dim("  Pre-flight: checking TypeScript build..."));
@@ -324,6 +327,7 @@ export async function runSession(force = false): Promise<void> {
   }
 
   // ── Phase 2: ORACLE analysis ──
+  currentPhase = "oracle";
   console.log(chalk.bold.yellow("  ── PHASE 2: ORACLE ANALYSIS ──\n"));
   const oracleSpinner = ora({ text: "ORACLE analyzing market structure...", color: "yellow" }).start();
 
@@ -371,6 +375,7 @@ export async function runSession(force = false): Promise<void> {
   }
 
   // ── Phase 3: AXIOM reflection ──
+  currentPhase = "axiom";
   console.log(chalk.bold.yellow("  ── PHASE 3: AXIOM REFLECTION ──\n"));
   const axiomSpinner = ora({ text: "AXIOM reflecting on cognitive performance...", color: "magenta" }).start();
 
@@ -414,6 +419,7 @@ export async function runSession(force = false): Promise<void> {
   // ── Phase 3b: FORGE — code evolution (only runs when AXIOM requests changes) ──
   let forgeResults: import("./types").ForgeResult[] = [];
   if (axiomResult.forgeRequests.length > 0) {
+    currentPhase = "forge";
     console.log(chalk.bold.yellow("  ── PHASE 3b: FORGE CODE EVOLUTION ──\n"));
     const forgeSpinner = ora({ text: "FORGE applying code changes...", color: "cyan" }).start();
     try {
@@ -448,7 +454,9 @@ export async function runSession(force = false): Promise<void> {
         try {
           execSync(`git checkout -- src/${path.basename(result.file)}`, { cwd: process.cwd(), stdio: "pipe" });
           forgeResults[i] = { ...result, success: false, reason: `Reverted — patch too large (${result.linesChanged} lines, max 200)`, reverted: true };
-        } catch { /* best effort */ }
+        } catch (err) {
+          console.debug(chalk.dim(`  [debug] FORGE large-patch revert failed: ${err}`));
+        }
       }
     }
 
@@ -466,13 +474,16 @@ export async function runSession(force = false): Promise<void> {
             ...r, success: false, reason: "Reverted — protected file violation detected", reverted: true
           }));
         }
-      } catch { /* git diff returns non-zero if files don't exist, that's fine */ }
+      } catch (err) {
+        console.debug(chalk.dim(`  [debug] FORGE protected-file check failed: ${err}`));
+      }
     }
 
     console.log("");
   }
 
   // ── Phase 4: Journal ──
+  currentPhase = "journal";
   console.log(chalk.bold.yellow("  ── PHASE 4: JOURNAL ──\n"));
   const journalSpinner = ora({ text: "Writing journal entry...", color: "cyan" }).start();
 
@@ -505,14 +516,16 @@ export async function runSession(force = false): Promise<void> {
     console.error(`  ✗ Session failed with unhandled error: ${err}`);
     logFailure({
       sessionNumber, timestamp: new Date().toISOString(),
-      phase: "oracle", errors: [String(err)], warnings: [], action: "skipped"
+      phase: currentPhase, errors: [String(err)], warnings: [], action: "skipped"
     });
     // Rollback any uncommitted changes from this session
     if (sessionStartSha) {
       try {
         execSync("git checkout -- .", { cwd: process.cwd(), stdio: "pipe" });
         console.log("  ↩ Rolled back uncommitted changes from failed session");
-      } catch { /* best effort */ }
+      } catch (err) {
+        console.debug(chalk.dim(`  [debug] session rollback failed: ${err}`));
+      }
     }
     // Don't re-throw — let the process exit cleanly so GitHub Actions doesn't fail
   }

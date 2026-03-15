@@ -43,7 +43,9 @@ function buildCodebaseContext(openSelfTasksText: string): string {
       const size = fs.statSync(path.join(srcDir, f)).size;
       lines.push(`  src/${f} (${size} bytes)`);
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`  [debug] codebase map: file listing failed: ${err}`);
+  }
 
   lines.push("");
 
@@ -64,7 +66,9 @@ function buildCodebaseContext(openSelfTasksText: string): string {
         lines.push("");
       }
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`  [debug] codebase map: file content injection failed: ${err}`);
+  }
 
   // Always inject README sessions table section
   try {
@@ -76,7 +80,9 @@ function buildCodebaseContext(openSelfTasksText: string): string {
       lines.push(readme.slice(tableStart, tableEnd + 60));
       lines.push("");
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`  [debug] codebase map: README table injection failed: ${err}`);
+  }
 
   // Inject last 5 sessions summary for README table update
   try {
@@ -92,7 +98,9 @@ function buildCodebaseContext(openSelfTasksText: string): string {
       lines.push(`  #${s.sessionNumber} | ${date} | ${bias} | ${setup} setups | ${conf}% | ${rules} rules`);
     }
     lines.push("");
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`  [debug] codebase map: sessions summary injection failed: ${err}`);
+  }
 
   return lines.join("\n");
 }
@@ -125,7 +133,9 @@ export async function runAxiomReflection(
     if (fs.existsSync(identityPath)) {
       identityContext = fs.readFileSync(identityPath, "utf-8");
     }
-  } catch { /* identity file not required */ }
+  } catch (err) {
+    console.debug(`  [debug] identity file load failed: ${err}`);
+  }
 
   const systemMessage = `You are NEXUS AXIOM, the self-reflection engine of the NEXUS market intelligence system.
 Your purpose is to critique the analysis just produced, identify cognitive biases and gaps, then generate precise updates to improve future performance.

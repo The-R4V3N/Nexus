@@ -127,4 +127,17 @@ describe("buildJournalEntry", () => {
     );
     expect(entry.axiomSummary).toBe("Big changes this session");
   });
+
+  it("handles unexpected bias values without crashing", () => {
+    // An attacker-controlled bias value should not break buildJournalEntry
+    const entry = buildJournalEntry(
+      1,
+      makeOracle({ bias: { overall: '<img onerror="alert(1)">' as any, notes: "xss attempt" } }),
+      makeReflection(),
+      makeRules()
+    );
+    expect(entry.fullAnalysis.bias.overall).toContain("<img");
+    // buildJournalEntry stores the raw value; the HTML sanitization happens in buildEntryHTML
+    expect(entry.sessionNumber).toBe(1);
+  });
 });

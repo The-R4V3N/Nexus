@@ -7,24 +7,25 @@
 
 const INJECTION_PATTERNS: RegExp[] = [
     // Classic instruction override attempts
-    /ignore\s+(all\s+)?(previous|prior|above|earlier)\s+instructions?/i,
-    /disregard\s+(all\s+)?(previous|prior|above|earlier)\s+instructions?/i,
-    /forget\s+(all\s+)?(previous|prior|above|earlier)\s+instructions?/i,
-    /you\s+are\s+now\s+(a\s+)?(?!nexus)/i,
-    /new\s+(system\s+)?prompt/i,
-    /override\s+(system|instructions?|rules?|prompt)/i,
+    // NOTE: \s{1,10} used instead of \s+ to prevent ReDoS via catastrophic backtracking
+    /ignore\s{1,10}(all\s{1,10})?(previous|prior|above|earlier)\s{1,10}instructions?/i,
+    /disregard\s{1,10}(all\s{1,10})?(previous|prior|above|earlier)\s{1,10}instructions?/i,
+    /forget\s{1,10}(all\s{1,10})?(previous|prior|above|earlier)\s{1,10}instructions?/i,
+    /you\s{1,10}are\s{1,10}now\s{1,10}(a\s{1,10})?(?!nexus)/i,
+    /new\s{1,10}(system\s{1,10})?prompt/i,
+    /override\s{1,10}(system|instructions?|rules?|prompt)/i,
 
     // Role/identity hijacking
-    /act\s+as\s+(if\s+you\s+(are|were)\s+)?(?!a\s+market)/i,
-    /pretend\s+(you\s+are|to\s+be)/i,
-    /your\s+(true|real|actual)\s+(purpose|goal|mission|identity)/i,
-    /you\s+are\s+(actually|really)\s+(an?\s+)?(?!market)/i,
+    /act\s{1,10}as\s{1,10}(if\s{1,10}you\s{1,10}(are|were)\s{1,10})?(?!a\s{1,10}market)/i,
+    /pretend\s{1,10}(you\s{1,10}are|to\s{1,10}be)/i,
+    /your\s{1,10}(true|real|actual)\s{1,10}(purpose|goal|mission|identity)/i,
+    /you\s{1,10}are\s{1,10}(actually|really)\s{1,10}(an?\s{1,10})?(?!market)/i,
 
     // Direct rule manipulation
-    /add\s+(this\s+)?(rule|instruction)\s+to\s+your\s+(memory|rules|system)/i,
-    /update\s+your\s+(memory|rules|system\s+prompt)\s+to/i,
-    /from\s+now\s+on\s+you\s+(must|should|will|shall)/i,
-    /always\s+respond\s+with/i,
+    /add\s{1,10}(this\s{1,10})?(rule|instruction)\s{1,10}to\s{1,10}your\s{1,10}(memory|rules|system)/i,
+    /update\s{1,10}your\s{1,10}(memory|rules|system\s{1,10}prompt)\s{1,10}to/i,
+    /from\s{1,10}now\s{1,10}on\s{1,10}you\s{1,10}(must|should|will|shall)/i,
+    /always\s{1,10}respond\s{1,10}with/i,
 
     // Jailbreak patterns
     /\[system\]/i,
@@ -36,15 +37,15 @@ const INJECTION_PATTERNS: RegExp[] = [
     /###\s*system/i,
 
     // API / cost abuse
-    /repeat\s+(the\s+following\s+)?\d{3,}/i,
-    /generate\s+\d{4,}\s+words?/i,
-    /write\s+\d{4,}\s+words?/i,
+    /repeat\s{1,10}(the\s{1,10}following\s{1,10})?\d{3,}/i,
+    /generate\s{1,10}\d{4,}\s{1,10}words?/i,
+    /write\s{1,10}\d{4,}\s{1,10}words?/i,
 
     // Sensitive data extraction
-    /reveal\s+(your\s+)?(api\s+key|secret|token|password|key)/i,
-    /print\s+(your\s+)?(api\s+key|system\s+prompt|instructions?)/i,
-    /what\s+is\s+your\s+(api\s+key|system\s+prompt)/i,
-    /show\s+(me\s+)?(your\s+)?(api\s+key|system\s+prompt|secret)/i,
+    /reveal\s{1,10}(your\s{1,10})?(api\s{1,10}key|secret|token|password|key)/i,
+    /print\s{1,10}(your\s{1,10})?(api\s{1,10}key|system\s{1,10}prompt|instructions?)/i,
+    /what\s{1,10}is\s{1,10}your\s{1,10}(api\s{1,10}key|system\s{1,10}prompt)/i,
+    /show\s{1,10}(me\s{1,10})?(your\s{1,10})?(api\s{1,10}key|system\s{1,10}prompt|secret)/i,
 ];
 
 // ── Suspicious content patterns (warn but don't block) ─────
@@ -334,11 +335,31 @@ export function sanitizeAxiomOutput(
         warnings.push(`Capped self-tasks at ${LIMITS.MAX_SELF_TASKS_PER_SESSION} (was ${rawTasks.length})`);
     }
 
+    // ── Validate resolvedSelfTasks ──
+    const rawResolved = (parsed.resolvedSelfTasks ?? []) as any[];
+    const safeResolved: any[] = [];
+
+    for (const resolved of rawResolved) {
+        const issueNum = parseInt(resolved.issueNumber);
+        if (!Number.isInteger(issueNum) || issueNum <= 0) {
+            warnings.push(`Blocked resolvedSelfTask with invalid issueNumber: ${resolved.issueNumber}`);
+            continue;
+        }
+
+        let comment = typeof resolved.resolutionComment === "string"
+            ? resolved.resolutionComment
+            : "";
+        // Strip HTML tags and cap at 500 chars
+        comment = comment.replace(/<[^>]+>/g, "").slice(0, 500);
+
+        safeResolved.push({ issueNumber: issueNum, resolutionComment: comment });
+    }
+
     return {
         newRules:         safeRules,
         ruleUpdates:      safeUpdates,
         newSelfTasks:     safeTasks,
-        resolvedTasks:    parsed.resolvedSelfTasks ?? [],
+        resolvedTasks:    safeResolved,
         blockedRules,
         blockedSelfTasks,
         warnings,

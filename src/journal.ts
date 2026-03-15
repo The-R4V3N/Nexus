@@ -158,10 +158,15 @@ export function invalidateEntriesCache(): void {
   _entriesCache = null;
 }
 
+const MAX_SESSIONS = 500;
+
 export function saveJournalEntry(entry: JournalEntry): void {
   const stored = path.join(process.cwd(), "memory", "sessions.json");
   const entries = loadAllJournalEntries();
   entries.push(entry);
+  if (entries.length > MAX_SESSIONS) {
+    entries.splice(0, entries.length - MAX_SESSIONS);
+  }
   fs.writeFileSync(stored, JSON.stringify(entries, null, 2));
   invalidateEntriesCache();
 }
@@ -218,8 +223,12 @@ function escapeAndBreak(str: string): string {
 
 // ── HTML builders ──────────────────────────────────────────
 
+const VALID_BIASES = new Set(["bullish", "bearish", "neutral", "mixed"]);
+
 function buildEntryHTML(entry: JournalEntry, index: number): string {
-  const biasClass = escapeHTML(entry.fullAnalysis.bias.overall);
+  const biasClass = VALID_BIASES.has(entry.fullAnalysis.bias.overall)
+    ? escapeHTML(entry.fullAnalysis.bias.overall)
+    : "neutral";
   const isFirst = index === 0; // newest entry starts expanded
 
   const setupsHTML = entry.fullAnalysis.setups.map((s: any) => {
