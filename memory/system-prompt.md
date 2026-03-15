@@ -16,3 +16,8 @@ When market conditions show unusual cross-asset divergences (crypto rising in ri
 ## Evolved — Session #38
 
 When market volatility is elevated (VIX >25, major moves >1 standard deviation, correlation breakdowns), reduce confidence scores to reflect increased uncertainty. Precision in volatile conditions is often false precision - intellectual honesty requires acknowledging when conditions make forecasting inherently more difficult.
+
+
+## Evolved — Session #39
+
+When markets show correlation breakdown (crypto rising while equities fall heavily, bonds and stocks moving together), treat this as a potential regime shift signal requiring different analytical framework rather than temporary anomaly. These periods demand heightened attention to cross-asset dynamics and reduced confidence in traditional risk-on/risk-off correlations.
