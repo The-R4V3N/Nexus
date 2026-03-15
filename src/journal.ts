@@ -59,9 +59,10 @@ export function writeJournalMarkdown(entry: JournalEntry): string {
   const biasIcon = { bullish: "🟢", bearish: "🔴", neutral: "⚪", mixed: "🟡" };
 
   const content = `# Session #${entry.sessionNumber} — ${entry.title}
-**Date:** ${entry.date}  
-**Bias:** ${biasIcon[entry.fullAnalysis.bias.overall] ?? "⚪"} ${entry.fullAnalysis.bias.overall.toUpperCase()}  
-**Confidence:** ${entry.fullAnalysis.confidence}/100  
+
+**Date:** ${entry.date}
+**Bias:** ${biasIcon[entry.fullAnalysis.bias.overall] ?? "⚪"} ${entry.fullAnalysis.bias.overall.toUpperCase()}
+**Confidence:** ${entry.fullAnalysis.confidence}/100
 **Rules:** ${entry.ruleCount} (v${entry.systemPromptVersion})
 
 ---
@@ -71,6 +72,7 @@ export function writeJournalMarkdown(entry: JournalEntry): string {
 ${entry.fullAnalysis.analysis}
 
 ### Bias
+
 ${entry.fullAnalysis.bias.overall.toUpperCase()} — ${entry.fullAnalysis.bias.notes}
 
 ### Setups Identified (${entry.fullAnalysis.setups.length})
@@ -80,7 +82,9 @@ ${entry.fullAnalysis.setups.length === 0 ? "_No high-probability setups this ses
         const specs = s.entry ? `  \nEntry: **${s.entry}** | Stoploss: **${s.stop}** | Target: **${s.target}** | Risk/Reward: **${s.RR}** | Timeframe: **${s.timeframe}**` : "";
         return `
 **${s.instrument}** — ${s.type} (${s.direction.toUpperCase()})
+
 ${s.description}${specs}
+
 _Invalidated if: ${s.invalidation}_
 `;
       }).join("\n---\n")}
@@ -99,22 +103,27 @@ ${entry.fullAnalysis.keyLevels.length === 0 ? "_No key levels identified._" :
 ${entry.reflection.evolutionSummary}
 
 ### What Worked
+
 ${entry.reflection.whatWorked}
 
 ### What Failed
+
 ${entry.reflection.whatFailed}
 
 ${entry.reflection.cognitiveBiases.length > 0 ? `### Cognitive Biases Detected
+
 ${entry.reflection.cognitiveBiases.map((b) => `- ${b}`).join("\n")}` : ""}
 
 ${entry.reflection.ruleUpdates.length > 0 ? `### Rule Updates (${entry.reflection.ruleUpdates.length})
+
 ${entry.reflection.ruleUpdates.map((u) => `
-**[${u.type.toUpperCase()}]** \`${u.ruleId}\`  
-_Reason: ${u.reason}_  
+**[${u.type.toUpperCase()}]** \`${u.ruleId}\`
+_Reason: ${u.reason}_
 ${u.before ? `Before: ${u.before}  \n` : ""}${u.after ? `After: ${u.after}` : ""}
-`).join("\n")} ` : "_No rule changes this session._"}
+`).join("\n")}` : "_No rule changes this session._"}
 
 ${entry.reflection.newSystemPromptSections ? `### System Prompt Evolution
+
 > ${entry.reflection.newSystemPromptSections}` : ""}
 `;
 
