@@ -211,7 +211,7 @@ function buildEntryHTML(entry: JournalEntry, index: number): string {
   const setupsHTML = entry.fullAnalysis.setups.map((s: any) => {
     const hasSpecs = s.entry && s.entry !== 0;
     const specsLine = hasSpecs
-      ? `<div class="setup-specs">Entry: ${s.entry} &middot; Stoploss: ${s.stop} &middot; Target: ${s.target} &middot; Risk/Reward: ${s.RR} &middot; ${escapeHTML(s.timeframe ?? "")}</div>`
+      ? `<div class="setup-specs">E:${s.entry} S:${s.stop} T:${s.target}<br>RR:${s.RR} TF:${escapeHTML(s.timeframe ?? "")}</div>`
       : "";
     return `
     <div class="setup-chip ${escapeHTML(s.direction)}">
@@ -367,7 +367,7 @@ function buildPageHTML(
     z-index: 0;
   }
 
-  .container { max-width: 1200px; margin: 0 auto; padding: 0 10px; position: relative; z-index: 1; overflow-x: hidden; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 10px; position: relative; z-index: 1; overflow-x: hidden; width: 100%; }
 
   /* ── Header (mobile-first) ── */
   header {
