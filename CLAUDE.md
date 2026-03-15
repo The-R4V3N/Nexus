@@ -6,7 +6,7 @@ NEXUS is a self-evolving market intelligence AI. It runs 3 automated sessions pe
 
 ## Architecture
 
-```
+```text
 src/
   index.ts        CLI entry point (commander)
   agent.ts        Session orchestrator — runs the full defensive pipeline
@@ -89,6 +89,7 @@ All external input passes through `security.ts` before reaching the AI:
 ## Working With the Code
 
 ### Commands
+
 ```bash
 npm run run:session          # Run full session (weekdays only)
 npm run run:session -- --force  # Run even on weekends
@@ -99,12 +100,14 @@ npm run rebuild-site         # Regenerate GitHub Pages
 ```
 
 ### Environment
+
 - Requires `ANTHROPIC_API_KEY` in `.env`
-- Optional `FRED_API_KEY` for macro economic indicators (free at https://fred.stlouisfed.org/docs/api/api_key.html)
+- Optional `FRED_API_KEY` for macro economic indicators (free at <https://fred.stlouisfed.org/docs/api/api_key.html>)
 - Optional `GITHUB_TOKEN` for issue reading/writing
 - Optional `GITHUB_REPOSITORY` (defaults to `The-R4V3N/Nexus`)
 
 ### TypeScript
+
 - `strict: false` in tsconfig — the codebase uses `any` for API responses
 - Run with `ts-node` (transpileOnly, commonjs)
 - Target: ES2020
@@ -112,6 +115,7 @@ npm run rebuild-site         # Regenerate GitHub Pages
 ## Bug Fixing Protocol
 
 When a bug is reported, do not start by trying to fix it. Instead:
+
 1. Write a test that reproduces the bug (prove it fails)
 2. Delegate the fix to subagents who must prove their fix works by making the test pass
 3. Only consider the bug fixed when the reproduction test passes

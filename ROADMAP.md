@@ -5,6 +5,7 @@
 NEXUS receives one **price snapshot** per instrument per session: price, previous close, change%, high, low, volume. It runs 3 sessions per day aligned to major market opens (Asia, London, NY).
 
 ### What works now
+
 - Cross-asset sentiment analysis (risk-on/risk-off classification)
 - Session range breakouts (Asian high/low → London sweep)
 - Previous session level tests (support/resistance from memory)
@@ -14,7 +15,9 @@ NEXUS receives one **price snapshot** per instrument per session: price, previou
 - Complete setup specs (entry/stoploss/target/RR/timeframe)
 
 ### What's missing for true ICT methodology
+
 NEXUS claims to use ICT concepts but currently **cannot detect**:
+
 - **Fair Value Gaps** — requires 3 consecutive candles (candle 1 high < candle 3 low = bullish FVG)
 - **Order Blocks** — requires identifying the last opposing candle before a displacement move
 - **Breaker Blocks** — failed order blocks that flip from support to resistance
@@ -29,21 +32,25 @@ NEXUS claims to use ICT concepts but currently **cannot detect**:
 **Goal:** Give NEXUS access to multi-timeframe candle data so it can actually perform ICT analysis.
 
 ### What to build
+
 - Extend `markets.ts` to fetch historical OHLCV bars from Yahoo Finance v8 API
 - Fetch two timeframes per instrument:
   - **Daily (1D)** — last 20 candles for HTF structure
   - **Hourly (1H)** — last 24 candles for intraday analysis
+
 - Store as structured data: `{ open, high, low, close, volume, timestamp }[]`
 - Pass to ORACLE prompt as formatted candle data table
 - Keep current snapshot data as well (for real-time reference)
 
 ### Token budget
+
 - 17 instruments × (20 daily + 24 hourly) candles ≈ 748 candles
 - At ~30 tokens per candle ≈ 22,440 tokens
 - May need to reduce to top 5–8 focus instruments for candle data
 - Alternative: only fetch candles for `focusInstruments` from analysis-rules.json
 
 ### Risks
+
 - Yahoo Finance rate limits on historical data
 - Token budget could exceed prompt limits
 - Need to balance data volume vs analysis quality
@@ -54,13 +61,15 @@ NEXUS claims to use ICT concepts but currently **cannot detect**:
 
 **Goal:** NEXUS can identify real ICT patterns from candle data.
 
-### What to build
+### What to build (Phase 2)
+
 - **FVG detection** — scan 3-candle sequences for gaps (candle[0].high < candle[2].low or candle[0].low > candle[2].high)
 - **Order Block detection** — find last opposing candle before a displacement move (3+ candle body run in one direction)
 - **MSS detection** — identify swing highs/lows and breaks of structure
 - **Displacement measurement** — flag candles where body > 70% of range and range > 1.5× average
 
 ### Approach options
+
 1. **Prompt-based** — give ORACLE the raw candles and let it identify patterns (simpler, uses AI reasoning)
 2. **Code-based** — detect patterns in TypeScript before the prompt, pass pre-identified patterns to ORACLE (more reliable, less token usage)
 3. **Hybrid** — code detects candidates, ORACLE confirms and contextualizes
@@ -73,7 +82,8 @@ Recommendation: **Hybrid** — code finds FVGs and OBs mechanically, ORACLE deci
 
 **Goal:** NEXUS can align HTF and LTF patterns for high-probability setups.
 
-### What to build
+### What to build (Phase 3)
+
 - HTF (daily) bias determination from structure
 - LTF (hourly) entry refinement within HTF bias
 - FVG stacking — when an LTF FVG sits inside an HTF FVG
@@ -86,7 +96,8 @@ Recommendation: **Hybrid** — code finds FVGs and OBs mechanically, ORACLE deci
 
 **Goal:** NEXUS can identify and track trendlines.
 
-### What to build
+### What to build (Phase 4)
+
 - Swing high/low detection algorithm from candle data
 - Trendline construction by connecting 2+ swing points
 - Trendline break detection
@@ -98,11 +109,13 @@ Recommendation: **Hybrid** — code finds FVGs and OBs mechanically, ORACLE deci
 
 **Goal:** NEXUS can evaluate whether its past setups were correct.
 
-### What to build
+### What to build (Phase 5)
+
 - After each session, check if previous session's setups:
   - Hit target (success)
   - Hit stoploss (failure)
   - Neither (still active or expired)
+
 - Track win rate, average RR achieved, best/worst instruments
 - Feed performance data back to AXIOM for self-evaluation
 - AXIOM can adjust rules based on actual results, not just reasoning
@@ -112,11 +125,13 @@ Recommendation: **Hybrid** — code finds FVGs and OBs mechanically, ORACLE deci
 ## Cost Management Strategy
 
 ### Current cost (~$11–16/month)
+
 - 3 API calls per session: ORACLE + AXIOM + FORGE (Sonnet for all)
 - ~4K output tokens, ~8-10K input tokens per call
 - ~$0.10–0.15 per session × 3/day × 22 weekdays
 
 ### Projected cost with historical candles (~$33–55/month)
+
 - Input tokens jump significantly with candle data
 - ~$0.30–0.50 per session
 
@@ -138,11 +153,13 @@ Recommendation: **Hybrid** — code finds FVGs and OBs mechanically, ORACLE deci
    - API access for other tools to consume NEXUS signals
 
 ### Priority order
+
 Strategy 5 (code-based detection) is the highest priority — it's not just cheaper, it produces better results because the AI reasons about patterns, not raw data. Strategy 1 (Haiku for ORACLE) is the easiest quick win. Strategy 3 (conditional FORGE) is trivial to implement.
 
 ---
 
 ## Future Ideas (not planned yet)
+
 - Real-time data via WebSocket for intraday sessions
 - Economic calendar integration (NFP, CPI, FOMC dates)
 - Backtesting framework — run NEXUS against historical data

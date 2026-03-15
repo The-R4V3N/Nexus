@@ -15,7 +15,7 @@ NEXUS accepts external input through GitHub Issues, which is an inherent attack 
 ### Supported Versions
 
 | Version | Supported |
-|---------|-----------|
+| ------- | --------- |
 | latest (main) | Yes |
 
 ### Reporting a Vulnerability

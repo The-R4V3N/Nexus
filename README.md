@@ -1,6 +1,6 @@
 # NEXUS 🔮
 
-### The Market Mind That Rewrites Itself
+## The Market Mind That Rewrites Itself
 
 [![session](https://img.shields.io/github/actions/workflow/status/The-R4V3N/Nexus/session.yml?label=last%20session&logo=github)](https://github.com/The-R4V3N/Nexus/actions)
 [![last commit](https://img.shields.io/github/last-commit/The-R4V3N/Nexus)](https://github.com/The-R4V3N/Nexus/commits/main)
@@ -110,7 +110,7 @@ flowchart TB
 
 ### Detailed Pipeline
 
-```
+```text
 GitHub Actions (Mon–Fri, 3 sessions per day)
     │
     ├── fetches live market data       (Yahoo Finance — 17 instruments)
@@ -174,7 +174,7 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 ## What NEXUS Watches
 
 | Category | Instruments |
-|----------|------------|
+| -------- | ----------- |
 | **Forex** | EUR/USD · GBP/USD · USD/JPY · GBP/JPY · AUD/USD · USD/CAD |
 | **Indices** | NAS100 · S&P 500 · Dow Jones · DAX · FTSE 100 |
 | **Crypto** | Bitcoin · Ethereum |
@@ -198,7 +198,7 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 
 ## Architecture
 
-```
+```text
 src/
 ├── index.ts        CLI entry point
 ├── agent.ts        Session orchestrator — defensive pipeline with quality gates
@@ -239,7 +239,7 @@ NEXUS is open to community input — but that input passes through a security la
 **Cost abuse prevention** — hard limits are enforced at every layer regardless of what the AI requests:
 
 | Limit | Value |
-|-------|-------|
+| ----- | ----- |
 | Max community issues per session | 5 |
 | Max total issue chars injected | 4,000 |
 | Max ORACLE output tokens | 8,192 |
@@ -270,6 +270,7 @@ NEXUS runs a multi-layered defensive pipeline that prevents bad data from enteri
 **Pre-flight build check** — Every session starts with `tsc --noEmit`. If the codebase doesn't compile, the session aborts before making any API calls.
 
 **ORACLE validation gate** — After ORACLE runs, its output is validated before proceeding:
+
 - Analysis must be >200 characters (rejects empty/stub responses)
 - Confidence must be 0–100
 - Bias must be a valid value (BULLISH, BEARISH, MIXED)
@@ -277,6 +278,7 @@ NEXUS runs a multi-layered defensive pipeline that prevents bad data from enteri
 - Recycled analysis detection — Jaccard word-overlap >80% against the previous session blocks copy-paste analysis
 
 **AXIOM validation gate** — After AXIOM runs, its output is validated before touching memory:
+
 - Required fields must be present
 - Arrays must actually be arrays
 - Rule IDs must match expected format
@@ -311,7 +313,7 @@ cp .env.example .env    # or rename manually
 ```
 
 | Key | Required | Where to get it |
-|-----|----------|----------------|
+| --- | -------- | --------------- |
 | `ANTHROPIC_API_KEY` | Yes | [Anthropic Console](https://console.anthropic.com/) |
 | `FRED_API_KEY` | No | [FRED API](https://fred.stlouisfed.org/docs/api/api_key.html) (free) |
 | `ALPHA_VANTAGE_API_KEY` | No | [Alpha Vantage](https://www.alphavantage.co/support/#api-key) (free) |
@@ -332,6 +334,7 @@ npm run rebuild-site  # Regenerate GitHub Pages locally
 ```
 
 Override the weekday guard (for testing):
+
 ```bash
 npm run run:session -- --force
 ```
@@ -343,7 +346,7 @@ npm run run:session -- --force
 Every session is committed to this repo. The journal lives at [the-r4v3n.github.io/Nexus](https://the-r4v3n.github.io/Nexus/).
 
 | # | Date | Bias | Setups | Confidence | Rule Δ |
-|---|------|------|--------|------------|--------|
+| - | ---- | ---- | ------ | ---------- | ------ |
 | 36 | 2026-03-14 | bearish | 3 | 78% | 23 rules |
 | 35 | 2026-03-14 | bearish | 2 | 58% | 23 rules |
 | 34 | 2026-03-14 | bearish | 2 | 58% | 23 rules |
@@ -383,6 +386,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 ## Day 0
 
 NEXUS began with:
+
 - 10 foundational analysis rules (ICT methodology) — protected as constitutional, cannot be deleted
 - A base system prompt built from first principles (capped at 8,000 chars, oldest sections pruned)
 - 3,800+ lines of TypeScript across 12 modules (including quality gates)
@@ -412,4 +416,4 @@ NEXUS is an experimental AI research project. The setups, bias calls, and price 
 
 ---
 
-*built by an AI that evolves itself*
+built by an AI that evolves itself

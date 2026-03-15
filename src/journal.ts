@@ -80,14 +80,12 @@ ${entry.fullAnalysis.bias.overall.toUpperCase()} — ${entry.fullAnalysis.bias.n
 ${entry.fullAnalysis.setups.length === 0 ? "_No high-probability setups this session._" :
       entry.fullAnalysis.setups.map((s: any) => {
         const specs = s.entry ? `  \nEntry: **${s.entry}** | Stoploss: **${s.stop}** | Target: **${s.target}** | Risk/Reward: **${s.RR}** | Timeframe: **${s.timeframe}**` : "";
-        return `
-**${s.instrument}** — ${s.type} (${s.direction.toUpperCase()})
+        return `**${s.instrument}** — ${s.type} (${s.direction.toUpperCase()})
 
 ${s.description}${specs}
 
-_Invalidated if: ${s.invalidation}_
-`;
-      }).join("\n---\n")}
+_Invalidated if: ${s.invalidation}_`;
+      }).join("\n\n---\n\n")}
 
 ### Key Levels
 
@@ -116,11 +114,9 @@ ${entry.reflection.cognitiveBiases.map((b) => `- ${b}`).join("\n")}` : ""}
 
 ${entry.reflection.ruleUpdates.length > 0 ? `### Rule Updates (${entry.reflection.ruleUpdates.length})
 
-${entry.reflection.ruleUpdates.map((u) => `
-**[${u.type.toUpperCase()}]** \`${u.ruleId}\`
+${entry.reflection.ruleUpdates.map((u) => `**[${u.type.toUpperCase()}]** \`${u.ruleId}\`
 _Reason: ${u.reason}_
-${u.before ? `Before: ${u.before}  \n` : ""}${u.after ? `After: ${u.after}` : ""}
-`).join("\n")}` : "_No rule changes this session._"}
+${u.before ? `Before: ${u.before}  \n` : ""}${u.after ? `After: ${u.after}` : ""}`).join("\n\n")}` : "_No rule changes this session._"}
 
 ${entry.reflection.newSystemPromptSections ? `### System Prompt Evolution
 
@@ -170,7 +166,7 @@ export function updateReadmeSessionsTable(entries: JournalEntry[]): void {
   let readme = fs.readFileSync(readmePath, "utf-8");
 
   const tableHeader = "| # | Date | Bias | Setups | Confidence | Rule Δ |";
-  const tableSep    = "|---|------|------|--------|------------|--------|";
+  const tableSep    = "| - | ---- | ---- | ------ | ---------- | ------ |";
   const tableEnd    = "*This table will be updated automatically each session.*";
 
   const startIdx = readme.indexOf(tableHeader);
