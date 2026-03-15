@@ -530,7 +530,7 @@ async function evolveMemory(
       axiomOutput.systemPromptAdditions.trim() + "\n";
 
     if (newSystemPrompt.length + addition.length <= maxLen) {
-      newSystemPrompt += addition;
+      newSystemPrompt = newSystemPrompt.trimEnd() + addition;
     } else {
       // Prune oldest evolved sections to make room, keeping base prompt intact
       const baseEnd     = newSystemPrompt.indexOf("\n\n## Evolved");
@@ -546,8 +546,8 @@ async function evolveMemory(
       }
 
       newSystemPrompt =
-        basePrompt +
-        (sections.length > 0 ? "\n\n" + sections.join("\n\n") : "") +
+        basePrompt.trimEnd() +
+        (sections.length > 0 ? "\n\n" + sections.join("\n\n").trimEnd() : "") +
         addition;
 
       console.log(`  ⚠ System prompt pruned — dropped oldest evolution(s) to stay under ${maxLen} chars`);
