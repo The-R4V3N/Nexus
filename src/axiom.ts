@@ -105,38 +105,19 @@ function buildCodebaseContext(openSelfTasksText: string): string {
   return lines.join("\n");
 }
 
-// ── AXIOM Reflection ───────────────────────────────────────
+// ── Prompt Builder ────────────────────────────────────────
 
-export async function runAxiomReflection(
-  client:                 Anthropic,
-  oracle:                 OracleAnalysis,
-  sessionNumber:          number,
-  previousSessions:       string,
-  communityIssues:        string = "",
-  openSelfTasksText:      string = "",
-  openSelfTaskNumbers:    number[] = [],
-  noChangeStreak:         number = 0,
-  setupOutcomes:          string = ""
-): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
-  const currentSystemPrompt = fs.existsSync(SYSTEM_PROMPT_PATH)
-    ? fs.readFileSync(SYSTEM_PROMPT_PATH, "utf-8")
-    : "";
-
-  const currentRules: AnalysisRules = fs.existsSync(ANALYSIS_RULES_PATH)
-    ? JSON.parse(fs.readFileSync(ANALYSIS_RULES_PATH, "utf-8"))
-    : { rules: [], version: 1, lastUpdated: "", focusInstruments: [], sessionNotes: "" };
-
-  // Load identity (constitutional rules)
-  const identityPath = path.join(process.cwd(), "NEXUS_IDENTITY.md");
-  let identityContext = "";
-  try {
-    if (fs.existsSync(identityPath)) {
-      identityContext = fs.readFileSync(identityPath, "utf-8");
-    }
-  } catch (err) {
-    console.debug(`  [debug] identity file load failed: ${err}`);
-  }
-
+export function buildAxiomPrompt(
+  oracle:            OracleAnalysis,
+  sessionNumber:     number,
+  previousSessions:  string,
+  communityIssues:   string,
+  openSelfTasksText: string,
+  noChangeStreak:    number,
+  setupOutcomes:     string,
+  currentRules:      AnalysisRules,
+  identityContext:   string
+): { systemMessage: string; userMessage: string } {
   const systemMessage = `You are NEXUS AXIOM, the self-reflection engine of the NEXUS market intelligence system.
 Your purpose is to critique the analysis just produced, identify cognitive biases and gaps, then generate precise updates to improve future performance.
 You are honest, ruthless, and specific. You do not tolerate vague analysis or lazy conclusions.
@@ -193,8 +174,7 @@ You have not modified any rules in ${noChangeStreak} consecutive sessions.
 Your self-critiques are repeating without action. This session, you MUST propose
 at least ONE concrete change — a rule weight adjustment, wording refinement,
 new rule, system prompt addition, or code change. Reflection without action is not evolution.
-` : ""}
-### Codebase context (so you can write precise codeChanges):
+` : ""}### Codebase context (so you can write precise codeChanges):
 ${buildCodebaseContext(openSelfTasksText)}
 
 ---
@@ -280,27 +260,20 @@ RULE POLICY — CRITICAL:
 - Max rule length is 500 characters. Keep rules concise — one clear idea per rule.
 - Be surgical. Quality over quantity.`;
 
-  // Strip lone surrogates before serializing to JSON — broken emoji in issue titles
-  // can survive earlier sanitization and cause a 400 from the Anthropic API
   const fullSystemMessage = identityContext
     ? identityContext + "\n\n" + systemMessage
     : systemMessage;
 
-  const cleanSystem  = stripSurrogates(fullSystemMessage);
-  const cleanMessage = stripSurrogates(userMessage);
+  return { systemMessage: fullSystemMessage, userMessage };
+}
 
-  const response = await client.messages.create({
-    model:      "claude-sonnet-4-20250514",
-    max_tokens: getMaxOutputTokens(),
-    system:     cleanSystem,
-    messages:   [{ role: "user", content: cleanMessage }],
-  });
+// ── Response Parser ───────────────────────────────────────
 
-  const rawText = response.content
-    .filter((b) => b.type === "text")
-    .map((b) => (b as { type: "text"; text: string }).text)
-    .join("");
-
+export function parseAxiomResponse(
+  rawText: string,
+  sessionNumber: number,
+  currentRules: AnalysisRules
+): any {
   const jsonText = extractJSONFromResponse(rawText);
 
   let rawParsed: any;
@@ -376,20 +349,16 @@ RULE POLICY — CRITICAL:
     resolvedSelfTasks: secResult.resolvedTasks,
   };
 
-  const reflection: AxiomReflection = {
-    timestamp:               new Date(),
-    sessionId:               oracle.sessionId,
-    whatWorked:              parsed.whatWorked       ?? "",
-    whatFailed:              parsed.whatFailed       ?? "",
-    cognitiveBiases:         parsed.cognitiveBiases  ?? [],
-    ruleUpdates:             parsed.ruleUpdates      ?? [],
-    newSystemPromptSections: parsed.systemPromptAdditions ?? "",
-    evolutionSummary:        parsed.evolutionSummary ?? "",
-  };
+  return parsed;
+}
 
-  await evolveMemory(currentRules, currentSystemPrompt, parsed, sessionNumber);
+// ── Self-Task Handler ─────────────────────────────────────
 
-  // ── Handle self-tasks ──
+export async function handleSelfTasks(
+  parsed: any,
+  openSelfTaskNumbers: number[],
+  sessionNumber: number
+): Promise<void> {
   if (parsed.newSelfTasks?.length > 0) {
     for (const task of parsed.newSelfTasks as SelfTask[]) {
       const issueNum = await createSelfTask(task, sessionNumber);
@@ -405,6 +374,80 @@ RULE POLICY — CRITICAL:
       }
     }
   }
+}
+
+// ── AXIOM Reflection ───────────────────────────────────────
+
+export async function runAxiomReflection(
+  client:                 Anthropic,
+  oracle:                 OracleAnalysis,
+  sessionNumber:          number,
+  previousSessions:       string,
+  communityIssues:        string = "",
+  openSelfTasksText:      string = "",
+  openSelfTaskNumbers:    number[] = [],
+  noChangeStreak:         number = 0,
+  setupOutcomes:          string = ""
+): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
+  const currentSystemPrompt = fs.existsSync(SYSTEM_PROMPT_PATH)
+    ? fs.readFileSync(SYSTEM_PROMPT_PATH, "utf-8")
+    : "";
+
+  const currentRules: AnalysisRules = fs.existsSync(ANALYSIS_RULES_PATH)
+    ? JSON.parse(fs.readFileSync(ANALYSIS_RULES_PATH, "utf-8"))
+    : { rules: [], version: 1, lastUpdated: "", focusInstruments: [], sessionNotes: "" };
+
+  // Load identity (constitutional rules)
+  const identityPath = path.join(process.cwd(), "NEXUS_IDENTITY.md");
+  let identityContext = "";
+  try {
+    if (fs.existsSync(identityPath)) {
+      identityContext = fs.readFileSync(identityPath, "utf-8");
+    }
+  } catch (err) {
+    console.debug(`  [debug] identity file load failed: ${err}`);
+  }
+
+  const { systemMessage, userMessage } = buildAxiomPrompt(
+    oracle, sessionNumber, previousSessions, communityIssues,
+    openSelfTasksText, noChangeStreak, setupOutcomes,
+    currentRules, identityContext
+  );
+
+  // Strip lone surrogates before serializing to JSON — broken emoji in issue titles
+  // can survive earlier sanitization and cause a 400 from the Anthropic API
+  const cleanSystem  = stripSurrogates(systemMessage);
+  const cleanMessage = stripSurrogates(userMessage);
+
+  const response = await client.messages.create({
+    model:      "claude-sonnet-4-20250514",
+    max_tokens: getMaxOutputTokens(),
+    system:     cleanSystem,
+    messages:   [{ role: "user", content: cleanMessage }],
+  });
+
+  const rawText = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
+    .join("");
+
+  const parsed = parseAxiomResponse(rawText, sessionNumber, currentRules);
+
+  const reflection: AxiomReflection = {
+    timestamp:               new Date(),
+    sessionId:               oracle.sessionId,
+    whatWorked:              parsed.whatWorked       ?? "",
+    whatFailed:              parsed.whatFailed       ?? "",
+    cognitiveBiases:         parsed.cognitiveBiases  ?? [],
+    ruleUpdates:             parsed.ruleUpdates      ?? [],
+    newSystemPromptSections: parsed.systemPromptAdditions ?? "",
+    evolutionSummary:        parsed.evolutionSummary ?? "",
+  };
+
+  await evolveMemory(currentRules, currentSystemPrompt, parsed, sessionNumber);
+
+  // ── Handle self-tasks ──
+  await handleSelfTasks(parsed, openSelfTaskNumbers, sessionNumber);
 
   const forgeRequests: ForgeRequest[] = (parsed.codeChanges ?? []).map((c: any) => ({
     file:                 c.file        ?? "",

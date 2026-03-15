@@ -27,7 +27,7 @@ import {
 } from "./journal";
 import { validateOracleOutput, logFailure, loadRecentFailures }    from "./validate";
 import { MEMORY_DIR, ANALYSIS_RULES_PATH } from "./utils";
-import type { AnalysisRules } from "./types";
+import type { AnalysisRules, MarketSnapshot, OracleAnalysis, AxiomReflection, ForgeRequest, ForgeResult } from "./types";
 
 // ── Session ID generator ───────────────────────────────────
 
@@ -80,7 +80,7 @@ function getNoChangeStreak(): number {
   return streak;
 }
 
-function buildSetupOutcomes(snapshots: import("./types").MarketSnapshot[]): string {
+function buildSetupOutcomes(snapshots: MarketSnapshot[]): string {
   const allEntries = loadAllJournalEntries();
   if (allEntries.length === 0) return "";
 
@@ -149,69 +149,17 @@ function isTradingDay(force = false): boolean {
   return day >= 1 && day <= 5;
 }
 
-// ── Main run ───────────────────────────────────────────────
+// ── Phase functions ───────────────────────────────────────
 
-export async function runSession(force = false): Promise<void> {
-  // Header
-  console.log(chalk.bold.white("\n╔══════════════════════════════════════════╗"));
-  console.log(chalk.bold.white("║  ") + chalk.bold.yellow("NEXUS") + chalk.dim("  —  The Market Mind That Rewrites Itself") + chalk.bold.white("  ║"));
-  console.log(chalk.bold.white("╚══════════════════════════════════════════╝\n"));
+interface InputData {
+  snapshots: MarketSnapshot[];
+  macroText: string;
+  issuesText: string;
+  selfTasksText: string;
+  selfTaskNumbers: number[];
+}
 
-  // Weekend guard
-  if (!isTradingDay(force)) {
-    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    console.log(chalk.yellow(`  ⚠  Today is ${days[new Date().getDay()]} — markets are closed.`));
-    console.log(chalk.dim("  NEXUS only runs Monday–Friday."));
-    console.log(chalk.dim("  To run anyway: npm run run:session -- --force\n"));
-    return;
-  }
-
-  const startTime     = new Date();
-  const sessionId     = generateSessionId();
-  const sessionNumber = getSessionNumber();
-
-  console.log(chalk.dim(`  Session:   `) + chalk.cyan(`#${sessionNumber}`));
-  console.log(chalk.dim(`  ID:        `) + chalk.dim(sessionId));
-  console.log(chalk.dim(`  Started:   `) + chalk.dim(format(startTime, "yyyy-MM-dd HH:mm:ss")));
-  console.log("");
-
-  // Init
-  initMemoryIfNeeded();
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    console.error(chalk.red("  ✗ ANTHROPIC_API_KEY not set. Add it to .env"));
-    process.exit(1);
-  }
-
-  const client = new Anthropic({ apiKey });
-
-  // Capture git HEAD for session-level rollback on failure
-  let sessionStartSha = "";
-  try {
-    sessionStartSha = execSync("git rev-parse HEAD", { cwd: process.cwd(), stdio: "pipe", encoding: "utf-8" }).trim();
-  } catch (err) {
-    console.debug(chalk.dim(`  [debug] git SHA capture failed: ${err}`));
-  }
-
- let currentPhase: "oracle" | "axiom" | "forge" | "journal" = "oracle";
- try {
-  // Pre-flight: verify codebase compiles before starting session
-  console.log(chalk.dim("  Pre-flight: checking TypeScript build..."));
-  try {
-    execSync("npx tsc --noEmit", { cwd: process.cwd(), stdio: "pipe", timeout: 30000 });
-    console.log(chalk.dim("  Pre-flight: build OK\n"));
-  } catch (err) {
-    console.error(chalk.red("  ✗ Pre-flight build check FAILED — codebase is broken"));
-    logFailure({
-      sessionNumber, timestamp: new Date().toISOString(),
-      phase: "oracle", errors: ["Pre-flight tsc --noEmit failed — codebase broken before session started"],
-      warnings: [], action: "skipped"
-    });
-    return;
-  }
-
-  // ── Phase 1: Fetch all data in parallel ──
+export async function fetchAllInputData(): Promise<InputData> {
   console.log(chalk.bold.yellow("  ── PHASE 1: DATA FETCH ──\n"));
   const phase1Spinner = ora({ text: "Fetching market data, macro context, issues...", color: "yellow" }).start();
 
@@ -326,8 +274,17 @@ export async function runSession(force = false): Promise<void> {
     console.log(chalk.dim("  Open self-tasks: unavailable\n"));
   }
 
-  // ── Phase 2: ORACLE analysis ──
-  currentPhase = "oracle";
+  return { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers };
+}
+
+export async function runAndValidateOracle(
+  client: Anthropic,
+  snapshots: MarketSnapshot[],
+  sessionId: string,
+  sessionNumber: number,
+  issuesText: string,
+  macroText: string
+): Promise<OracleAnalysis> {
   console.log(chalk.bold.yellow("  ── PHASE 2: ORACLE ANALYSIS ──\n"));
   const oracleSpinner = ora({ text: "ORACLE analyzing market structure...", color: "yellow" }).start();
 
@@ -356,7 +313,10 @@ export async function runSession(force = false): Promise<void> {
       warnings: oracleValidation.warnings, action: "skipped"
     });
     console.log("  Session skipped — invalid ORACLE output.");
-    return;
+    // Throw a specific error so runSession knows to return (not crash-log)
+    const err = new Error("ORACLE validation failed");
+    (err as any).oracleValidationFailure = true;
+    throw err;
   }
 
   // Print brief summary
@@ -374,8 +334,18 @@ export async function runSession(force = false): Promise<void> {
     console.log("");
   }
 
-  // ── Phase 3: AXIOM reflection ──
-  currentPhase = "axiom";
+  return oracle;
+}
+
+export async function runAndValidateAxiom(
+  client: Anthropic,
+  oracle: OracleAnalysis,
+  sessionNumber: number,
+  snapshots: MarketSnapshot[],
+  issuesText: string,
+  selfTasksText: string,
+  selfTaskNumbers: number[]
+): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
   console.log(chalk.bold.yellow("  ── PHASE 3: AXIOM REFLECTION ──\n"));
   const axiomSpinner = ora({ text: "AXIOM reflecting on cognitive performance...", color: "magenta" }).start();
 
@@ -416,74 +386,87 @@ export async function runSession(force = false): Promise<void> {
     console.log("");
   }
 
-  // ── Phase 3b: FORGE — code evolution (only runs when AXIOM requests changes) ──
-  let forgeResults: import("./types").ForgeResult[] = [];
-  if (axiomResult.forgeRequests.length > 0) {
-    currentPhase = "forge";
-    console.log(chalk.bold.yellow("  ── PHASE 3b: FORGE CODE EVOLUTION ──\n"));
-    const forgeSpinner = ora({ text: "FORGE applying code changes...", color: "cyan" }).start();
-    try {
-      forgeResults = await runForge(client, axiomResult.forgeRequests, sessionNumber);
-      const succeeded = forgeResults.filter(r => r.success).length;
-      const failed    = forgeResults.filter(r => !r.success).length;
-      forgeSpinner.succeed(chalk.green(`FORGE complete — ${succeeded} patched, ${failed} failed/reverted`));
+  return { reflection, forgeRequests: axiomResult.forgeRequests };
+}
 
-      // Auto-close linked self-tasks for successful FORGE patches
-      for (let i = 0; i < forgeResults.length; i++) {
-        const result  = forgeResults[i];
-        const request = axiomResult.forgeRequests[i];
-        if (result.success && request.selfTaskIssueNumber) {
-          const { closeSelfTask } = await import("./self-tasks");
-          const closed = await closeSelfTask(
-            request.selfTaskIssueNumber,
-            `FORGE patched \`${result.file}\` in session #${sessionNumber}. ${result.reason}`,
-            sessionNumber
-          );
-          if (closed) console.log(chalk.green(`    ✓ Auto-closed self-task #${request.selfTaskIssueNumber}`));
-        }
-      }
-    } catch (err) {
-      forgeSpinner.fail("FORGE failed");
-      console.warn(chalk.yellow(`  ⚠ FORGE error (non-fatal): ${err}`));
-    }
-    // Check FORGE diff size — reject patches over 200 lines as likely hallucinated
+export async function runAndValidateForge(
+  client: Anthropic,
+  forgeRequests: ForgeRequest[],
+  sessionNumber: number
+): Promise<ForgeResult[]> {
+  if (forgeRequests.length === 0) return [];
+
+  console.log(chalk.bold.yellow("  ── PHASE 3b: FORGE CODE EVOLUTION ──\n"));
+  const forgeSpinner = ora({ text: "FORGE applying code changes...", color: "cyan" }).start();
+
+  let forgeResults: ForgeResult[] = [];
+  try {
+    forgeResults = await runForge(client, forgeRequests, sessionNumber);
+    const succeeded = forgeResults.filter(r => r.success).length;
+    const failed    = forgeResults.filter(r => !r.success).length;
+    forgeSpinner.succeed(chalk.green(`FORGE complete — ${succeeded} patched, ${failed} failed/reverted`));
+
+    // Auto-close linked self-tasks for successful FORGE patches
     for (let i = 0; i < forgeResults.length; i++) {
-      const result = forgeResults[i];
-      if (result.success && result.linesChanged && result.linesChanged > 200) {
-        console.warn(`  ⚠ FORGE patch too large: ${result.file} changed ${result.linesChanged} lines (max 200)`);
-        try {
-          execSync(`git checkout -- src/${path.basename(result.file)}`, { cwd: process.cwd(), stdio: "pipe" });
-          forgeResults[i] = { ...result, success: false, reason: `Reverted — patch too large (${result.linesChanged} lines, max 200)`, reverted: true };
-        } catch (err) {
-          console.debug(chalk.dim(`  [debug] FORGE large-patch revert failed: ${err}`));
-        }
+      const result  = forgeResults[i];
+      const request = forgeRequests[i];
+      if (result.success && request.selfTaskIssueNumber) {
+        const { closeSelfTask } = await import("./self-tasks");
+        const closed = await closeSelfTask(
+          request.selfTaskIssueNumber,
+          `FORGE patched \`${result.file}\` in session #${sessionNumber}. ${result.reason}`,
+          sessionNumber
+        );
+        if (closed) console.log(chalk.green(`    ✓ Auto-closed self-task #${request.selfTaskIssueNumber}`));
       }
     }
-
-    // After FORGE completes, verify no protected files were touched
-    if (forgeResults.some(r => r.success)) {
+  } catch (err) {
+    forgeSpinner.fail("FORGE failed");
+    console.warn(chalk.yellow(`  ⚠ FORGE error (non-fatal): ${err}`));
+  }
+  // Check FORGE diff size — reject patches over 200 lines as likely hallucinated
+  for (let i = 0; i < forgeResults.length; i++) {
+    const result = forgeResults[i];
+    if (result.success && result.linesChanged && result.linesChanged > 200) {
+      console.warn(`  ⚠ FORGE patch too large: ${result.file} changed ${result.linesChanged} lines (max 200)`);
       try {
-        const diffOutput = execSync("git diff --name-only src/security.ts src/forge.ts .github/workflows/session.yml README.md", {
-          cwd: process.cwd(), stdio: "pipe", encoding: "utf-8"
-        }).trim();
-        if (diffOutput) {
-          console.error(`  🛡️ PROTECTED FILE VIOLATION: ${diffOutput}`);
-          console.error(`  Reverting ALL FORGE changes...`);
-          execSync("git checkout -- src/ README.md", { cwd: process.cwd(), stdio: "pipe" });
-          forgeResults = forgeResults.map(r => ({
-            ...r, success: false, reason: "Reverted — protected file violation detected", reverted: true
-          }));
-        }
+        execSync(`git checkout -- src/${path.basename(result.file)}`, { cwd: process.cwd(), stdio: "pipe" });
+        forgeResults[i] = { ...result, success: false, reason: `Reverted — patch too large (${result.linesChanged} lines, max 200)`, reverted: true };
       } catch (err) {
-        console.debug(chalk.dim(`  [debug] FORGE protected-file check failed: ${err}`));
+        console.debug(chalk.dim(`  [debug] FORGE large-patch revert failed: ${err}`));
       }
     }
-
-    console.log("");
   }
 
-  // ── Phase 4: Journal ──
-  currentPhase = "journal";
+  // After FORGE completes, verify no protected files were touched
+  if (forgeResults.some(r => r.success)) {
+    try {
+      const diffOutput = execSync("git diff --name-only src/security.ts src/forge.ts .github/workflows/session.yml README.md", {
+        cwd: process.cwd(), stdio: "pipe", encoding: "utf-8"
+      }).trim();
+      if (diffOutput) {
+        console.error(`  🛡️ PROTECTED FILE VIOLATION: ${diffOutput}`);
+        console.error(`  Reverting ALL FORGE changes...`);
+        execSync("git checkout -- src/ README.md", { cwd: process.cwd(), stdio: "pipe" });
+        forgeResults = forgeResults.map(r => ({
+          ...r, success: false, reason: "Reverted — protected file violation detected", reverted: true
+        }));
+      }
+    } catch (err) {
+      console.debug(chalk.dim(`  [debug] FORGE protected-file check failed: ${err}`));
+    }
+  }
+
+  console.log("");
+  return forgeResults;
+}
+
+export function writeSessionOutput(
+  sessionNumber: number,
+  oracle: OracleAnalysis,
+  reflection: AxiomReflection,
+  snapshots: MarketSnapshot[]
+): void {
   console.log(chalk.bold.yellow("  ── PHASE 4: JOURNAL ──\n"));
   const journalSpinner = ora({ text: "Writing journal entry...", color: "cyan" }).start();
 
@@ -499,8 +482,87 @@ export async function runSession(force = false): Promise<void> {
   journalSpinner.succeed(chalk.green("Journal written, GitHub Pages updated, README updated"));
   console.log(chalk.dim(`  Markdown: ${mdPath}`));
   console.log(chalk.dim(`  Site:     ${path.join(process.cwd(), "docs", "index.html")}\n`));
+}
+
+// ── Main run ───────────────────────────────────────────────
+
+export async function runSession(force = false): Promise<void> {
+  // Header
+  console.log(chalk.bold.white("\n╔══════════════════════════════════════════╗"));
+  console.log(chalk.bold.white("║  ") + chalk.bold.yellow("NEXUS") + chalk.dim("  —  The Market Mind That Rewrites Itself") + chalk.bold.white("  ║"));
+  console.log(chalk.bold.white("╚══════════════════════════════════════════╝\n"));
+
+  // Weekend guard
+  if (!isTradingDay(force)) {
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    console.log(chalk.yellow(`  ⚠  Today is ${days[new Date().getDay()]} — markets are closed.`));
+    console.log(chalk.dim("  NEXUS only runs Monday–Friday."));
+    console.log(chalk.dim("  To run anyway: npm run run:session -- --force\n"));
+    return;
+  }
+
+  const startTime     = new Date();
+  const sessionId     = generateSessionId();
+  const sessionNumber = getSessionNumber();
+
+  console.log(chalk.dim(`  Session:   `) + chalk.cyan(`#${sessionNumber}`));
+  console.log(chalk.dim(`  ID:        `) + chalk.dim(sessionId));
+  console.log(chalk.dim(`  Started:   `) + chalk.dim(format(startTime, "yyyy-MM-dd HH:mm:ss")));
+  console.log("");
+
+  // Init
+  initMemoryIfNeeded();
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error(chalk.red("  ✗ ANTHROPIC_API_KEY not set. Add it to .env"));
+    process.exit(1);
+  }
+
+  const client = new Anthropic({ apiKey });
+
+  // Capture git HEAD for session-level rollback on failure
+  let sessionStartSha = "";
+  try {
+    sessionStartSha = execSync("git rev-parse HEAD", { cwd: process.cwd(), stdio: "pipe", encoding: "utf-8" }).trim();
+  } catch (err) {
+    console.debug(chalk.dim(`  [debug] git SHA capture failed: ${err}`));
+  }
+
+ let currentPhase: "oracle" | "axiom" | "forge" | "journal" = "oracle";
+ try {
+  // Pre-flight: verify codebase compiles before starting session
+  console.log(chalk.dim("  Pre-flight: checking TypeScript build..."));
+  try {
+    execSync("npx tsc --noEmit", { cwd: process.cwd(), stdio: "pipe", timeout: 30000 });
+    console.log(chalk.dim("  Pre-flight: build OK\n"));
+  } catch (err) {
+    console.error(chalk.red("  ✗ Pre-flight build check FAILED — codebase is broken"));
+    logFailure({
+      sessionNumber, timestamp: new Date().toISOString(),
+      phase: "oracle", errors: ["Pre-flight tsc --noEmit failed — codebase broken before session started"],
+      warnings: [], action: "skipped"
+    });
+    return;
+  }
+
+  currentPhase = "oracle";
+  const { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers } = await fetchAllInputData();
+
+  currentPhase = "oracle";
+  const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, macroText);
+
+  currentPhase = "axiom";
+  const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers);
+
+  currentPhase = "forge";
+  await runAndValidateForge(client, forgeRequests, sessionNumber);
+
+  currentPhase = "journal";
+  writeSessionOutput(sessionNumber, oracle, reflection, snapshots);
 
   // ── Summary ──
+  const rules = loadRules();
   const elapsed = ((Date.now() - startTime.getTime()) / 1000).toFixed(1);
   console.log(chalk.bold.white("╔══════════════════════════════════════╗"));
   console.log(chalk.bold.white("║  ") + chalk.bold.green("SESSION COMPLETE") + chalk.bold.white("                       ║"));
@@ -513,6 +575,9 @@ export async function runSession(force = false): Promise<void> {
   console.log(chalk.bold.white("╚══════════════════════════════════════╝\n"));
 
  } catch (err) {
+    // ORACLE validation failure is already logged — just return cleanly
+    if ((err as any)?.oracleValidationFailure) return;
+
     console.error(`  ✗ Session failed with unhandled error: ${err}`);
     logFailure({
       sessionNumber, timestamp: new Date().toISOString(),

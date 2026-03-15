@@ -4,12 +4,14 @@
 // ============================================================
 
 import chalk from "chalk";
+import * as fs from "fs";
+import * as path from "path";
 import { groupBy } from "./utils";
 import type { MarketConfig, MarketSnapshot } from "./types";
 
 // ── Instrument Registry ────────────────────────────────────
 
-export const MARKET_CONFIGS: MarketConfig[] = [
+const DEFAULT_CONFIGS: MarketConfig[] = [
   { symbol: "EURUSD=X", name: "EUR/USD", category: "forex" },
   { symbol: "GBPUSD=X", name: "GBP/USD", category: "forex" },
   { symbol: "USDJPY=X", name: "USD/JPY", category: "forex" },
@@ -28,6 +30,20 @@ export const MARKET_CONFIGS: MarketConfig[] = [
   { symbol: "CL=F", name: "Crude Oil", category: "commodities" },
   { symbol: "NG=F", name: "Nat Gas", category: "commodities" },
 ];
+
+function loadMarketConfigs(): MarketConfig[] {
+  try {
+    const configPath = path.join(process.cwd(), "config", "instruments.json");
+    if (fs.existsSync(configPath)) {
+      return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    }
+  } catch {
+    // Fall through to default
+  }
+  return DEFAULT_CONFIGS;
+}
+
+export const MARKET_CONFIGS: MarketConfig[] = loadMarketConfigs();
 
 // ── Yahoo Finance v8 fetch ─────────────────────────────────
 
