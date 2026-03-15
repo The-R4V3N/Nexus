@@ -11,7 +11,7 @@
 
 ---
 
-NEXUS is a self-evolving market intelligence AI. Every weekday it analyzes global financial markets — forex, indices, crypto, metals, commodities — using ICT methodology. Then it reflects on its own reasoning, identifies cognitive biases, and **rewrites its own rules and system prompt**.
+NEXUS is a self-evolving market intelligence AI. Every weekday it analyzes global financial markets — forex, indices, crypto, commodities — using ICT methodology. Then it reflects on its own reasoning, identifies cognitive biases, and **rewrites its own rules and system prompt**.
 
 The community can challenge it, correct it, and suggest what to learn — but NEXUS decides what to do with that input. No static prompt tells it how to analyze. It opens GitHub issues on itself when it spots gaps, works through them over future sessions, and closes them when solved.
 
@@ -35,7 +35,7 @@ flowchart TB
     subgraph data["Phase 1 — Data Ingestion"]
         direction TB
         preflight["Pre-flight\ntsc --noEmit"]
-        preflight --> markets["Yahoo Finance\n17 instruments"]
+        preflight --> markets["Yahoo Finance\n45 instruments"]
         preflight --> macro["Macro Data\nFRED - Treasury - GDELT"]
         preflight --> issues["Community Issues\nGitHub Issues"]
         preflight --> tasks["Self-Tasks\nNEXUS to-do list"]
@@ -113,7 +113,7 @@ flowchart TB
 ```text
 GitHub Actions (Mon–Fri, 3 sessions per day)
     │
-    ├── fetches live market data       (Yahoo Finance — 17 instruments)
+    ├── fetches live market data       (Yahoo Finance — 45 instruments)
     ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT, Alpha Vantage — optional)
     ├── reads open community issues    (sanitized — injection checked)
     ├── reads open self-tasks          (NEXUS's own to-do list)
@@ -175,11 +175,11 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 
 | Category | Instruments |
 | -------- | ----------- |
-| **Forex** | EUR/USD · GBP/USD · USD/JPY · GBP/JPY · AUD/USD · USD/CAD |
+| **Forex (Majors)** | EUR/USD · GBP/USD · USD/JPY · USD/CHF · AUD/USD · USD/CAD · NZD/USD |
+| **Forex (Crosses)** | EUR/GBP · EUR/JPY · EUR/CHF · EUR/AUD · EUR/CAD · EUR/NZD · GBP/JPY · GBP/CHF · GBP/AUD · GBP/CAD · GBP/NZD · AUD/JPY · AUD/NZD · AUD/CAD · CAD/JPY · NZD/JPY · CHF/JPY |
 | **Indices** | NAS100 · S&P 500 · Dow Jones · DAX · FTSE 100 |
-| **Crypto** | Bitcoin · Ethereum |
-| **Metals** | Gold · Silver |
-| **Commodities** | Crude Oil · Natural Gas |
+| **Crypto** | Bitcoin · Ethereum · Solana · Ripple · BNB · Cardano · Dogecoin · Avalanche · Polkadot · Chainlink |
+| **Commodities** | Gold · Silver · Platinum · Copper · Crude Oil · Nat Gas |
 | **Macro (FRED)** | Fed Funds Rate · 10Y Yield · Yield Curve · VIX · Unemployment · CPI · HY Spread · USD Index |
 | **Fiscal** | US Treasury national debt (total + public held) |
 | **Geopolitical** | GDELT: conflict, military, economic, trade headlines (last 24h) |

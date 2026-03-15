@@ -1,0 +1,7 @@
+[
+  { "symbol": "^NDX", "name": "NASDAQ 100", "category": "indices" },
+  { "symbol": "^GSPC", "name": "S&P 500", "category": "indices" },
+  { "symbol": "^DJI", "name": "Dow Jones", "category": "indices" },
+  { "symbol": "^GDAXI", "name": "DAX", "category": "indices" },
+  { "symbol": "^FTSE", "name": "FTSE 100", "category": "indices" }
+]

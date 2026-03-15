@@ -1,0 +1,12 @@
+[
+  { "symbol": "BTC-USD", "name": "Bitcoin", "category": "crypto" },
+  { "symbol": "ETH-USD", "name": "Ethereum", "category": "crypto" },
+  { "symbol": "SOL-USD", "name": "Solana", "category": "crypto" },
+  { "symbol": "XRP-USD", "name": "Ripple", "category": "crypto" },
+  { "symbol": "BNB-USD", "name": "BNB", "category": "crypto" },
+  { "symbol": "ADA-USD", "name": "Cardano", "category": "crypto" },
+  { "symbol": "DOGE-USD", "name": "Dogecoin", "category": "crypto" },
+  { "symbol": "AVAX-USD", "name": "Avalanche", "category": "crypto" },
+  { "symbol": "DOT-USD", "name": "Polkadot", "category": "crypto" },
+  { "symbol": "LINK-USD", "name": "Chainlink", "category": "crypto" }
+]

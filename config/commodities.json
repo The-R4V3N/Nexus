@@ -1,0 +1,8 @@
+[
+  { "symbol": "GC=F", "name": "Gold", "category": "commodities" },
+  { "symbol": "SI=F", "name": "Silver", "category": "commodities" },
+  { "symbol": "PL=F", "name": "Platinum", "category": "commodities" },
+  { "symbol": "HG=F", "name": "Copper", "category": "commodities" },
+  { "symbol": "CL=F", "name": "Crude Oil", "category": "commodities" },
+  { "symbol": "NG=F", "name": "Nat Gas", "category": "commodities" }
+]

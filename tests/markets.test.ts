@@ -21,13 +21,13 @@ function makeSnapshot(overrides: Partial<MarketSnapshot> = {}): MarketSnapshot {
 // ── MARKET_CONFIGS ──────────────────────────────────────────
 
 describe("MARKET_CONFIGS", () => {
-  it("contains 17 instruments", () => {
-    expect(MARKET_CONFIGS).toHaveLength(17);
+  it("contains 45 instruments", () => {
+    expect(MARKET_CONFIGS).toHaveLength(45);
   });
 
   it("covers all expected categories", () => {
     const categories = new Set(MARKET_CONFIGS.map((c) => c.category));
-    expect(categories).toEqual(new Set(["forex", "indices", "crypto", "metals", "commodities"]));
+    expect(categories).toEqual(new Set(["forex", "indices", "crypto", "commodities"]));
   });
 
   it("has unique symbols", () => {
@@ -53,12 +53,12 @@ describe("formatSnapshotsForPrompt", () => {
   it("groups snapshots by category", () => {
     const snapshots = [
       makeSnapshot({ name: "EUR/USD", category: "forex" }),
-      makeSnapshot({ name: "Gold", category: "metals", symbol: "GC=F", price: 2050.00 }),
+      makeSnapshot({ name: "Gold", category: "commodities", symbol: "GC=F", price: 2050.00 }),
       makeSnapshot({ name: "GBP/USD", category: "forex", symbol: "GBPUSD=X" }),
     ];
     const result = formatSnapshotsForPrompt(snapshots);
     expect(result).toContain("--- FOREX ---");
-    expect(result).toContain("--- METALS ---");
+    expect(result).toContain("--- COMMODITIES ---");
     expect(result).toContain("EUR/USD");
     expect(result).toContain("GBP/USD");
     expect(result).toContain("Gold");
@@ -72,7 +72,7 @@ describe("formatSnapshotsForPrompt", () => {
 
   it("formats price with 2 decimals for prices >= 10", () => {
     const snapshots = [
-      makeSnapshot({ name: "Gold", category: "metals", symbol: "GC=F", price: 2050.75 }),
+      makeSnapshot({ name: "Gold", category: "commodities", symbol: "GC=F", price: 2050.75 }),
     ];
     const result = formatSnapshotsForPrompt(snapshots);
     expect(result).toContain("2050.75");

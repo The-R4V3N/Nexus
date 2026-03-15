@@ -2,7 +2,7 @@
 
 ## What This Is
 
-NEXUS is a self-evolving market intelligence AI. It runs 3 automated sessions per day (Mon-Fri, aligned to market opens via GitHub Actions) that analyze 17 financial instruments using ICT methodology, then reflects on its own reasoning, rewrites its own rules and system prompt, and can even rewrite its own source code.
+NEXUS is a self-evolving market intelligence AI. It runs 3 automated sessions per day (Mon-Fri, aligned to market opens via GitHub Actions) that analyze 45 financial instruments using ICT methodology, then reflects on its own reasoning, rewrites its own rules and system prompt, and can even rewrite its own source code.
 
 ## Architecture
 
@@ -24,7 +24,10 @@ src/
   utils.ts        Shared utilities (salvageJSON, stripSurrogates, extractJSON, path constants, groupBy)
 
 config/
-  instruments.json    Externalized instrument definitions (17 instruments, editable without code changes)
+  forex.json          24 forex pairs (majors + crosses)
+  indices.json        5 major indices
+  crypto.json         10 cryptocurrencies
+  commodities.json    6 commodities (metals, energy)
 
 memory/           NEXUS's evolving mind (committed to git)
   system-prompt.md    Base + evolved system prompt (grows each session, capped at 8000 chars)
@@ -41,7 +44,7 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 
 1. **Pre-flight Check** — `tsc --noEmit` validates the codebase compiles before anything runs
 2. **Git Snapshot** — captures `HEAD` SHA for session-level rollback on unhandled crashes
-3. **Data Fetch (parallel)** — `fetchAllInputData()` pulls market data (17 instruments from Yahoo Finance), macro data (FRED, Treasury, GDELT, Alpha Vantage), community issues, and self-tasks simultaneously via `Promise.allSettled()`. Market data failure halts the session; other sources degrade gracefully.
+3. **Data Fetch (parallel)** — `fetchAllInputData()` pulls market data (45 instruments from Yahoo Finance), macro data (FRED, Treasury, GDELT, Alpha Vantage), community issues, and self-tasks simultaneously via `Promise.allSettled()`. Market data failure halts the session; other sources degrade gracefully.
 4. **ORACLE** — Claude API call with market data + macro context + rules + system prompt → structured JSON analysis (rules embedded in prompt). Max 8192 output tokens. Truncated responses are salvaged via field-boundary cut points.
 5. **ORACLE Validation Gate** — `validateOracleOutput()` checks analysis length, confidence range, bias validity, setup sanity, and recycled content detection (>80% Jaccard similarity blocks). Session halts on failure.
 6. **AXIOM** — Claude API call reflecting on ORACLE's output → rule updates, new rules, system prompt additions, self-tasks, FORGE change requests. Receives failure history (last 5 failures from `memory/failures.json`), setup outcome tracking (previous setups vs current prices), stagnation alerts (when 3+ consecutive sessions have zero rule changes), and NEXUS_IDENTITY.md as constitutional context.

@@ -20,7 +20,6 @@ export type MarketCategory =
   | "forex"
   | "indices"
   | "crypto"
-  | "metals"
   | "commodities";
 
 export interface MarketConfig {

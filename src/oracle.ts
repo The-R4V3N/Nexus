@@ -372,7 +372,7 @@ function getDefaultRules(): AnalysisRules {
       },
       {
         id:                    "r008",
-        category:              "metals",
+        category:              "commodities",
         description:           "Gold (XAU) often leads as a risk-off signal — rising gold with falling indices = fear in the market",
         weight:                7,
         addedSession:          0,

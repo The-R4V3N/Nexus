@@ -15,28 +15,32 @@ const DEFAULT_CONFIGS: MarketConfig[] = [
   { symbol: "EURUSD=X", name: "EUR/USD", category: "forex" },
   { symbol: "GBPUSD=X", name: "GBP/USD", category: "forex" },
   { symbol: "USDJPY=X", name: "USD/JPY", category: "forex" },
-  { symbol: "GBPJPY=X", name: "GBP/JPY", category: "forex" },
+  { symbol: "USDCHF=X", name: "USD/CHF", category: "forex" },
   { symbol: "AUDUSD=X", name: "AUD/USD", category: "forex" },
   { symbol: "USDCAD=X", name: "USD/CAD", category: "forex" },
+  { symbol: "NZDUSD=X", name: "NZD/USD", category: "forex" },
   { symbol: "^NDX", name: "NASDAQ 100", category: "indices" },
   { symbol: "^GSPC", name: "S&P 500", category: "indices" },
-  { symbol: "^DJI", name: "Dow Jones", category: "indices" },
-  { symbol: "^GDAXI", name: "DAX", category: "indices" },
-  { symbol: "^FTSE", name: "FTSE 100", category: "indices" },
   { symbol: "BTC-USD", name: "Bitcoin", category: "crypto" },
   { symbol: "ETH-USD", name: "Ethereum", category: "crypto" },
-  { symbol: "GC=F", name: "Gold", category: "metals" },
-  { symbol: "SI=F", name: "Silver", category: "metals" },
+  { symbol: "GC=F", name: "Gold", category: "commodities" },
   { symbol: "CL=F", name: "Crude Oil", category: "commodities" },
-  { symbol: "NG=F", name: "Nat Gas", category: "commodities" },
 ];
+
+const CONFIG_FILES = ["forex.json", "indices.json", "crypto.json", "commodities.json"];
 
 function loadMarketConfigs(): MarketConfig[] {
   try {
-    const configPath = path.join(process.cwd(), "config", "instruments.json");
-    if (fs.existsSync(configPath)) {
-      return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    const configDir = path.join(process.cwd(), "config");
+    const configs: MarketConfig[] = [];
+    for (const file of CONFIG_FILES) {
+      const filePath = path.join(configDir, file);
+      if (fs.existsSync(filePath)) {
+        const items: MarketConfig[] = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+        configs.push(...items);
+      }
     }
+    if (configs.length > 0) return configs;
   } catch {
     // Fall through to default
   }
