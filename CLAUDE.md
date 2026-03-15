@@ -15,7 +15,7 @@ src/
   forge.ts        Code evolution engine (self-modifying source via Claude API)
   validate.ts     Quality gates — ORACLE + AXIOM output validation, recycled content detection
   markets.ts      Live data via Yahoo Finance v8 API (no package, raw HTTP)
-  macro.ts        Macro & geopolitical data (FRED, US Treasury, GDELT — all raw HTTP)
+  macro.ts        Macro & geopolitical data (FRED, US Treasury, GDELT, Alpha Vantage — all raw HTTP)
   issues.ts       Community GitHub issues reader (nexus-input label)
   self-tasks.ts   Autonomous issue creation + resolution (nexus-self-task label, with dedup)
   security.ts     Prompt injection detection, cost guards, output sanitization, meta-rule blocking
@@ -38,7 +38,7 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 1. **Pre-flight Check** — `tsc --noEmit` validates the codebase compiles before anything runs
 2. **Git Snapshot** — captures `HEAD` SHA for session-level rollback on unhandled crashes
 3. **Market Data** — `fetchAllMarkets()` pulls 17 instruments from Yahoo Finance
-4. **Macro & Geopolitical Data** — `fetchMacroSnapshot()` pulls FRED indicators (Fed Funds Rate, yield curve, VIX, CPI, unemployment, credit spreads, USD index), US Treasury debt figures, and GDELT geopolitical events in parallel. Gracefully degrades — missing API keys or failed fetches don't break the session. Derives signals (yield curve inversion, VIX elevation, credit stress).
+4. **Macro & Geopolitical Data** — `fetchMacroSnapshot()` pulls FRED indicators (Fed Funds Rate, yield curve, VIX, CPI, unemployment, credit spreads, USD index), US Treasury debt figures, GDELT geopolitical events, and Alpha Vantage technicals (RSI, ATR for key instruments, top US gainers/losers) in parallel. Gracefully degrades — missing API keys or failed fetches don't break the session. Derives signals (yield curve inversion, VIX elevation, credit stress, overbought/oversold).
 5. **Community Issues** — fetches GitHub issues labeled `nexus-input`, sanitized through security
 6. **Self-Tasks** — fetches open issues labeled `nexus-self-task` (deduplicated)
 7. **ORACLE** — Claude API call with market data + macro context + rules + system prompt → structured JSON analysis (rules embedded in prompt). Max 8192 output tokens. Truncated responses are salvaged via field-boundary cut points.
@@ -55,7 +55,7 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 
 - **Claude Sonnet** is used for ORACLE, AXIOM, and FORGE calls (`claude-sonnet-4-20250514`)
 - **No external market data packages** — raw Yahoo Finance v8 API, FRED, US Treasury, and GDELT APIs via `fetch()`
-- **Macro data is optional** — FRED requires a free API key (`FRED_API_KEY`), Treasury and GDELT need no auth. All sources degrade gracefully on failure
+- **Macro data is optional** — FRED requires a free API key (`FRED_API_KEY`), Alpha Vantage requires a free API key (`ALPHA_VANTAGE_API_KEY`), Treasury and GDELT need no auth. All sources degrade gracefully on failure
 - **Memory is git-versioned** — every cognitive change is a commit
 - **Security-first community input** — all issues pass through `sanitizeAllIssues()` before touching the prompt
 - **Foundational rules (r001-r010)** are constitutional — AXIOM can modify their wording but cannot delete them
@@ -103,6 +103,7 @@ npm run rebuild-site         # Regenerate GitHub Pages
 
 - Requires `ANTHROPIC_API_KEY` in `.env`
 - Optional `FRED_API_KEY` for macro economic indicators (free at <https://fred.stlouisfed.org/docs/api/api_key.html>)
+- Optional `ALPHA_VANTAGE_API_KEY` for technical indicators and market movers (free at <https://www.alphavantage.co/support/#api-key>)
 - Optional `GITHUB_TOKEN` for issue reading/writing
 - Optional `GITHUB_REPOSITORY` (defaults to `The-R4V3N/Nexus`)
 

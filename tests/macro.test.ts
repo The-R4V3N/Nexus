@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { MacroSnapshot, MacroIndicator, MacroSignal, GdeltEvent } from "../src/types";
+import type { MacroSnapshot, MacroIndicator, MacroSignal, GdeltEvent, AlphaVantageData, AlphaTechnical } from "../src/types";
 
 // ── Helpers ──────────────────────────────────────────────
 
@@ -41,6 +41,7 @@ function makeSnapshot(overrides: Partial<MacroSnapshot> = {}): MacroSnapshot {
     signals: [],
     treasuryDebt: [],
     geopoliticalEvents: { total: 0, conflicts: [], economy: [] },
+    alphaVantage: { topGainers: [], topLosers: [], technicals: [] },
     errors: [],
     ...overrides,
   };
@@ -513,5 +514,266 @@ describe("MacroSnapshot shape", () => {
     expect(typeof event.date).toBe("string");
     expect(typeof event.domain).toBe("string");
     expect(typeof event.country).toBe("string");
+  });
+});
+
+// ── Alpha Vantage ──────────────────────────────────────
+
+describe("Alpha Vantage integration", () => {
+  const topGainersLosersResponse = {
+    top_gainers: [
+      { ticker: "AAPL", price: "195.50", change_percentage: "5.2%" },
+      { ticker: "NVDA", price: "890.00", change_percentage: "4.1%" },
+      { ticker: "MSFT", price: "420.00", change_percentage: "3.5%" },
+      { ticker: "GOOG", price: "170.00", change_percentage: "2.8%" },
+      { ticker: "AMZN", price: "185.00", change_percentage: "2.3%" },
+      { ticker: "META", price: "500.00", change_percentage: "1.9%" },
+    ],
+    top_losers: [
+      { ticker: "TSLA", price: "180.20", change_percentage: "-4.8%" },
+      { ticker: "BABA", price: "85.00", change_percentage: "-3.2%" },
+      { ticker: "NIO", price: "5.50", change_percentage: "-2.9%" },
+      { ticker: "PLTR", price: "22.00", change_percentage: "-2.5%" },
+      { ticker: "SNAP", price: "11.00", change_percentage: "-2.1%" },
+      { ticker: "RIVN", price: "14.00", change_percentage: "-1.8%" },
+    ],
+    most_actively_traded: [],
+  };
+
+  const rsiResponse = (value: string) => ({
+    "Technical Analysis: RSI": { "2026-03-14": { RSI: value } },
+  });
+
+  const atrResponse = (value: string) => ({
+    "Technical Analysis: ATR": { "2026-03-14": { ATR: value } },
+  });
+
+  function mockAlphaVantageFetch() {
+    return vi.fn().mockImplementation((url: string) => {
+      if (typeof url !== "string" || !url.includes("alphavantage.co")) {
+        return Promise.reject(new Error("Mock: not Alpha Vantage"));
+      }
+
+      // Top Gainers/Losers
+      if (url.includes("TOP_GAINERS_LOSERS")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(topGainersLosersResponse),
+        });
+      }
+
+      // RSI
+      if (url.includes("function=RSI")) {
+        const symbolMatch = url.match(/symbol=([^&]+)/);
+        const symbol = symbolMatch?.[1] ?? "";
+        const rsiValues: Record<string, string> = {
+          SPY: "72.50",
+          QQQ: "45.30",
+          GLD: "28.10",
+          "BTC-USD": "55.00",
+        };
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(rsiResponse(rsiValues[symbol] ?? "50.00")),
+        });
+      }
+
+      // ATR
+      if (url.includes("function=ATR")) {
+        const symbolMatch = url.match(/symbol=([^&]+)/);
+        const symbol = symbolMatch?.[1] ?? "";
+        const atrValues: Record<string, string> = {
+          SPY: "4.25",
+          QQQ: "6.80",
+        };
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(atrResponse(atrValues[symbol] ?? "3.00")),
+        });
+      }
+
+      return Promise.reject(new Error("Mock: unknown Alpha Vantage endpoint"));
+    });
+  }
+
+  it("skips Alpha Vantage when ALPHA_VANTAGE_API_KEY is not set", async () => {
+    vi.stubEnv("ALPHA_VANTAGE_API_KEY", "");
+
+    global.fetch = vi.fn().mockRejectedValue(new Error("should not call"));
+
+    const { fetchMacroSnapshot } = await import("../src/macro");
+    const snapshot = await fetchMacroSnapshot();
+
+    const avError = snapshot.errors.find((e) => e.includes("ALPHA_VANTAGE"));
+    expect(avError).toBeDefined();
+    expect(snapshot.alphaVantage.topGainers).toEqual([]);
+    expect(snapshot.alphaVantage.topLosers).toEqual([]);
+    expect(snapshot.alphaVantage.technicals).toEqual([]);
+  });
+
+  it("fetches and parses Top Gainers/Losers", async () => {
+    vi.stubEnv("ALPHA_VANTAGE_API_KEY", "test-av-key");
+
+    const fetchMock = mockAlphaVantageFetch();
+    global.fetch = fetchMock;
+
+    const { fetchMacroSnapshot } = await import("../src/macro");
+    const snapshot = await fetchMacroSnapshot();
+
+    // Should have top 5 gainers (capped)
+    expect(snapshot.alphaVantage.topGainers.length).toBeLessThanOrEqual(5);
+    expect(snapshot.alphaVantage.topGainers[0].ticker).toBe("AAPL");
+    expect(snapshot.alphaVantage.topGainers[0].price).toBe("195.50");
+    expect(snapshot.alphaVantage.topGainers[0].changePercent).toBe("5.2%");
+
+    // Should have top 5 losers (capped)
+    expect(snapshot.alphaVantage.topLosers.length).toBeLessThanOrEqual(5);
+    expect(snapshot.alphaVantage.topLosers[0].ticker).toBe("TSLA");
+    expect(snapshot.alphaVantage.topLosers[0].changePercent).toBe("-4.8%");
+  });
+
+  it("fetches RSI and classifies overbought/oversold/neutral", async () => {
+    vi.stubEnv("ALPHA_VANTAGE_API_KEY", "test-av-key");
+
+    global.fetch = mockAlphaVantageFetch();
+
+    const { fetchMacroSnapshot } = await import("../src/macro");
+    const snapshot = await fetchMacroSnapshot();
+
+    const spy = snapshot.alphaVantage.technicals.find((t) => t.symbol === "SPY");
+    expect(spy).toBeDefined();
+    expect(spy!.rsi).toBe(72.5);
+    expect(spy!.rsiSignal).toBe("overbought");
+
+    const qqq = snapshot.alphaVantage.technicals.find((t) => t.symbol === "QQQ");
+    expect(qqq).toBeDefined();
+    expect(qqq!.rsi).toBe(45.3);
+    expect(qqq!.rsiSignal).toBe("neutral");
+
+    const gld = snapshot.alphaVantage.technicals.find((t) => t.symbol === "GLD");
+    expect(gld).toBeDefined();
+    expect(gld!.rsi).toBe(28.1);
+    expect(gld!.rsiSignal).toBe("oversold");
+
+    const btc = snapshot.alphaVantage.technicals.find((t) => t.symbol === "BTC-USD");
+    expect(btc).toBeDefined();
+    expect(btc!.rsi).toBe(55.0);
+    expect(btc!.rsiSignal).toBe("neutral");
+  });
+
+  it("fetches ATR values for SPY and QQQ", async () => {
+    vi.stubEnv("ALPHA_VANTAGE_API_KEY", "test-av-key");
+
+    global.fetch = mockAlphaVantageFetch();
+
+    const { fetchMacroSnapshot } = await import("../src/macro");
+    const snapshot = await fetchMacroSnapshot();
+
+    const spy = snapshot.alphaVantage.technicals.find((t) => t.symbol === "SPY");
+    expect(spy).toBeDefined();
+    expect(spy!.atr).toBe(4.25);
+
+    const qqq = snapshot.alphaVantage.technicals.find((t) => t.symbol === "QQQ");
+    expect(qqq).toBeDefined();
+    expect(qqq!.atr).toBe(6.8);
+
+    // GLD and BTC-USD should NOT have ATR
+    const gld = snapshot.alphaVantage.technicals.find((t) => t.symbol === "GLD");
+    expect(gld?.atr).toBeUndefined();
+  });
+
+  it("includes Alpha Vantage data in formatMacroForPrompt output", async () => {
+    const { formatMacroForPrompt } = await import("../src/macro");
+    const snapshot = makeSnapshot({
+      alphaVantage: {
+        topGainers: [
+          { ticker: "AAPL", price: "195.50", changePercent: "5.2%" },
+          { ticker: "NVDA", price: "890.00", changePercent: "4.1%" },
+        ],
+        topLosers: [
+          { ticker: "TSLA", price: "180.20", changePercent: "-4.8%" },
+        ],
+        technicals: [
+          { symbol: "SPY", name: "S&P 500 ETF", rsi: 72.5, atr: 4.25, rsiSignal: "overbought" },
+          { symbol: "QQQ", name: "NASDAQ ETF", rsi: 45.3, atr: 6.80, rsiSignal: "neutral" },
+          { symbol: "GLD", name: "Gold ETF", rsi: 28.1, rsiSignal: "oversold" },
+          { symbol: "BTC-USD", name: "Bitcoin", rsi: 55.0, rsiSignal: "neutral" },
+        ],
+      },
+    });
+
+    const result = formatMacroForPrompt(snapshot);
+    expect(result).toContain("--- MARKET TECHNICALS (Alpha Vantage) ---");
+    expect(result).toContain("RSI (14-period daily):");
+    expect(result).toContain("S&P 500 ETF (SPY)");
+    expect(result).toContain("72.50");
+    expect(result).toContain("OVERBOUGHT");
+    expect(result).toContain("OVERSOLD");
+    expect(result).toContain("ATR (14-period daily):");
+    expect(result).toContain("4.25");
+    expect(result).toContain("6.80");
+    expect(result).toContain("Top US Gainers:");
+    expect(result).toContain("AAPL +5.2%");
+    expect(result).toContain("Top US Losers:");
+    expect(result).toContain("TSLA -4.8%");
+  });
+
+  it("handles Alpha Vantage API failure gracefully", async () => {
+    vi.stubEnv("ALPHA_VANTAGE_API_KEY", "test-av-key");
+
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === "string" && url.includes("alphavantage.co")) {
+        return Promise.resolve({ ok: false, status: 500 });
+      }
+      return Promise.reject(new Error("Mock: not AV"));
+    });
+
+    const { fetchMacroSnapshot } = await import("../src/macro");
+    const snapshot = await fetchMacroSnapshot();
+
+    // Should degrade gracefully — empty data, not a crash
+    expect(snapshot.alphaVantage.topGainers).toEqual([]);
+    expect(snapshot.alphaVantage.topLosers).toEqual([]);
+    expect(snapshot.alphaVantage.technicals).toEqual([]);
+  });
+
+  it("handles Alpha Vantage rate-limit response", async () => {
+    vi.stubEnv("ALPHA_VANTAGE_API_KEY", "test-av-key");
+
+    const rateLimitResponse = {
+      Note: "Thank you for using Alpha Vantage! Our standard API rate limit is 25 requests per day.",
+    };
+
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === "string" && url.includes("alphavantage.co")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(rateLimitResponse),
+        });
+      }
+      return Promise.reject(new Error("Mock: not AV"));
+    });
+
+    const { fetchMacroSnapshot } = await import("../src/macro");
+    const snapshot = await fetchMacroSnapshot();
+
+    // Rate-limited responses should be treated as errors, not crash
+    expect(snapshot.alphaVantage.topGainers).toEqual([]);
+    expect(snapshot.alphaVantage.technicals).toEqual([]);
+  });
+
+  it("derives overbought/oversold signals from RSI", async () => {
+    vi.stubEnv("ALPHA_VANTAGE_API_KEY", "test-av-key");
+
+    global.fetch = mockAlphaVantageFetch();
+
+    const { fetchMacroSnapshot } = await import("../src/macro");
+    const snapshot = await fetchMacroSnapshot();
+
+    // SPY RSI is 72.5 (>70) — should produce overbought signal
+    const spySignal = snapshot.signals.find((s) => s.signal.includes("SPY") && s.signal.includes("OVERBOUGHT"));
+    expect(spySignal).toBeDefined();
+    expect(spySignal!.source).toBe("AlphaVantage/RSI");
+    expect(spySignal!.severity).toBe("warning");
   });
 });

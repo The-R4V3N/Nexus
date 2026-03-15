@@ -162,6 +162,20 @@ export interface GdeltEvent {
   country: string;
 }
 
+export interface AlphaVantageData {
+  topGainers: { ticker: string; price: string; changePercent: string }[];
+  topLosers: { ticker: string; price: string; changePercent: string }[];
+  technicals: AlphaTechnical[];
+}
+
+export interface AlphaTechnical {
+  symbol: string;
+  name: string;
+  rsi?: number;       // 14-period daily RSI
+  atr?: number;       // 14-period daily ATR
+  rsiSignal?: string; // "overbought" | "oversold" | "neutral"
+}
+
 export interface MacroSnapshot {
   timestamp: Date;
   indicators: MacroIndicator[];
@@ -172,5 +186,6 @@ export interface MacroSnapshot {
     conflicts: GdeltEvent[];
     economy: GdeltEvent[];
   };
+  alphaVantage: AlphaVantageData;
   errors: string[];  // sources that failed (for logging, not fatal)
 }

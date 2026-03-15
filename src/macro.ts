@@ -4,7 +4,7 @@
 // ============================================================
 
 import chalk from "chalk";
-import type { MacroSnapshot, MacroIndicator, MacroSignal, GdeltEvent } from "./types";
+import type { MacroSnapshot, MacroIndicator, MacroSignal, GdeltEvent, AlphaVantageData, AlphaTechnical } from "./types";
 
 // ── FRED series definitions ────────────────────────────────
 
@@ -154,7 +154,153 @@ async function fetchGdeltEvents(): Promise<{ total: number; conflicts: GdeltEven
   return { total: articles.length, conflicts, economy };
 }
 
+// ── Alpha Vantage definitions ────────────────────────────
+
+const AV_RSI_SYMBOLS: { symbol: string; name: string }[] = [
+  { symbol: "SPY",     name: "S&P 500 ETF" },
+  { symbol: "QQQ",     name: "NASDAQ ETF" },
+  { symbol: "GLD",     name: "Gold ETF" },
+  { symbol: "BTC-USD", name: "Bitcoin" },
+];
+
+const AV_ATR_SYMBOLS: { symbol: string; name: string }[] = [
+  { symbol: "SPY", name: "S&P 500 ETF" },
+  { symbol: "QQQ", name: "NASDAQ ETF" },
+];
+
+function isAlphaVantageRateLimited(data: any): boolean {
+  return !!(data?.Note || data?.Information);
+}
+
+// ── Alpha Vantage fetch ─────────────────────────────────
+
+async function fetchTopGainersLosers(apiKey: string): Promise<{ topGainers: { ticker: string; price: string; changePercent: string }[]; topLosers: { ticker: string; price: string; changePercent: string }[] }> {
+  const url = `https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey=${apiKey}`;
+  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status} for TOP_GAINERS_LOSERS`);
+
+  const data = await res.json() as any;
+  if (isAlphaVantageRateLimited(data)) throw new Error("Alpha Vantage rate limit hit");
+
+  const rawGainers: any[] = data?.top_gainers ?? [];
+  const rawLosers:  any[] = data?.top_losers  ?? [];
+
+  const topGainers = rawGainers.slice(0, 5).map((g: any) => ({
+    ticker:        g.ticker ?? "",
+    price:         g.price ?? "",
+    changePercent: g.change_percentage ?? "",
+  }));
+
+  const topLosers = rawLosers.slice(0, 5).map((l: any) => ({
+    ticker:        l.ticker ?? "",
+    price:         l.price ?? "",
+    changePercent: l.change_percentage ?? "",
+  }));
+
+  return { topGainers, topLosers };
+}
+
+async function fetchRSI(symbol: string, apiKey: string): Promise<{ value: number; signal: string }> {
+  const url = `https://www.alphavantage.co/query?function=RSI&symbol=${symbol}&interval=daily&time_period=14&series_type=close&apikey=${apiKey}`;
+  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status} for RSI ${symbol}`);
+
+  const data = await res.json() as any;
+  if (isAlphaVantageRateLimited(data)) throw new Error("Alpha Vantage rate limit hit");
+
+  const analysis = data?.["Technical Analysis: RSI"] ?? {};
+  const dates = Object.keys(analysis).sort().reverse();
+  if (dates.length === 0) throw new Error(`No RSI data for ${symbol}`);
+
+  const value = parseFloat(analysis[dates[0]].RSI);
+  if (isNaN(value)) throw new Error(`Invalid RSI value for ${symbol}`);
+
+  const signal = value > 70 ? "overbought" : value < 30 ? "oversold" : "neutral";
+  return { value, signal };
+}
+
+async function fetchATR(symbol: string, apiKey: string): Promise<number> {
+  const url = `https://www.alphavantage.co/query?function=ATR&symbol=${symbol}&interval=daily&time_period=14&apikey=${apiKey}`;
+  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status} for ATR ${symbol}`);
+
+  const data = await res.json() as any;
+  if (isAlphaVantageRateLimited(data)) throw new Error("Alpha Vantage rate limit hit");
+
+  const analysis = data?.["Technical Analysis: ATR"] ?? {};
+  const dates = Object.keys(analysis).sort().reverse();
+  if (dates.length === 0) throw new Error(`No ATR data for ${symbol}`);
+
+  const value = parseFloat(analysis[dates[0]].ATR);
+  if (isNaN(value)) throw new Error(`Invalid ATR value for ${symbol}`);
+
+  return value;
+}
+
+async function fetchAlphaVantageData(apiKey: string): Promise<AlphaVantageData> {
+  const [gainersLosersResult, ...techResults] = await Promise.allSettled([
+    fetchTopGainersLosers(apiKey),
+    ...AV_RSI_SYMBOLS.map(async (s) => ({ symbol: s.symbol, name: s.name, type: "rsi" as const, result: await fetchRSI(s.symbol, apiKey) })),
+    ...AV_ATR_SYMBOLS.map(async (s) => ({ symbol: s.symbol, name: s.name, type: "atr" as const, result: await fetchATR(s.symbol, apiKey) })),
+  ]);
+
+  let topGainers: { ticker: string; price: string; changePercent: string }[] = [];
+  let topLosers:  { ticker: string; price: string; changePercent: string }[] = [];
+
+  if (gainersLosersResult.status === "fulfilled") {
+    topGainers = gainersLosersResult.value.topGainers;
+    topLosers  = gainersLosersResult.value.topLosers;
+  }
+
+  // Build technicals map: symbol -> AlphaTechnical
+  const techMap = new Map<string, AlphaTechnical>();
+  for (const s of AV_RSI_SYMBOLS) {
+    techMap.set(s.symbol, { symbol: s.symbol, name: s.name });
+  }
+
+  for (const r of techResults) {
+    if (r.status !== "fulfilled") continue;
+    const { symbol, type, result } = r.value as any;
+    const tech = techMap.get(symbol);
+    if (!tech) continue;
+
+    if (type === "rsi") {
+      tech.rsi = result.value;
+      tech.rsiSignal = result.signal;
+    } else if (type === "atr") {
+      tech.atr = result;
+    }
+  }
+
+  // Only include technicals that have at least one data point
+  const technicals = Array.from(techMap.values()).filter((t) => t.rsi !== undefined || t.atr !== undefined);
+
+  return { topGainers, topLosers, technicals };
+}
+
 // ── Signal derivation ──────────────────────────────────────
+
+function deriveAlphaVantageSignals(alphaVantage: AlphaVantageData): MacroSignal[] {
+  const signals: MacroSignal[] = [];
+  for (const tech of alphaVantage.technicals) {
+    if (tech.rsi !== undefined && (tech.symbol === "SPY" || tech.symbol === "QQQ")) {
+      if (tech.rsi > 70) {
+        signals.push({
+          source:   "AlphaVantage/RSI",
+          signal:   `${tech.symbol} OVERBOUGHT (RSI: ${tech.rsi.toFixed(1)})`,
+          severity: "warning",
+        });
+      } else if (tech.rsi < 30) {
+        signals.push({
+          source:   "AlphaVantage/RSI",
+          signal:   `${tech.symbol} OVERSOLD (RSI: ${tech.rsi.toFixed(1)})`,
+          severity: "warning",
+        });
+      }
+    }
+  }
+  return signals;
+}
 
 function deriveSignals(indicators: MacroIndicator[]): MacroSignal[] {
   const signals: MacroSignal[] = [];
@@ -212,15 +358,20 @@ export async function fetchMacroSnapshot(): Promise<MacroSnapshot> {
   let signals:    MacroSignal[]    = [];
   let treasuryDebt: { date: string; totalDebt: string; publicDebt: string }[] = [];
   let geopoliticalEvents = { total: 0, conflicts: [] as GdeltEvent[], economy: [] as GdeltEvent[] };
+  let alphaVantage: AlphaVantageData = { topGainers: [], topLosers: [], technicals: [] };
 
   const fredApiKey = process.env.FRED_API_KEY ?? "";
+  const avApiKey   = process.env.ALPHA_VANTAGE_API_KEY ?? "";
 
-  const [fredResult, treasuryResult, gdeltResult] = await Promise.allSettled([
+  const [fredResult, treasuryResult, gdeltResult, avResult] = await Promise.allSettled([
     fredApiKey
       ? fetchAllFred(fredApiKey)
       : Promise.reject(new Error("FRED_API_KEY not set — skipping FRED")),
     fetchTreasuryDebt(),
     fetchGdeltEvents(),
+    avApiKey
+      ? fetchAlphaVantageData(avApiKey)
+      : Promise.reject(new Error("ALPHA_VANTAGE_API_KEY not set — skipping Alpha Vantage")),
   ]);
 
   if (fredResult.status === "fulfilled") {
@@ -242,12 +393,20 @@ export async function fetchMacroSnapshot(): Promise<MacroSnapshot> {
     errors.push(`GDELT: ${gdeltResult.reason?.message ?? gdeltResult.reason}`);
   }
 
+  if (avResult.status === "fulfilled") {
+    alphaVantage = avResult.value;
+    signals = signals.concat(deriveAlphaVantageSignals(alphaVantage));
+  } else {
+    errors.push(`Alpha Vantage: ${avResult.reason?.message ?? avResult.reason}`);
+  }
+
   return {
     timestamp: new Date(),
     indicators,
     signals,
     treasuryDebt,
     geopoliticalEvents,
+    alphaVantage,
     errors,
   };
 }
@@ -306,6 +465,42 @@ export function formatMacroForPrompt(snapshot: MacroSnapshot): string {
     lines.push("");
   }
 
+  if (snapshot.alphaVantage.technicals.length > 0 || snapshot.alphaVantage.topGainers.length > 0) {
+    lines.push("--- MARKET TECHNICALS (Alpha Vantage) ---");
+
+    const rsiTechs = snapshot.alphaVantage.technicals.filter((t) => t.rsi !== undefined);
+    if (rsiTechs.length > 0) {
+      lines.push("RSI (14-period daily):");
+      for (const t of rsiTechs) {
+        const rsiStr    = t.rsi!.toFixed(2);
+        const signalStr = t.rsiSignal === "overbought" ? "OVERBOUGHT" : t.rsiSignal === "oversold" ? "OVERSOLD" : "neutral";
+        lines.push(`  ${t.name} (${t.symbol})`.padEnd(30) + `${rsiStr.padStart(8)}  ${signalStr}`);
+      }
+    }
+
+    const atrTechs = snapshot.alphaVantage.technicals.filter((t) => t.atr !== undefined);
+    if (atrTechs.length > 0) {
+      lines.push("");
+      lines.push("ATR (14-period daily):");
+      for (const t of atrTechs) {
+        lines.push(`  ${t.name} (${t.symbol})`.padEnd(30) + `${t.atr!.toFixed(2).padStart(8)}`);
+      }
+    }
+
+    if (snapshot.alphaVantage.topGainers.length > 0) {
+      lines.push("");
+      const gainers = snapshot.alphaVantage.topGainers.map((g) => `${g.ticker} +${g.changePercent.replace("+", "")}`).join(", ");
+      lines.push(`Top US Gainers: ${gainers}`);
+    }
+
+    if (snapshot.alphaVantage.topLosers.length > 0) {
+      const losers = snapshot.alphaVantage.topLosers.map((l) => `${l.ticker} ${l.changePercent}`).join(", ");
+      lines.push(`Top US Losers: ${losers}`);
+    }
+
+    lines.push("");
+  }
+
   return lines.join("\n");
 }
 
@@ -343,6 +538,23 @@ export function printMacroSummary(snapshot: MacroSnapshot): void {
     console.log(chalk.dim("\n  ── GEOPOLITICAL (24h) ──"));
     console.log(`  ${chalk.white("Conflict articles".padEnd(28))} ${chalk.red(String(conflicts.length).padStart(8))}`);
     console.log(`  ${chalk.white("Economic articles".padEnd(28))} ${chalk.yellow(String(economy.length).padStart(8))}`);
+  }
+
+  if (snapshot.alphaVantage.technicals.length > 0) {
+    console.log(chalk.dim("\n  ── ALPHA VANTAGE TECHNICALS ──"));
+    for (const t of snapshot.alphaVantage.technicals) {
+      if (t.rsi !== undefined) {
+        const rsiColor = t.rsiSignal === "overbought" ? chalk.red : t.rsiSignal === "oversold" ? chalk.green : chalk.cyan;
+        const label = `${t.name} (${t.symbol})`;
+        console.log(`  ${chalk.white(label.padEnd(28))} RSI ${rsiColor(t.rsi.toFixed(1).padStart(6))} ${rsiColor(t.rsiSignal ?? "")}`);
+      }
+    }
+    for (const t of snapshot.alphaVantage.technicals) {
+      if (t.atr !== undefined) {
+        const label = `${t.name} (${t.symbol})`;
+        console.log(`  ${chalk.white(label.padEnd(28))} ATR ${chalk.cyan(t.atr.toFixed(2).padStart(6))}`);
+      }
+    }
   }
 
   console.log("");

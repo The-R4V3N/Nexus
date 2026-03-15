@@ -114,7 +114,7 @@ flowchart TB
 GitHub Actions (Mon–Fri, 3 sessions per day)
     │
     ├── fetches live market data       (Yahoo Finance — 17 instruments)
-    ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT — optional)
+    ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT, Alpha Vantage — optional)
     ├── reads open community issues    (sanitized — injection checked)
     ├── reads open self-tasks          (NEXUS's own to-do list)
     │
@@ -183,12 +183,13 @@ The entire cognitive history is in the git log. Every rule change is versioned. 
 | **Macro (FRED)** | Fed Funds Rate · 10Y Yield · Yield Curve · VIX · Unemployment · CPI · HY Spread · USD Index |
 | **Fiscal** | US Treasury national debt (total + public held) |
 | **Geopolitical** | GDELT: conflict, military, economic, trade headlines (last 24h) |
+| **Technicals (Alpha Vantage)** | RSI (14d) for SPY, QQQ, GLD, BTC · ATR (14d) for SPY, QQQ · Top US Gainers/Losers |
 
 ---
 
 ## The Three Minds
 
-**ORACLE** applies ICT (Inner Circle Trader) methodology — fair value gaps, order blocks, liquidity sweeps, market structure shifts, session ranges. It now receives macro-economic context (FRED indicators, Treasury data, geopolitical events) alongside live prices, giving it real data for the macro alignment component of its confidence score. It identifies the highest-probability setup, states a directional bias, and rates its own confidence from 0–100.
+**ORACLE** applies ICT (Inner Circle Trader) methodology — fair value gaps, order blocks, liquidity sweeps, market structure shifts, session ranges. It now receives macro-economic context (FRED indicators, Treasury data, geopolitical events) and technical indicators (RSI, ATR, top gainers/losers via Alpha Vantage) alongside live prices, giving it real data for the macro alignment component of its confidence score. It identifies the highest-probability setup, states a directional bias, and rates its own confidence from 0–100.
 
 **AXIOM** is the part nobody else builds. After every session it asks: *what biases infected my reasoning? what rule is wrong? what am I missing?* Then it edits its own rulebook. It receives failure history from past crashes, outcome tracking from previous setups, and stagnation alerts when it hasn't evolved in 3+ sessions — so it's always grounded in real results. Its identity is anchored by `NEXUS_IDENTITY.md`, a constitutional document it cannot modify. After 50 sessions, `memory/` in this repo is a visible record of an AI mind developing real domain expertise — not from training, but from iterative self-reflection.
 

@@ -232,7 +232,7 @@ export async function runSession(force = false): Promise<void> {
     const macroSnapshot = await fetchMacroSnapshot();
     const sourceCount = macroSnapshot.indicators.length + (macroSnapshot.treasuryDebt.length > 0 ? 1 : 0) + (macroSnapshot.geopoliticalEvents.total > 0 ? 1 : 0);
     if (sourceCount > 0) {
-      macroSpinner.succeed(chalk.green(`Macro context: ${macroSnapshot.indicators.length} indicators, ${macroSnapshot.signals.length} signals, ${macroSnapshot.geopoliticalEvents.total} events`));
+      macroSpinner.succeed(chalk.green(`Macro context: ${macroSnapshot.indicators.length} indicators, ${macroSnapshot.signals.length} signals, ${macroSnapshot.geopoliticalEvents.total} events, ${macroSnapshot.alphaVantage.technicals.length} technicals`));
       printMacroSummary(macroSnapshot);
       macroText = formatMacroForPrompt(macroSnapshot);
     } else {
