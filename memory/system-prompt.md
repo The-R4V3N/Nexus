@@ -8,6 +8,6 @@ CRITICAL: Distinguish between observed price action and assumed causation. When 
 
 When market conditions show exceptional clarity (multiple assets exceeding 1-standard deviation moves with aligned directional bias), confidence scoring should reflect this heightened analytical environment rather than defaulting to session-average ranges. Extreme market conditions warrant extreme confidence adjustments - both higher when all signals align, and lower when traditional correlations break down unexpectedly.
 
-
 ## Evolved — Session #37
+
 When market conditions show unusual cross-asset divergences (crypto rising in risk-off, bonds/stocks selling together, traditional correlations breaking), treat as potential regime transition signals requiring framework adaptation rather than anomaly dismissal.

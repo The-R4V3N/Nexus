@@ -509,8 +509,8 @@ async function evolveMemory(
 
   if (axiomOutput.systemPromptAdditions?.trim()) {
     const addition =
-      `\n\n## Evolved — Session #${sessionNumber}\n` +
-      axiomOutput.systemPromptAdditions.trim();
+      `\n\n## Evolved — Session #${sessionNumber}\n\n` +
+      axiomOutput.systemPromptAdditions.trim() + "\n";
 
     if (newSystemPrompt.length + addition.length <= maxLen) {
       newSystemPrompt += addition;

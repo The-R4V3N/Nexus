@@ -77,19 +77,19 @@ ${entry.fullAnalysis.bias.overall.toUpperCase()} — ${entry.fullAnalysis.bias.n
 
 ### Setups Identified (${entry.fullAnalysis.setups.length})
 
-${entry.fullAnalysis.setups.length === 0 ? "_No high-probability setups this session._" :
+${entry.fullAnalysis.setups.length === 0 ? "No high-probability setups this session." :
       entry.fullAnalysis.setups.map((s: any) => {
         const specs = s.entry ? `  \nEntry: **${s.entry}** | Stoploss: **${s.stop}** | Target: **${s.target}** | Risk/Reward: **${s.RR}** | Timeframe: **${s.timeframe}**` : "";
         return `**${s.instrument}** — ${s.type} (${s.direction.toUpperCase()})
 
 ${s.description}${specs}
 
-_Invalidated if: ${s.invalidation}_`;
+Invalidation: ${s.invalidation}`;
       }).join("\n\n---\n\n")}
 
 ### Key Levels
 
-${entry.fullAnalysis.keyLevels.length === 0 ? "_No key levels identified._" :
+${entry.fullAnalysis.keyLevels.length === 0 ? "No key levels identified." :
       entry.fullAnalysis.keyLevels.map((l) =>
         `- **${l.instrument}** ${l.level} (${l.type}): ${l.notes}`
       ).join("\n")}
@@ -115,8 +115,8 @@ ${entry.reflection.cognitiveBiases.map((b) => `- ${b}`).join("\n")}` : ""}
 ${entry.reflection.ruleUpdates.length > 0 ? `### Rule Updates (${entry.reflection.ruleUpdates.length})
 
 ${entry.reflection.ruleUpdates.map((u) => `**[${u.type.toUpperCase()}]** \`${u.ruleId}\`
-_Reason: ${u.reason}_
-${u.before ? `Before: ${u.before}  \n` : ""}${u.after ? `After: ${u.after}` : ""}`).join("\n\n")}` : "_No rule changes this session._"}
+Reason: ${u.reason}
+${u.before ? `Before: ${u.before}  \n` : ""}${u.after ? `After: ${u.after}` : ""}`).join("\n\n")}` : "No rule changes this session."}
 
 ${entry.reflection.newSystemPromptSections ? `### System Prompt Evolution
 
