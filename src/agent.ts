@@ -26,10 +26,8 @@ import {
   saveJournalEntry,
 } from "./journal";
 import { validateOracleOutput, logFailure, loadRecentFailures }    from "./validate";
+import { MEMORY_DIR, ANALYSIS_RULES_PATH } from "./utils";
 import type { AnalysisRules } from "./types";
-
-const MEMORY_DIR           = path.join(process.cwd(), "memory");
-const ANALYSIS_RULES_PATH  = path.join(MEMORY_DIR, "analysis-rules.json");
 
 // ── Session ID generator ───────────────────────────────────
 
@@ -192,8 +190,11 @@ export async function runSession(force = false): Promise<void> {
   let sessionStartSha = "";
   try {
     sessionStartSha = execSync("git rev-parse HEAD", { cwd: process.cwd(), stdio: "pipe", encoding: "utf-8" }).trim();
-  } catch { /* not a git repo or git not available */ }
+  } catch (err) {
+    console.debug(chalk.dim(`  [debug] git SHA capture failed: ${err}`));
+  }
 
+ let currentPhase: "oracle" | "axiom" | "forge" | "journal" = "oracle";
  try {
   // Pre-flight: verify codebase compiles before starting session
   console.log(chalk.dim("  Pre-flight: checking TypeScript build..."));
@@ -210,48 +211,93 @@ export async function runSession(force = false): Promise<void> {
     return;
   }
 
-  // ── Phase 1: Fetch market data ──
-  console.log(chalk.bold.yellow("  ── PHASE 1: MARKET DATA ──\n"));
-  const marketSpinner = ora({ text: "Fetching live market data...", color: "yellow" }).start();
+  // ── Phase 1: Fetch all data in parallel ──
+  console.log(chalk.bold.yellow("  ── PHASE 1: DATA FETCH ──\n"));
+  const phase1Spinner = ora({ text: "Fetching market data, macro context, issues...", color: "yellow" }).start();
 
+  const [marketsResult, macroResult, issuesResult, selfTasksResult] = await Promise.allSettled([
+    fetchAllMarkets(),
+    fetchMacroSnapshot(),
+    fetchCommunityIssues(),
+    fetchOpenSelfTasks(),
+  ]);
+
+  // ── Handle markets (required) ──
   let snapshots;
-  try {
-    snapshots = await fetchAllMarkets();
-    marketSpinner.succeed(chalk.green(`Fetched ${snapshots.length} instruments`));
-  } catch (err) {
-    marketSpinner.fail("Failed to fetch market data");
-    throw err;
+  if (marketsResult.status === "fulfilled") {
+    snapshots = marketsResult.value;
+  } else {
+    phase1Spinner.fail("Failed to fetch market data");
+    throw marketsResult.reason;
+  }
+
+  // ── Handle macro (optional) ──
+  let macroText = "";
+  if (macroResult.status === "fulfilled") {
+    const macroSnapshot = macroResult.value;
+    const sourceCount = macroSnapshot.indicators.length + (macroSnapshot.treasuryDebt.length > 0 ? 1 : 0) + (macroSnapshot.geopoliticalEvents.total > 0 ? 1 : 0);
+    if (sourceCount > 0) {
+      macroText = formatMacroForPrompt(macroSnapshot);
+    }
+  }
+
+  // ── Handle issues (optional) ──
+  let issuesText = "";
+  if (issuesResult.status === "fulfilled") {
+    const issues = issuesResult.value;
+    if (issues.length > 0) {
+      issuesText = formatIssuesForPrompt(issues);
+    }
+  }
+
+  // ── Handle self-tasks (optional) ──
+  let selfTasksText    = "";
+  let selfTaskNumbers: number[] = [];
+  if (selfTasksResult.status === "fulfilled") {
+    const selfTasks = selfTasksResult.value;
+    setCachedOpenTasks(selfTasks);
+    selfTaskNumbers = selfTasks.map((t) => t.number);
+    if (selfTasks.length > 0) {
+      selfTasksText = formatSelfTasksForPrompt(selfTasks);
+    }
+  }
+
+  // ── Summarize Phase 1 results ──
+  const failedSources: string[] = [];
+  if (macroResult.status === "rejected") failedSources.push("macro");
+  if (issuesResult.status === "rejected") failedSources.push("issues");
+  if (selfTasksResult.status === "rejected") failedSources.push("self-tasks");
+
+  if (failedSources.length > 0) {
+    phase1Spinner.warn(chalk.yellow(`Fetched ${snapshots.length} instruments (${failedSources.join(", ")} unavailable)`));
+  } else {
+    phase1Spinner.succeed(chalk.green(`Fetched ${snapshots.length} instruments + macro, issues, self-tasks`));
   }
 
   printMarketsTable(snapshots);
 
-  // ── Phase 1d: Macro & geopolitical context ──
-  let macroText = "";
-  try {
-    const macroSpinner = ora({ text: "Fetching macro & geopolitical data...", color: "yellow" }).start();
-    const macroSnapshot = await fetchMacroSnapshot();
+  // Print macro details
+  if (macroResult.status === "fulfilled") {
+    const macroSnapshot = macroResult.value;
     const sourceCount = macroSnapshot.indicators.length + (macroSnapshot.treasuryDebt.length > 0 ? 1 : 0) + (macroSnapshot.geopoliticalEvents.total > 0 ? 1 : 0);
     if (sourceCount > 0) {
-      macroSpinner.succeed(chalk.green(`Macro context: ${macroSnapshot.indicators.length} indicators, ${macroSnapshot.signals.length} signals, ${macroSnapshot.geopoliticalEvents.total} events, ${macroSnapshot.alphaVantage.technicals.length} technicals`));
+      console.log(chalk.green(`  Macro context: ${macroSnapshot.indicators.length} indicators, ${macroSnapshot.signals.length} signals, ${macroSnapshot.geopoliticalEvents.total} events, ${macroSnapshot.alphaVantage.technicals.length} technicals`));
       printMacroSummary(macroSnapshot);
-      macroText = formatMacroForPrompt(macroSnapshot);
     } else {
-      macroSpinner.info(chalk.dim("Macro data: no sources available"));
+      console.log(chalk.dim("  Macro data: no sources available"));
     }
     if (macroSnapshot.errors.length > 0) {
       for (const e of macroSnapshot.errors) console.log(chalk.dim(`    ⚠ ${e}`));
     }
-  } catch {
+  } else {
     console.log(chalk.dim("  Macro data: unavailable\n"));
   }
 
-  // ── Phase 1b: Community issues ──
-  let issuesText = "";
-  try {
-    const issues = await fetchCommunityIssues();
+  // Print issues details
+  if (issuesResult.status === "fulfilled") {
+    const issues = issuesResult.value;
     if (issues.length > 0) {
       console.log(chalk.dim(`  Community issues: `) + chalk.cyan(`${issues.length} open`));
-      issuesText = formatIssuesForPrompt(issues);
       for (const issue of issues) {
         const emoji = issue.label === "feedback" ? "🔴" : issue.label === "challenge" ? "🟡" : "🟢";
         console.log(chalk.dim(`    ${emoji} #${issue.number} ${issue.title}`));
@@ -260,32 +306,28 @@ export async function runSession(force = false): Promise<void> {
     } else {
       console.log(chalk.dim("  Community issues: none open\n"));
     }
-  } catch {
+  } else {
     console.log(chalk.dim("  Community issues: unavailable\n"));
   }
 
-  // ── Phase 1c: Open self-tasks ──
-  let selfTasksText    = "";
-  let selfTaskNumbers: number[] = [];
-  try {
-    const selfTasks = await fetchOpenSelfTasks();
-    setCachedOpenTasks(selfTasks);
-    selfTaskNumbers = selfTasks.map((t) => t.number);
+  // Print self-tasks details
+  if (selfTasksResult.status === "fulfilled") {
+    const selfTasks = selfTasksResult.value;
     if (selfTasks.length > 0) {
       console.log(chalk.dim(`  Open self-tasks: `) + chalk.yellow(`${selfTasks.length} pending`));
       for (const t of selfTasks) {
         console.log(chalk.dim(`    ✦ #${t.number} [${t.category}] ${t.title}`));
       }
-      selfTasksText = formatSelfTasksForPrompt(selfTasks);
       console.log("");
     } else {
       console.log(chalk.dim("  Open self-tasks: none\n"));
     }
-  } catch {
+  } else {
     console.log(chalk.dim("  Open self-tasks: unavailable\n"));
   }
 
   // ── Phase 2: ORACLE analysis ──
+  currentPhase = "oracle";
   console.log(chalk.bold.yellow("  ── PHASE 2: ORACLE ANALYSIS ──\n"));
   const oracleSpinner = ora({ text: "ORACLE analyzing market structure...", color: "yellow" }).start();
 
@@ -333,6 +375,7 @@ export async function runSession(force = false): Promise<void> {
   }
 
   // ── Phase 3: AXIOM reflection ──
+  currentPhase = "axiom";
   console.log(chalk.bold.yellow("  ── PHASE 3: AXIOM REFLECTION ──\n"));
   const axiomSpinner = ora({ text: "AXIOM reflecting on cognitive performance...", color: "magenta" }).start();
 
@@ -376,6 +419,7 @@ export async function runSession(force = false): Promise<void> {
   // ── Phase 3b: FORGE — code evolution (only runs when AXIOM requests changes) ──
   let forgeResults: import("./types").ForgeResult[] = [];
   if (axiomResult.forgeRequests.length > 0) {
+    currentPhase = "forge";
     console.log(chalk.bold.yellow("  ── PHASE 3b: FORGE CODE EVOLUTION ──\n"));
     const forgeSpinner = ora({ text: "FORGE applying code changes...", color: "cyan" }).start();
     try {
@@ -410,7 +454,9 @@ export async function runSession(force = false): Promise<void> {
         try {
           execSync(`git checkout -- src/${path.basename(result.file)}`, { cwd: process.cwd(), stdio: "pipe" });
           forgeResults[i] = { ...result, success: false, reason: `Reverted — patch too large (${result.linesChanged} lines, max 200)`, reverted: true };
-        } catch { /* best effort */ }
+        } catch (err) {
+          console.debug(chalk.dim(`  [debug] FORGE large-patch revert failed: ${err}`));
+        }
       }
     }
 
@@ -428,13 +474,16 @@ export async function runSession(force = false): Promise<void> {
             ...r, success: false, reason: "Reverted — protected file violation detected", reverted: true
           }));
         }
-      } catch { /* git diff returns non-zero if files don't exist, that's fine */ }
+      } catch (err) {
+        console.debug(chalk.dim(`  [debug] FORGE protected-file check failed: ${err}`));
+      }
     }
 
     console.log("");
   }
 
   // ── Phase 4: Journal ──
+  currentPhase = "journal";
   console.log(chalk.bold.yellow("  ── PHASE 4: JOURNAL ──\n"));
   const journalSpinner = ora({ text: "Writing journal entry...", color: "cyan" }).start();
 
@@ -467,14 +516,16 @@ export async function runSession(force = false): Promise<void> {
     console.error(`  ✗ Session failed with unhandled error: ${err}`);
     logFailure({
       sessionNumber, timestamp: new Date().toISOString(),
-      phase: "oracle", errors: [String(err)], warnings: [], action: "skipped"
+      phase: currentPhase, errors: [String(err)], warnings: [], action: "skipped"
     });
     // Rollback any uncommitted changes from this session
     if (sessionStartSha) {
       try {
         execSync("git checkout -- .", { cwd: process.cwd(), stdio: "pipe" });
         console.log("  ↩ Rolled back uncommitted changes from failed session");
-      } catch { /* best effort */ }
+      } catch (err) {
+        console.debug(chalk.dim(`  [debug] session rollback failed: ${err}`));
+      }
     }
     // Don't re-throw — let the process exit cleanly so GitHub Actions doesn't fail
   }

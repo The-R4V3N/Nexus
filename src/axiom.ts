@@ -8,6 +8,10 @@ import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
 import { validateAxiomOutput, logFailure } from "./validate";
 import { loadAllJournalEntries } from "./journal";
+import {
+  salvageJSON, stripSurrogates, extractJSONFromResponse,
+  MEMORY_DIR, SYSTEM_PROMPT_PATH, ANALYSIS_RULES_PATH,
+} from "./utils";
 import * as fs from "fs";
 import * as path from "path";
 import type {
@@ -17,10 +21,6 @@ import type {
   RuleUpdate,
   ForgeRequest,
 } from "./types";
-
-const MEMORY_DIR         = path.join(process.cwd(), "memory");
-const SYSTEM_PROMPT_PATH = path.join(MEMORY_DIR, "system-prompt.md");
-const ANALYSIS_RULES_PATH= path.join(MEMORY_DIR, "analysis-rules.json");
 
 
 // ── Build codebase context for AXIOM ──────────────────────
@@ -43,7 +43,9 @@ function buildCodebaseContext(openSelfTasksText: string): string {
       const size = fs.statSync(path.join(srcDir, f)).size;
       lines.push(`  src/${f} (${size} bytes)`);
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`  [debug] codebase map: file listing failed: ${err}`);
+  }
 
   lines.push("");
 
@@ -64,7 +66,9 @@ function buildCodebaseContext(openSelfTasksText: string): string {
         lines.push("");
       }
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`  [debug] codebase map: file content injection failed: ${err}`);
+  }
 
   // Always inject README sessions table section
   try {
@@ -76,7 +80,9 @@ function buildCodebaseContext(openSelfTasksText: string): string {
       lines.push(readme.slice(tableStart, tableEnd + 60));
       lines.push("");
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`  [debug] codebase map: README table injection failed: ${err}`);
+  }
 
   // Inject last 5 sessions summary for README table update
   try {
@@ -92,7 +98,9 @@ function buildCodebaseContext(openSelfTasksText: string): string {
       lines.push(`  #${s.sessionNumber} | ${date} | ${bias} | ${setup} setups | ${conf}% | ${rules} rules`);
     }
     lines.push("");
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`  [debug] codebase map: sessions summary injection failed: ${err}`);
+  }
 
   return lines.join("\n");
 }
@@ -125,7 +133,9 @@ export async function runAxiomReflection(
     if (fs.existsSync(identityPath)) {
       identityContext = fs.readFileSync(identityPath, "utf-8");
     }
-  } catch { /* identity file not required */ }
+  } catch (err) {
+    console.debug(`  [debug] identity file load failed: ${err}`);
+  }
 
   const systemMessage = `You are NEXUS AXIOM, the self-reflection engine of the NEXUS market intelligence system.
 Your purpose is to critique the analysis just produced, identify cognitive biases and gaps, then generate precise updates to improve future performance.
@@ -276,8 +286,8 @@ RULE POLICY — CRITICAL:
     ? identityContext + "\n\n" + systemMessage
     : systemMessage;
 
-  const cleanSystem  = fullSystemMessage.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
-  const cleanMessage = userMessage.replace(/[�-�](?![�-�])|(?<![�-�])[�-�]/g, "");
+  const cleanSystem  = stripSurrogates(fullSystemMessage);
+  const cleanMessage = stripSurrogates(userMessage);
 
   const response = await client.messages.create({
     model:      "claude-sonnet-4-20250514",
@@ -291,17 +301,7 @@ RULE POLICY — CRITICAL:
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  let jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
-
-  // Extract JSON object if model returned text around it
-  const firstBrace = jsonText.indexOf("{");
-  const lastBrace  = jsonText.lastIndexOf("}");
-  if (firstBrace > 0 || (lastBrace !== -1 && lastBrace < jsonText.length - 1)) {
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      console.warn("  ⚠ AXIOM returned text around JSON — extracting object");
-      jsonText = jsonText.slice(firstBrace, lastBrace + 1);
-    }
-  }
+  const jsonText = extractJSONFromResponse(rawText);
 
   let rawParsed: any;
 
@@ -414,32 +414,6 @@ RULE POLICY — CRITICAL:
   })).filter((r: ForgeRequest) => r.file && r.description);
 
   return { reflection, forgeRequests };
-}
-
-// ── JSON salvage helper ────────────────────────────────────
-
-function salvageJSON(text: string): any | null {
-  let attempt = text;
-
-  const openBraces   = (attempt.match(/{/g)  || []).length;
-  const closeBraces  = (attempt.match(/}/g)  || []).length;
-  const openBrackets = (attempt.match(/\[/g) || []).length;
-  const closeBrackets= (attempt.match(/]/g)  || []).length;
-
-  // Close any dangling string
-  const lastQuote = attempt.lastIndexOf('"');
-  const afterLast = attempt.slice(lastQuote + 1);
-  if (lastQuote > 0 && !afterLast.includes('"') && (afterLast.includes(',') || afterLast.trim() === '')) {
-    attempt = attempt.slice(0, lastQuote + 1);
-  }
-
-  attempt = attempt.replace(/,\s*$/, '');
-
-  for (let i = 0; i < openBrackets - closeBrackets; i++) attempt += ']';
-  for (let i = 0; i < openBraces   - closeBraces;   i++) attempt += '}';
-
-  try   { return JSON.parse(attempt); }
-  catch { return null; }
 }
 
 // ── Memory Evolution ───────────────────────────────────────

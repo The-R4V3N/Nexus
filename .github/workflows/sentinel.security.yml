@@ -17,8 +17,6 @@ jobs:
 
       - name: Scan for hardcoded secrets
         uses: trufflesecurity/trufflehog@v3.88.26
-        with:
-          extra_args: --only-verified --results=verified
 
   dependency-review:
     name: Dependency Supply Chain Scan

@@ -4,6 +4,7 @@
 // ============================================================
 
 import chalk from "chalk";
+import { groupBy } from "./utils";
 import type { MarketConfig, MarketSnapshot } from "./types";
 
 // ── Instrument Registry ────────────────────────────────────
@@ -35,6 +36,7 @@ async function fetchYahooQuote(symbol: string): Promise<any> {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&range=2d`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" },
+    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json() as any;
@@ -73,11 +75,7 @@ export async function fetchAllMarkets(): Promise<MarketSnapshot[]> {
 }
 
 export function formatSnapshotsForPrompt(snapshots: MarketSnapshot[]): string {
-  const byCategory: Record<string, MarketSnapshot[]> = {};
-  for (const s of snapshots) {
-    if (!byCategory[s.category]) byCategory[s.category] = [];
-    byCategory[s.category].push(s);
-  }
+  const byCategory = groupBy(snapshots, (s) => s.category);
   const lines: string[] = ["=== CURRENT MARKET DATA ===\n"];
   for (const [category, items] of Object.entries(byCategory)) {
     lines.push(`--- ${category.toUpperCase()} ---`);
@@ -93,11 +91,7 @@ export function formatSnapshotsForPrompt(snapshots: MarketSnapshot[]): string {
 }
 
 export function printMarketsTable(snapshots: MarketSnapshot[]): void {
-  const byCategory: Record<string, MarketSnapshot[]> = {};
-  for (const s of snapshots) {
-    if (!byCategory[s.category]) byCategory[s.category] = [];
-    byCategory[s.category].push(s);
-  }
+  const byCategory = groupBy(snapshots, (s) => s.category);
   for (const [category, items] of Object.entries(byCategory)) {
     console.log(chalk.dim(`\n  ── ${category.toUpperCase()} ──`));
     for (const s of items) {

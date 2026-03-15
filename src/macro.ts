@@ -4,7 +4,37 @@
 // ============================================================
 
 import chalk from "chalk";
+import { INJECTION_PATTERNS } from "./security";
 import type { MacroSnapshot, MacroIndicator, MacroSignal, GdeltEvent, AlphaVantageData, AlphaTechnical } from "./types";
+
+// ── Macro text sanitization ──────────────────────────────
+
+export function sanitizeMacroText(text: string): string {
+  if (!text) return text;
+
+  // Truncate to 200 chars
+  let cleaned = text.slice(0, 200);
+
+  // Strip HTML tags
+  cleaned = cleaned.replace(/<[^>]+>/g, "");
+
+  // Check against injection patterns
+  for (const pattern of INJECTION_PATTERNS) {
+    if (pattern.test(cleaned)) {
+      return "[REMOVED]";
+    }
+  }
+
+  return cleaned;
+}
+
+// ── Error message sanitization ───────────────────────────
+
+export function sanitizeErrorMessage(msg: string): string {
+  return msg
+    .replace(/api_key=[^&]*/gi, "api_key=[REDACTED]")
+    .replace(/apikey=[^&]*/gi, "apikey=[REDACTED]");
+}
 
 // ── FRED series definitions ────────────────────────────────
 
@@ -36,7 +66,7 @@ async function fetchFredSeries(seriesId: string, apiKey: string): Promise<{ valu
   });
 
   const url = `https://api.stlouisfed.org/fred/series/observations?${params}`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  const res = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`FRED HTTP ${res.status} for ${seriesId}`);
 
   const data = await res.json() as any;
@@ -83,7 +113,7 @@ async function fetchTreasuryDebt(): Promise<{ date: string; totalDebt: string; p
   });
 
   const url = `https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?${params}`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  const res = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Treasury HTTP ${res.status}`);
 
   const data = await res.json() as any;
@@ -108,12 +138,12 @@ async function fetchGdeltEvents(): Promise<{ total: number; conflicts: GdeltEven
   });
 
   const url = `https://api.gdeltproject.org/api/v2/doc/doc?${params}`;
-  let res = await fetch(url, { headers: { "Accept": "application/json" } });
+  let res = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(15000) });
 
   // GDELT rate-limits aggressively — retry twice with backoff on 429
   for (let attempt = 0; attempt < 2 && res.status === 429; attempt++) {
     await new Promise((r) => setTimeout(r, (attempt + 1) * 8000));
-    res = await fetch(url, { headers: { "Accept": "application/json" } });
+    res = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(15000) });
   }
   if (!res.ok) throw new Error(`GDELT HTTP ${res.status}`);
 
@@ -135,13 +165,14 @@ async function fetchGdeltEvents(): Promise<{ total: number; conflicts: GdeltEven
   const economyKeywords  = ["economy", "economic", "tariff", "trade", "gdp", "inflation", "recession", "rate", "bank", "crisis"];
 
   for (const a of articles) {
-    const title = (a.title ?? "").toLowerCase();
+    const rawTitle = a.title ?? "";
+    const title = rawTitle.toLowerCase();
     const event: GdeltEvent = {
-      title:   a.title   ?? "",
+      title:   sanitizeMacroText(rawTitle),
       url:     a.url     ?? "",
       date:    a.seendate ?? "",
-      domain:  a.domain  ?? "",
-      country: a.sourcecountry ?? "",
+      domain:  sanitizeMacroText(a.domain  ?? ""),
+      country: sanitizeMacroText(a.sourcecountry ?? ""),
     };
 
     const isConflict = conflictKeywords.some((k) => title.includes(k));
@@ -176,7 +207,7 @@ function isAlphaVantageRateLimited(data: any): boolean {
 
 async function fetchTopGainersLosers(apiKey: string): Promise<{ topGainers: { ticker: string; price: string; changePercent: string }[]; topLosers: { ticker: string; price: string; changePercent: string }[] }> {
   const url = `https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey=${apiKey}`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  const res = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status} for TOP_GAINERS_LOSERS`);
 
   const data = await res.json() as any;
@@ -186,13 +217,13 @@ async function fetchTopGainersLosers(apiKey: string): Promise<{ topGainers: { ti
   const rawLosers:  any[] = data?.top_losers  ?? [];
 
   const topGainers = rawGainers.slice(0, 5).map((g: any) => ({
-    ticker:        g.ticker ?? "",
+    ticker:        sanitizeMacroText(g.ticker ?? ""),
     price:         g.price ?? "",
     changePercent: g.change_percentage ?? "",
   }));
 
   const topLosers = rawLosers.slice(0, 5).map((l: any) => ({
-    ticker:        l.ticker ?? "",
+    ticker:        sanitizeMacroText(l.ticker ?? ""),
     price:         l.price ?? "",
     changePercent: l.change_percentage ?? "",
   }));
@@ -202,7 +233,7 @@ async function fetchTopGainersLosers(apiKey: string): Promise<{ topGainers: { ti
 
 async function fetchRSI(symbol: string, apiKey: string): Promise<{ value: number; signal: string }> {
   const url = `https://www.alphavantage.co/query?function=RSI&symbol=${symbol}&interval=daily&time_period=14&series_type=close&apikey=${apiKey}`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  const res = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status} for RSI ${symbol}`);
 
   const data = await res.json() as any;
@@ -221,7 +252,7 @@ async function fetchRSI(symbol: string, apiKey: string): Promise<{ value: number
 
 async function fetchATR(symbol: string, apiKey: string): Promise<number> {
   const url = `https://www.alphavantage.co/query?function=ATR&symbol=${symbol}&interval=daily&time_period=14&apikey=${apiKey}`;
-  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  const res = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Alpha Vantage HTTP ${res.status} for ATR ${symbol}`);
 
   const data = await res.json() as any;
@@ -378,26 +409,26 @@ export async function fetchMacroSnapshot(): Promise<MacroSnapshot> {
     indicators = fredResult.value;
     signals    = deriveSignals(indicators);
   } else {
-    errors.push(`FRED: ${fredResult.reason?.message ?? fredResult.reason}`);
+    errors.push(sanitizeErrorMessage(`FRED: ${fredResult.reason?.message ?? fredResult.reason}`));
   }
 
   if (treasuryResult.status === "fulfilled") {
     treasuryDebt = treasuryResult.value;
   } else {
-    errors.push(`Treasury: ${treasuryResult.reason?.message ?? treasuryResult.reason}`);
+    errors.push(sanitizeErrorMessage(`Treasury: ${treasuryResult.reason?.message ?? treasuryResult.reason}`));
   }
 
   if (gdeltResult.status === "fulfilled") {
     geopoliticalEvents = gdeltResult.value;
   } else {
-    errors.push(`GDELT: ${gdeltResult.reason?.message ?? gdeltResult.reason}`);
+    errors.push(sanitizeErrorMessage(`GDELT: ${gdeltResult.reason?.message ?? gdeltResult.reason}`));
   }
 
   if (avResult.status === "fulfilled") {
     alphaVantage = avResult.value;
     signals = signals.concat(deriveAlphaVantageSignals(alphaVantage));
   } else {
-    errors.push(`Alpha Vantage: ${avResult.reason?.message ?? avResult.reason}`);
+    errors.push(sanitizeErrorMessage(`Alpha Vantage: ${avResult.reason?.message ?? avResult.reason}`));
   }
 
   return {
@@ -489,12 +520,12 @@ export function formatMacroForPrompt(snapshot: MacroSnapshot): string {
 
     if (snapshot.alphaVantage.topGainers.length > 0) {
       lines.push("");
-      const gainers = snapshot.alphaVantage.topGainers.map((g) => `${g.ticker} +${g.changePercent.replace("+", "")}`).join(", ");
+      const gainers = snapshot.alphaVantage.topGainers.map((g) => `${g.ticker ?? "?"} +${(g.changePercent ?? "").replace("+", "")}`).join(", ");
       lines.push(`Top US Gainers: ${gainers}`);
     }
 
     if (snapshot.alphaVantage.topLosers.length > 0) {
-      const losers = snapshot.alphaVantage.topLosers.map((l) => `${l.ticker} ${l.changePercent}`).join(", ");
+      const losers = snapshot.alphaVantage.topLosers.map((l) => `${l.ticker ?? "?"} ${l.changePercent ?? ""}`).join(", ");
       lines.push(`Top US Losers: ${losers}`);
     }
 

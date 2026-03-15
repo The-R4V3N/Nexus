@@ -5,9 +5,9 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { MEMORY_DIR } from "./utils";
 import type { OracleAnalysis, JournalEntry } from "./types";
 
-const MEMORY_DIR      = path.join(process.cwd(), "memory");
 const FAILURES_PATH   = path.join(MEMORY_DIR, "failures.json");
 const MAX_FAILURES    = 20;
 

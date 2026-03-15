@@ -12,9 +12,44 @@ import { execSync } from "child_process";
 import * as fs   from "fs";
 import * as path from "path";
 import { getMaxOutputTokens } from "./security";
+import { stripSurrogates } from "./utils";
 import type { ForgeRequest, ForgeResult } from "./types";
 
 const SRC_DIR = path.join(process.cwd(), "src");
+
+// ── Dangerous code patterns FORGE must never write ────────
+const DANGEROUS_CODE_PATTERNS: { pattern: RegExp; label: string; check?: (code: string) => boolean }[] = [
+  {
+    pattern: /process\.env\.\w+/,
+    label:   "secret exfiltration (process.env combined with fetch)",
+    check:   (code) => /process\.env\.\w+/.test(code) && /\bfetch\s*\(/.test(code),
+  },
+  { pattern: /child_process/,                     label: "child_process import" },
+  { pattern: /\bexecSync\s*\(/,                   label: "execSync call" },
+  { pattern: /\bexec\s*\(/,                       label: "exec call" },
+  { pattern: /\bfs\s*\.\s*writeFileSync\s*\(/,    label: "fs.writeFileSync call" },
+  { pattern: /\bfs\s*\.\s*unlinkSync\s*\(/,       label: "fs.unlinkSync call" },
+  { pattern: /\bfs\s*\.\s*rmSync\s*\(/,           label: "fs.rmSync call" },
+  { pattern: /\bfs\s*\.\s*renameSync\s*\(/,       label: "fs.renameSync call" },
+  { pattern: /\beval\s*\(/,                        label: "eval call" },
+];
+
+// ── Content safety scan for AI-generated code ─────────────
+
+export function isCodeSafe(code: string): { safe: boolean; reason?: string } {
+  for (const entry of DANGEROUS_CODE_PATTERNS) {
+    if (entry.check) {
+      if (entry.check(code)) {
+        return { safe: false, reason: `FORGE output blocked — dangerous pattern: ${entry.label}` };
+      }
+    } else {
+      if (entry.pattern.test(code)) {
+        return { safe: false, reason: `FORGE output blocked — dangerous pattern: ${entry.label}` };
+      }
+    }
+  }
+  return { safe: true };
+}
 
 // ── Files FORGE can never modify ──────────────────────────
 // security.ts  — constitutional, must not self-modify
@@ -25,6 +60,9 @@ const PROTECTED_FILES = new Set([
   "session.yml",   // self-modifying execution environment is too dangerous
   "README.md",     // documentation integrity — FORGE must not strip formatting
 ]);
+
+// ── Filename prefixes FORGE can never modify ─────────────
+const PROTECTED_PREFIXES = ["security", "forge"];
 
 // ── Max file size FORGE will attempt to patch ─────────────
 const MAX_FILE_CHARS = 12000;
@@ -82,8 +120,21 @@ async function applyForgeRequest(
     };
   }
 
+  // ── Security: block files matching protected prefixes ──
+  const lowerFilename = filename.toLowerCase();
+  for (const prefix of PROTECTED_PREFIXES) {
+    if (lowerFilename.startsWith(prefix)) {
+      return {
+        file:     req.file,
+        success:  false,
+        reason:   `${filename} matches protected prefix "${prefix}" — FORGE cannot modify it`,
+        reverted: false,
+      };
+    }
+  }
+
   // ── Only allow src/*.ts files or README.md — block everything else ──
-  const isSourceFile = req.file.endsWith(".ts") && !req.file.includes("/") && !req.file.includes("..");
+  const isSourceFile = req.file.endsWith(".ts") && !req.file.includes("/") && !req.file.includes("\\") && !req.file.includes("..");
   const isReadme     = filename === "README.md";
 
   if (!isSourceFile && !isReadme) {
@@ -140,9 +191,6 @@ Return the complete modified file with the requested change applied.`;
   let patchedContent: string;
 
   try {
-    const stripSurrogates = (s: string) =>
-      s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "");
-
     const response = await client.messages.create({
       model:      "claude-sonnet-4-20250514",
       max_tokens: getMaxOutputTokens(),
@@ -168,6 +216,17 @@ Return the complete modified file with the requested change applied.`;
     };
   }
 
+  // ── Content safety scan ──
+  const safetyCheck = isCodeSafe(patchedContent);
+  if (!safetyCheck.safe) {
+    return {
+      file:     req.file,
+      success:  false,
+      reason:   safetyCheck.reason ?? "FORGE output blocked — dangerous pattern detected",
+      reverted: false,
+    };
+  }
+
   // ── Write the patched file ──
   fs.writeFileSync(filePath, patchedContent + "\n", "utf-8");
 
@@ -185,10 +244,19 @@ Return the complete modified file with the requested change applied.`;
     };
   }
 
-  // ── Count lines changed ──
-  const originalLines = originalContent.split("\n").length;
-  const patchedLines  = patchedContent.split("\n").length;
-  const linesChanged  = Math.abs(patchedLines - originalLines);
+  // ── Count lines changed (actual diff, not just line count delta) ──
+  const originalLinesList = originalContent.split("\n");
+  const patchedLinesList  = patchedContent.split("\n");
+  const originalSet = new Set(originalLinesList);
+  let changedLines = 0;
+  for (const line of patchedLinesList) {
+    if (!originalSet.has(line)) changedLines++;
+  }
+  const patchedSet = new Set(patchedLinesList);
+  for (const line of originalLinesList) {
+    if (!patchedSet.has(line)) changedLines++;
+  }
+  const linesChanged = changedLines;
 
   return {
     file:         req.file,
@@ -227,4 +295,4 @@ export function formatForgeResults(results: ForgeResult[]): string {
   return lines.join("\n");
 }
 
-export { MAX_FORGE_REQUESTS_PER_SESSION, PROTECTED_FILES };
+export { MAX_FORGE_REQUESTS_PER_SESSION, PROTECTED_FILES, PROTECTED_PREFIXES };

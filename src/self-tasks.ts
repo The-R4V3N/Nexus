@@ -102,6 +102,7 @@ export async function createSelfTask(
     const res = await fetch(`https://api.github.com/repos/${repo}/issues`, {
       method: "POST",
       headers,
+      signal: AbortSignal.timeout(20000),
       body: JSON.stringify({
         title:  `[SELF-TASK] ${task.title}`,
         body,
@@ -132,7 +133,7 @@ export async function fetchOpenSelfTasks(): Promise<OpenSelfTask[]> {
   try {
     const res = await fetch(
       `https://api.github.com/repos/${repo}/issues?labels=nexus-self-task&state=open&per_page=20`,
-      { headers }
+      { headers, signal: AbortSignal.timeout(20000) }
     );
 
     if (!res.ok) return [];
@@ -180,6 +181,7 @@ export async function closeSelfTask(
     await fetch(`https://api.github.com/repos/${repo}/issues/${issueNumber}/comments`, {
       method: "POST",
       headers,
+      signal: AbortSignal.timeout(20000),
       body: JSON.stringify({
         body: `## ✅ Resolved by NEXUS — Session #${sessionNumber}\n\n${resolutionComment}`,
       }),
@@ -189,6 +191,7 @@ export async function closeSelfTask(
     const res = await fetch(`https://api.github.com/repos/${repo}/issues/${issueNumber}`, {
       method:  "PATCH",
       headers,
+      signal: AbortSignal.timeout(20000),
       body: JSON.stringify({
         state:        "closed",
         state_reason: "completed",

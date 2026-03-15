@@ -45,7 +45,7 @@ function generateSessionTitle(oracle: OracleAnalysis, reflection: AxiomReflectio
   if (topSetup) {
     return `${emoji} ${topSetup.instrument} ${topSetup.type} + ${reflection.ruleUpdates.length > 0 ? "rule evolution" : "no rule changes"}`;
   }
-  return `${emoji} No clear setups — ${reflection.whatFailed.split(".")[0]}`;
+  return `${emoji} No clear setups — ${(reflection.whatFailed ?? "").split(".")[0]}`;
 }
 
 // ── Write Markdown Journal ─────────────────────────────────
@@ -53,7 +53,7 @@ function generateSessionTitle(oracle: OracleAnalysis, reflection: AxiomReflectio
 export function writeJournalMarkdown(entry: JournalEntry): string {
   fs.mkdirSync(JOURNAL_DIR, { recursive: true });
 
-  const filename = `session-${String(entry.sessionNumber).padStart(4, "0")}-${entry.date.replace(/[: ]/g, "-")}.md`;
+  const filename = `session-${String(entry.sessionNumber).padStart(4, "0")}-${(entry.date ?? "unknown").replace(/[: ]/g, "-")}.md`;
   const filepath = path.join(JOURNAL_DIR, filename);
 
   const biasIcon = { bullish: "🟢", bearish: "🔴", neutral: "⚪", mixed: "🟡" };
@@ -142,19 +142,33 @@ export function updateGithubPages(entries: JournalEntry[]): void {
   fs.writeFileSync(path.join(DOCS_DIR, "index.html"), html);
 }
 
-// ── Load all journal entries ───────────────────────────────
+// ── Load all journal entries (cached per session) ─────────
+
+let _entriesCache: JournalEntry[] | null = null;
 
 export function loadAllJournalEntries(): JournalEntry[] {
+  if (_entriesCache !== null) return _entriesCache;
   const stored = path.join(process.cwd(), "memory", "sessions.json");
   if (!fs.existsSync(stored)) return [];
-  return JSON.parse(fs.readFileSync(stored, "utf-8"));
+  _entriesCache = JSON.parse(fs.readFileSync(stored, "utf-8"));
+  return _entriesCache!;
 }
+
+export function invalidateEntriesCache(): void {
+  _entriesCache = null;
+}
+
+const MAX_SESSIONS = 500;
 
 export function saveJournalEntry(entry: JournalEntry): void {
   const stored = path.join(process.cwd(), "memory", "sessions.json");
   const entries = loadAllJournalEntries();
   entries.push(entry);
+  if (entries.length > MAX_SESSIONS) {
+    entries.splice(0, entries.length - MAX_SESSIONS);
+  }
   fs.writeFileSync(stored, JSON.stringify(entries, null, 2));
+  invalidateEntriesCache();
 }
 
 // ── README sessions table auto-update ─────────────────────
@@ -195,7 +209,7 @@ export function updateReadmeSessionsTable(entries: JournalEntry[]): void {
 // ── HTML helpers ──────────────────────────────────────────
 
 function escapeHTML(str: string): string {
-  return str
+  return (str ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -209,8 +223,12 @@ function escapeAndBreak(str: string): string {
 
 // ── HTML builders ──────────────────────────────────────────
 
+const VALID_BIASES = new Set(["bullish", "bearish", "neutral", "mixed"]);
+
 function buildEntryHTML(entry: JournalEntry, index: number): string {
-  const biasClass = escapeHTML(entry.fullAnalysis.bias.overall);
+  const biasClass = VALID_BIASES.has(entry.fullAnalysis.bias.overall)
+    ? escapeHTML(entry.fullAnalysis.bias.overall)
+    : "neutral";
   const isFirst = index === 0; // newest entry starts expanded
 
   const setupsHTML = entry.fullAnalysis.setups.map((s: any) => {
