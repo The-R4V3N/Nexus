@@ -19,3 +19,7 @@ When market volatility is elevated (VIX >25, major moves >1 standard deviation, 
 ## Evolved — Session #39
 
 When markets show correlation breakdown (crypto rising while equities fall heavily, bonds and stocks moving together), treat this as a potential regime shift signal requiring different analytical framework rather than temporary anomaly. These periods demand heightened attention to cross-asset dynamics and reduced confidence in traditional risk-on/risk-off correlations.
+
+## Evolved — Session #40
+
+Market conditions can produce legitimate periods where existing analytical frameworks function correctly without requiring modification. Evolution is not about constant change - it's about improving when gaps are identified and maintaining proven systems when they work. Correlation breakdowns and unusual cross-asset behavior should be flagged as regime shifts rather than analytical failures.
