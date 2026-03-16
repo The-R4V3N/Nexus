@@ -107,10 +107,10 @@
     {
       "id": "r014",
       "category": "confidence_methodology",
-      "description": "Confidence breakdown must specify: technical confluence score (1=20%, 2=40%, 3=60%, 4+=80%), macro alignment score (strong correlation=60-80%, weak=20-40%, breakdown=0-20%), and risk/reward clarity (RR>2=high, 1.5-2=medium, <1.5=low). Apply volatility discount: reduce total confidence by 10-20% during VIX >25, major news events, or correlation breakdowns. Total confidence = weighted average minus volatility adjustment.",
+      "description": "Confidence methodology: (1) Technical confluence: count valid confluences per r022, apply 1=20%, 2=40%, 3=60%, 4+=80%. (2) Macro alignment: 60-80% for strong correlation, 20-40% for weak correlation, 0-20% for breakdown. (3) RR clarity: high for RR>2, medium for 1.5-2, low for <1.5. (4) Volatility adjustment: reduce by 10-20% during VIX>25, major events, or correlation breakdowns. Final confidence = weighted average minus volatility discount.",
       "weight": 8,
       "addedSession": 2,
-      "lastModifiedSession": 38
+      "lastModifiedSession": 42
     },
     {
       "id": "r015",
@@ -191,8 +191,8 @@
       "lastModifiedSession": 29
     }
   ],
-  "version": 36,
-  "lastUpdated": "2026-03-15T19:59:28.781Z",
+  "version": 37,
+  "lastUpdated": "2026-03-16T13:32:57.437Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -200,5 +200,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #38"
+  "sessionNotes": "Last updated: Session #42"
 }

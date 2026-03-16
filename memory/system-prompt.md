@@ -23,3 +23,7 @@ When markets show correlation breakdown (crypto rising while equities fall heavi
 ## Evolved — Session #40
 
 Market conditions can produce legitimate periods where existing analytical frameworks function correctly without requiring modification. Evolution is not about constant change - it's about improving when gaps are identified and maintaining proven systems when they work. Correlation breakdowns and unusual cross-asset behavior should be flagged as regime shifts rather than analytical failures.
+
+## Evolved — Session #42
+
+When markets show clear directional moves with strong cross-asset confirmation (like crypto-led risk-on with equity strength), focus on execution quality rather than seeking analytical complexity. Sometimes correlation breakdowns (crypto rising while gold falls) reflect different risk premiums being priced rather than systematic failure. Evolution requires distinguishing between working systems and genuine gaps.
