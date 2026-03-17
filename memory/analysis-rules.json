@@ -197,10 +197,18 @@
       "weight": 8,
       "addedSession": 43,
       "lastModifiedSession": 43
+    },
+    {
+      "id": "r025",
+      "category": "setup_construction",
+      "description": "When confidence exceeds 70% with clear directional bias, identify minimum one setup using closest structural level (recent break, liquidity zone, or fair value gap) as entry reference. High confidence without setups indicates analytical failure.",
+      "weight": 9,
+      "addedSession": 45,
+      "lastModifiedSession": 45
     }
   ],
-  "version": 38,
-  "lastUpdated": "2026-03-17T00:23:10.069Z",
+  "version": 39,
+  "lastUpdated": "2026-03-17T13:31:54.637Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -208,5 +216,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #43"
+  "sessionNotes": "Last updated: Session #45"
 }

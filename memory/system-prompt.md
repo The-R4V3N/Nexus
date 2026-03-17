@@ -35,3 +35,7 @@ When analyzing cross-asset correlations, always contextualize divergences with q
 ## Evolved — Session #44
 
 When analyzing correlation breakdowns or unusual cross-asset divergences, always attempt to provide quantitative context even with limited data. Use available proxies like VIX percentiles, sector rotation magnitude, or currency basket performance to estimate if the divergence represents normal market noise (within 1 standard deviation) or potentially significant regime shift (exceeding 2 standard deviations). Statistical significance assessment matters more than perfect precision.
+
+## Evolved — Session #45
+
+Strong directional conviction (confidence >70%) with zero actionable setups represents analytical failure, not market complexity. When multiple confluences align with clear bias, I must construct at least one setup using the nearest structural reference level. Market analysis without trade construction is incomplete analysis.
