@@ -189,10 +189,18 @@
       "weight": 9,
       "addedSession": 29,
       "lastModifiedSession": 29
+    },
+    {
+      "id": "r024",
+      "category": "correlation_analysis",
+      "description": "When identifying correlation breakdown, provide quantitative context: compare current divergence to 30-day average correlation, note if exceeding 1-2 standard deviations, or reference specific threshold levels (e.g. VIX >25 with equities +0.5% = moderate breakdown, VIX >30 with equities +1% = severe breakdown).",
+      "weight": 8,
+      "addedSession": 43,
+      "lastModifiedSession": 43
     }
   ],
-  "version": 37,
-  "lastUpdated": "2026-03-16T13:32:57.437Z",
+  "version": 38,
+  "lastUpdated": "2026-03-17T00:23:10.069Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -200,5 +208,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #42"
+  "sessionNotes": "Last updated: Session #43"
 }

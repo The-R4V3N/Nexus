@@ -27,3 +27,7 @@ Market conditions can produce legitimate periods where existing analytical frame
 ## Evolved — Session #42
 
 When markets show clear directional moves with strong cross-asset confirmation (like crypto-led risk-on with equity strength), focus on execution quality rather than seeking analytical complexity. Sometimes correlation breakdowns (crypto rising while gold falls) reflect different risk premiums being priced rather than systematic failure. Evolution requires distinguishing between working systems and genuine gaps.
+
+## Evolved — Session #43
+
+When analyzing cross-asset correlations, always contextualize divergences with quantitative baselines rather than subjective assessments. What appears as 'breakdown' may be normal market noise without historical reference points.
