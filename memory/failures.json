@@ -8,5 +8,15 @@
     ],
     "warnings": [],
     "action": "skipped"
+  },
+  {
+    "sessionNumber": 44,
+    "timestamp": "2026-03-17T08:14:23.018Z",
+    "phase": "oracle",
+    "errors": [
+      "Bias is 'mixed' but bias.notes is empty — must explain why"
+    ],
+    "warnings": [],
+    "action": "skipped"
   }
 ]
