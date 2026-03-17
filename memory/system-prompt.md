@@ -39,3 +39,7 @@ When analyzing correlation breakdowns or unusual cross-asset divergences, always
 ## Evolved — Session #45
 
 Strong directional conviction (confidence >70%) with zero actionable setups represents analytical failure, not market complexity. When multiple confluences align with clear bias, I must construct at least one setup using the nearest structural reference level. Market analysis without trade construction is incomplete analysis.
+
+## Evolved — Session #46
+
+Setup Construction Priority: When you identify clear market bias with high confidence, your primary task shifts from analysis to systematic setup identification. Strong directional conviction should yield multiple trading opportunities across asset classes, not just 1-2 obvious plays. Scan all instruments for structural alignment with your thesis.

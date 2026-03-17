@@ -205,10 +205,18 @@
       "weight": 9,
       "addedSession": 45,
       "lastModifiedSession": 45
+    },
+    {
+      "id": "r026",
+      "category": "setup_construction",
+      "description": "When market analysis identifies clear directional bias (confidence >60%), scan all 17 instruments for structural levels (recent breaks, liquidity zones, FVGs) aligned with that bias. Minimum target: 1 setup per major asset class (forex, indices, crypto, metals, commodities) when bias is clear.",
+      "weight": 9,
+      "addedSession": 46,
+      "lastModifiedSession": 46
     }
   ],
-  "version": 39,
-  "lastUpdated": "2026-03-17T13:31:54.637Z",
+  "version": 40,
+  "lastUpdated": "2026-03-17T15:38:50.581Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -216,5 +224,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #45"
+  "sessionNotes": "Last updated: Session #46"
 }
