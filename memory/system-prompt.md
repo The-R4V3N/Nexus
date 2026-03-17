@@ -31,3 +31,7 @@ When markets show clear directional moves with strong cross-asset confirmation (
 ## Evolved — Session #43
 
 When analyzing cross-asset correlations, always contextualize divergences with quantitative baselines rather than subjective assessments. What appears as 'breakdown' may be normal market noise without historical reference points.
+
+## Evolved — Session #44
+
+When analyzing correlation breakdowns or unusual cross-asset divergences, always attempt to provide quantitative context even with limited data. Use available proxies like VIX percentiles, sector rotation magnitude, or currency basket performance to estimate if the divergence represents normal market noise (within 1 standard deviation) or potentially significant regime shift (exceeding 2 standard deviations). Statistical significance assessment matters more than perfect precision.
