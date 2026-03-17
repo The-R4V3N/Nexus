@@ -53,7 +53,7 @@ export const MARKET_CONFIGS: MarketConfig[] = loadMarketConfigs();
 
 async function fetchYahooQuote(symbol: string): Promise<any> {
   const encoded = encodeURIComponent(symbol);
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&range=2d`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1d&range=5d`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" },
     signal: AbortSignal.timeout(10000),
@@ -72,11 +72,19 @@ export async function fetchMarketSnapshot(config: MarketConfig): Promise<MarketS
     const previousClose = meta.chartPreviousClose ?? meta.previousClose ?? price;
     const change = price - previousClose;
     const changePercent = previousClose !== 0 ? (change / previousClose) * 100 : 0;
+
+    // Extract close prices from the chart data for rolling average
+    const closes: number[] = result.indicators?.quote?.[0]?.close?.filter((c: any) => c != null) ?? [];
+    const avgChange = closes.length >= 2
+      ? closes.slice(1).reduce((sum: number, c: number, i: number) => sum + Math.abs((c - closes[i]) / closes[i] * 100), 0) / (closes.length - 1)
+      : 0;
+
     return {
       symbol: config.symbol, name: config.name, category: config.category,
       price, previousClose, change, changePercent,
       high: meta.regularMarketDayHigh ?? price,
       low: meta.regularMarketDayLow ?? price,
+      avgDailyChange: avgChange,
       timestamp: new Date(),
     };
   } catch (err) {
@@ -103,7 +111,9 @@ export function formatSnapshotsForPrompt(snapshots: MarketSnapshot[]): string {
       const sign = s.change >= 0 ? "+" : "";
       const pct = s.changePercent.toFixed(2);
       const price = s.price < 10 ? s.price.toFixed(5) : s.price.toFixed(2);
-      lines.push(`${s.name.padEnd(14)} ${price.padStart(12)}  ${sign}${s.change.toFixed(4)} (${sign}${pct}%)  H:${s.high.toFixed(2)} L:${s.low.toFixed(2)}`);
+      const isExceptional = s.avgDailyChange && Math.abs(s.changePercent) > s.avgDailyChange * 2;
+      const avgNote = isExceptional ? ` [>2x avg move]` : "";
+      lines.push(`${s.name.padEnd(14)} ${price.padStart(12)}  ${sign}${s.change.toFixed(4)} (${sign}${pct}%)  H:${s.high.toFixed(2)} L:${s.low.toFixed(2)}${avgNote}`);
     }
     lines.push("");
   }

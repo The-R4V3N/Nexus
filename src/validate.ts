@@ -64,6 +64,27 @@ export function calculateTextSimilarity(text1: string, text2: string): number {
   return union === 0 ? 0 : intersection / union;
 }
 
+// ── Confidence extraction from analysis text ─────────────
+
+export function extractConfidenceFromText(text: string): number | null {
+  // Pattern 1: "Confidence: X%" or "Confidence: X% —"
+  const directMatch = text.match(/Confidence:\s*(\d+)%/i);
+  if (directMatch) {
+    return parseInt(directMatch[1], 10);
+  }
+
+  // Pattern 2: "TC (X%), MA (Y%), RR (Z%)" — compute weighted average
+  const componentMatch = text.match(/TC\s*\((\d+)%\).*?MA\s*\((\d+)%\).*?RR\s*\((\d+)%\)/i);
+  if (componentMatch) {
+    const tc = parseInt(componentMatch[1], 10);
+    const ma = parseInt(componentMatch[2], 10);
+    const rr = parseInt(componentMatch[3], 10);
+    return Math.round(tc * 0.4 + ma * 0.3 + rr * 0.3);
+  }
+
+  return null;
+}
+
 // ── ORACLE Validator ──────────────────────────────────────
 
 export function validateOracleOutput(
@@ -146,6 +167,19 @@ export function validateOracleOutput(
             warnings.push(`${label}: bearish but target (${s.target}) >= entry (${s.entry})`);
           }
         }
+      }
+    }
+  }
+
+  // Confidence mismatch check — compare analysis text vs JSON field
+  if (oracle.analysis && typeof oracle.confidence === "number") {
+    const textConfidence = extractConfidenceFromText(oracle.analysis);
+    if (textConfidence !== null) {
+      const diff = Math.abs(textConfidence - oracle.confidence);
+      if (diff > 15) {
+        warnings.push(
+          `Confidence mismatch: analysis text says ${textConfidence}% but JSON field says ${oracle.confidence}%`
+        );
       }
     }
   }

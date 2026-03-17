@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput } from "../src/validate";
+import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText } from "../src/validate";
 import type { OracleAnalysis, JournalEntry } from "../src/types";
 
 // ── calculateTextSimilarity ─────────────────────────────────
@@ -227,6 +227,64 @@ describe("validateOracleOutput", () => {
       [prevEntry]
     );
     expect(result.warnings.some((w) => w.includes("Recycled"))).toBe(false);
+  });
+});
+
+// ── extractConfidenceFromText ────────────────────────────────
+
+describe("extractConfidenceFromText", () => {
+  it("extracts direct 'Confidence: X%' pattern", () => {
+    expect(extractConfidenceFromText("Confidence: 73% — some notes")).toBe(73);
+  });
+
+  it("extracts TC/MA/RR component pattern and computes weighted average", () => {
+    // TC=70, MA=50, RR=60 → (70×0.4)+(50×0.3)+(60×0.3) = 28+15+18 = 61
+    expect(extractConfidenceFromText("Breakdown: TC (70%), MA (50%), RR (60%)")).toBe(61);
+  });
+
+  it("returns null when no confidence pattern found", () => {
+    expect(extractConfidenceFromText("The market is bullish today")).toBeNull();
+  });
+
+  it("is case insensitive", () => {
+    expect(extractConfidenceFromText("confidence: 55%")).toBe(55);
+  });
+});
+
+// ── Confidence mismatch validation ──────────────────────────
+
+describe("validateOracleOutput confidence mismatch", () => {
+  function makeOracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
+    return {
+      timestamp: new Date(),
+      sessionId: "test-session",
+      marketSnapshots: [],
+      analysis: "A".repeat(300),
+      setups: [],
+      bias: { overall: "bullish", notes: "Strong uptrend" },
+      keyLevels: [],
+      confidence: 65,
+      ...overrides,
+    };
+  }
+
+  it("does not warn when analysis text confidence matches JSON confidence", () => {
+    const analysis = "A".repeat(200) + " Confidence: 73% — TC (80%), MA (60%), RR (70%)";
+    const result = validateOracleOutput(makeOracle({ analysis, confidence: 73 }), []);
+    expect(result.warnings.some((w) => w.includes("Confidence mismatch"))).toBe(false);
+  });
+
+  it("warns when analysis text confidence differs from JSON confidence by >15", () => {
+    const analysis = "A".repeat(200) + " Confidence: 73% — TC (80%), MA (60%), RR (70%)";
+    const result = validateOracleOutput(makeOracle({ analysis, confidence: 50 }), []);
+    expect(result.warnings.some((w) => w.includes("Confidence mismatch"))).toBe(true);
+    expect(result.warnings.some((w) => w.includes("73%") && w.includes("50%"))).toBe(true);
+  });
+
+  it("does not warn when analysis has no confidence text", () => {
+    const analysis = "A".repeat(300) + " The market is bullish with strong momentum";
+    const result = validateOracleOutput(makeOracle({ analysis, confidence: 50 }), []);
+    expect(result.warnings.some((w) => w.includes("Confidence mismatch"))).toBe(false);
   });
 });
 

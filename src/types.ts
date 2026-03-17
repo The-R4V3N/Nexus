@@ -13,6 +13,7 @@ export interface MarketSnapshot {
   high: number;
   low: number;
   volume?: number;
+  avgDailyChange?: number;  // average absolute daily % change over last 5 sessions
   timestamp: Date;
 }
 

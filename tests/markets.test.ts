@@ -13,6 +13,7 @@ function makeSnapshot(overrides: Partial<MarketSnapshot> = {}): MarketSnapshot {
     changePercent: 0.46,
     high: 1.08700,
     low: 1.07900,
+    avgDailyChange: 0.5,
     timestamp: new Date(),
     ...overrides,
   };
@@ -95,5 +96,23 @@ describe("formatSnapshotsForPrompt", () => {
     const result = formatSnapshotsForPrompt(snapshots);
     expect(result).toContain("H:1.09");
     expect(result).toContain("L:1.07");
+  });
+
+  it("shows [>2x avg move] when change exceeds 2x average daily change", () => {
+    const snapshots = [makeSnapshot({ changePercent: 2.5, avgDailyChange: 0.5 })];
+    const result = formatSnapshotsForPrompt(snapshots);
+    expect(result).toContain("[>2x avg move]");
+  });
+
+  it("does not show [>2x avg move] when change is within normal range", () => {
+    const snapshots = [makeSnapshot({ changePercent: 0.46, avgDailyChange: 0.5 })];
+    const result = formatSnapshotsForPrompt(snapshots);
+    expect(result).not.toContain("[>2x avg move]");
+  });
+
+  it("does not show [>2x avg move] when avgDailyChange is undefined", () => {
+    const snapshots = [makeSnapshot({ changePercent: 5.0, avgDailyChange: undefined })];
+    const result = formatSnapshotsForPrompt(snapshots);
+    expect(result).not.toContain("[>2x avg move]");
   });
 });

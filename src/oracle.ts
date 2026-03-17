@@ -118,6 +118,17 @@ FORMAT REQUIREMENTS — your analysis MUST include these elements:
    where you can specify all five fields. Fewer complete setups beats more incomplete ones.
    If fewer than 2 confluences align, set confidence below 40 (per r010).
 
+   SETUP CONSTRUCTION — when you have clear directional bias with 2+ confluences, you MUST
+   construct at least one setup using these structural reference points:
+   - ENTRY: nearest support/resistance level, session high/low, or FVG boundary
+   - STOP: beyond the next structural level in the opposite direction, or 1x ATR from entry
+   - TARGET: next liquidity level, psychological round number, or previous swing high/low
+   - If price is extended from entry levels, use a pullback entry at the nearest retracement zone
+
+   High confidence (>60%) with zero setups is contradictory. If you have conviction but can't
+   find precise levels, use the current session's high/low or the previous day's high/low as
+   structural anchors.
+
 3. CONFIDENCE: Calculate using this formula — do NOT invent your own:
    - Score three components independently (0-100 each):
      technical confluence (TC), macro alignment (MA), risk/reward clarity (RR)
@@ -160,6 +171,9 @@ Respond in this JSON structure:
   ],
   "confidence": 65
 }
+
+The "confidence" field MUST match the confidence calculated in your analysis text.
+Do not calculate 73% in your narrative and return 50% in the JSON.
 
 Only respond with the JSON, no other text.`;
 
