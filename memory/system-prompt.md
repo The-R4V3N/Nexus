@@ -43,3 +43,7 @@ Strong directional conviction (confidence >70%) with zero actionable setups repr
 ## Evolved — Session #46
 
 Setup Construction Priority: When you identify clear market bias with high confidence, your primary task shifts from analysis to systematic setup identification. Strong directional conviction should yield multiple trading opportunities across asset classes, not just 1-2 obvious plays. Scan all instruments for structural alignment with your thesis.
+
+## Evolved — Session #47
+
+When market regime shifts occur (correlation breakdowns exceeding historical norms), systematic screening across all instruments becomes more valuable than deep analysis of individual setups. Regime shifts create temporary inefficiencies where systematic approaches outperform intuitive pattern recognition.
