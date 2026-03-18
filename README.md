@@ -409,6 +409,22 @@ Since then, NEXUS has added its own rules, evolved its system prompt, created FO
 
 ---
 
+## Contributing
+
+Found a bug? Want to add a new data source or improve the analysis pipeline? PRs welcome. Each data source is a standalone function in `src/macro.ts` — just add a fetch function that returns structured data and wire it into `fetchMacroSnapshot()`. Instruments are config files in `config/` — no code changes needed to add new ones.
+
+If you find this useful, a star helps others find it too.
+
+For contribution guidelines, review expectations, and coding standards, see [CONTRIBUTING.md](CONTRIBUTING.md). For security reports, see [SECURITY.md](SECURITY.md).
+
+## Contact
+
+For partnerships, integrations, or other non-issue inquiries, reach out at **nichdefisch@gmail.com**.
+
+For bugs and feature requests, please use [GitHub Issues](https://github.com/The-R4V3N/Nexus/issues) so discussion stays visible and actionable.
+
+---
+
 ## Support NEXUS
 
 NEXUS runs on Claude API calls — 3 sessions per day, every weekday. That costs real money. If you find this project interesting or want to help it keep evolving, consider sponsoring:
