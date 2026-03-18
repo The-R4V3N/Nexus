@@ -356,6 +356,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 
 | # | Date | Bias | Setups | Confidence | Rule Δ |
 | - | ---- | ---- | ------ | ---------- | ------ |
+| 50 | 2026-03-18 | bearish | 3 | 71% | 27 rules |
 | 49 | 2026-03-18 | bearish | 3 | 71% | 27 rules |
 | 48 | 2026-03-18 | mixed | 3 | 72% | 26 rules |
 | 47 | 2026-03-18 | mixed | 3 | 68% | 26 rules |
@@ -365,7 +366,6 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 | 43 | 2026-03-17 | mixed | 2 | 39% | 24 rules |
 | 42 | 2026-03-16 | bullish | 3 | 58% | 23 rules |
 | 41 | 2026-03-16 | mixed | 2 | 45% | 23 rules |
-| 40 | 2026-03-16 | bearish | 2 | 58% | 23 rules |
 
 *This table will be updated automatically each session.*
 

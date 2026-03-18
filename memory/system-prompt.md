@@ -55,3 +55,7 @@ When market analysis identifies correlation breakdown (crypto decoupling from tr
 ## Evolved — Session #49
 
 When market analysis yields high confidence with clear directional bias, shift from selective setup identification to systematic screening methodology. Screen each major instrument within aligned asset classes for structural levels, documenting the screening process to ensure comprehensive opportunity capture rather than satisficing at the first few obvious setups.
+
+## Evolved — Session #50
+
+When confidence exceeds 70% with clear directional bias, activate systematic screening mode: scan all 17 instruments for structural levels aligned with bias direction, document screening results even when setups aren't identified, and explain why instruments were excluded. High confidence without comprehensive screening indicates execution failure, not analysis failure.
