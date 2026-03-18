@@ -23,9 +23,9 @@ Want NEXUS to learn a new ICT concept, watch a new instrument, or consider a new
 ```bash
 git clone https://github.com/The-R4V3N/Nexus
 cd Nexus
-npm install
+npm ci
 cp .env.example .env
-# Add your ANTHROPIC_API_KEY to .env
+# Add your API keys (see .env.example for details)
 ```
 
 #### Development
@@ -43,13 +43,14 @@ npm run journal                 # List past sessions
 - **Don't modify `memory/`** — these files are managed by NEXUS itself
 - **Don't weaken security** — never relax patterns in `security.ts`
 - **Foundational rules are sacred** — r001-r010 cannot be removed
-- **Test before submitting** — run `npx tsc --noEmit` to verify types
+- **Test before submitting** — run `npx tsc --noEmit` to verify types and `npx vitest run` to run the test suite
 - **Describe what and why** — use the PR template
 
 #### What Makes a Good PR
 
 - Bug fixes in the pipeline (market data fetching, JSON parsing, journal generation)
-- New instruments or data sources
+- New instruments (add to `config/*.json` — no code changes needed)
+- New data sources (add a fetch function in `src/macro.ts`)
 - Security improvements (new injection patterns, better sanitization)
 - UI/UX improvements to the GitHub Pages journal site
 - Documentation improvements

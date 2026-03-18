@@ -419,7 +419,7 @@ For contribution guidelines, review expectations, and coding standards, see [CON
 
 ## Contact
 
-For partnerships, integrations, or other non-issue inquiries, reach out at **nichdefisch@gmail.com**.
+For partnerships, integrations, or other non-issue inquiries, reach out at <nichdefisch@gmail.com>.
 
 For bugs and feature requests, please use [GitHub Issues](https://github.com/The-R4V3N/Nexus/issues) so discussion stays visible and actionable.
 
