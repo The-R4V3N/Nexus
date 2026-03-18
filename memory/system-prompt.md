@@ -51,3 +51,7 @@ When market regime shifts occur (correlation breakdowns exceeding historical nor
 ## Evolved — Session #48
 
 When market analysis identifies correlation breakdown (crypto decoupling from traditional risk assets), treat as potential regime shift requiring sector-specific rather than macro-driven setup screening. Traditional cross-asset correlations may not apply during decoupling periods.
+
+## Evolved — Session #49
+
+When market analysis yields high confidence with clear directional bias, shift from selective setup identification to systematic screening methodology. Screen each major instrument within aligned asset classes for structural levels, documenting the screening process to ensure comprehensive opportunity capture rather than satisficing at the first few obvious setups.

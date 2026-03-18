@@ -213,10 +213,18 @@
       "weight": 9,
       "addedSession": 46,
       "lastModifiedSession": 46
+    },
+    {
+      "id": "r027",
+      "category": "setup-construction",
+      "description": "When confidence exceeds 70% with clear directional bias, systematically screen each asset class (forex majors, indices, crypto, metals, commodities) for structural levels aligned with bias direction. Document which instruments were screened and why setups were/weren't identified.",
+      "weight": 8,
+      "addedSession": 49,
+      "lastModifiedSession": 49
     }
   ],
-  "version": 40,
-  "lastUpdated": "2026-03-17T15:38:50.581Z",
+  "version": 41,
+  "lastUpdated": "2026-03-18T13:32:26.675Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -224,5 +232,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #46"
+  "sessionNotes": "Last updated: Session #49"
 }
