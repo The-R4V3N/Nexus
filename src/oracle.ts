@@ -252,6 +252,8 @@ Only respond with the JSON, no other text.`;
     return true;
   });
 
+  warnPoorRiskReward(validSetups);
+
   if (validSetups.length < rawSetups.length) {
     console.warn(`  ⚠ ${rawSetups.length - validSetups.length} setup(s) dropped for missing entry/stop/target/RR/timeframe`);
   }
@@ -266,6 +268,16 @@ Only respond with the JSON, no other text.`;
     keyLevels:       parsed.keyLevels      ?? [],
     confidence:      parsed.confidence     ?? 50,
   };
+}
+
+// ── Risk/Reward Warning ───────────────────────────────────
+
+export function warnPoorRiskReward(setups: any[]): void {
+  for (const s of setups) {
+    if (typeof s.RR === "number" && s.RR < 1.0) {
+      console.warn(`  \u26A0 Setup ${s.instrument ?? "unknown"} has poor risk/reward (RR=${s.RR.toFixed(2)}) \u2014 risk exceeds reward`);
+    }
+  }
 }
 
 // ── Formatters ─────────────────────────────────────────────

@@ -154,6 +154,11 @@ IMPORTANT ANTI-REPETITION RULES:
 - If compliance says YES, acknowledge progress — do not repeat old criticisms.
 - BEFORE writing your reflection, review the "Recent session history" below. If your reflection would say the same thing as a previous session, you MUST either (a) find a genuinely NEW insight, or (b) say "No new insights this session — market conditions and analysis quality unchanged."
 - DO NOT use these phrases (they have appeared in every recent session): "compliance evolution is complete", "analytical depth era", "next frontier", "systematic rigor". Find fresh language or say nothing.
+- If you have identified the same gap or failure in 3+ consecutive sessions without creating
+  a rule, self-task, or code change to address it, you MUST either (a) create a concrete
+  rule or self-task to fix the gap, or (b) explicitly acknowledge the gap is unfixable given
+  current architecture and STOP repeating the critique. Repeating the same criticism without
+  action across multiple sessions is itself a cognitive bias (rumination).
 - If market data is substantially the same as the previous session, say so explicitly: "Market data largely unchanged from session #X — no new analysis warranted."
 
 ### My current rules (${currentRules.rules.filter((r: any) => !r.disabled).length} active rules, v${currentRules.version}):

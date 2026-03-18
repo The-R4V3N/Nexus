@@ -141,6 +141,36 @@ function loadRules(): AnalysisRules {
   return { version: 1, lastUpdated: "", rules: [], focusInstruments: [], sessionNotes: "" };
 }
 
+// ── Repetition Detection ──────────────────────────────────
+
+export function detectRepeatedCritiques(entries: import("./types").JournalEntry[]): string {
+  const recent = entries.slice(-3);
+  if (recent.length < 3) return "";
+
+  const critiques = recent.map(e => e.reflection?.whatFailed ?? "");
+  if (critiques.some(c => c.length === 0)) return "";
+
+  // Split first critique into sentences
+  const sentences = critiques[0].split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
+
+  const repeated: string[] = [];
+  for (const sentence of sentences) {
+    const words = new Set(sentence.toLowerCase().split(/\s+/));
+    // Check if this sentence's words appear in all 3 critiques
+    const appearsInAll = critiques.every(c => {
+      const cWords = new Set(c.toLowerCase().split(/\s+/));
+      let overlap = 0;
+      for (const w of words) {
+        if (cWords.has(w)) overlap++;
+      }
+      return overlap / words.size > 0.6;
+    });
+    if (appearsInAll) repeated.push(sentence);
+  }
+
+  return repeated.length > 0 ? repeated[0] : "";
+}
+
 // ── Weekday guard ─────────────────────────────────────────
 
 function isTradingDay(force = false): boolean {
@@ -361,6 +391,20 @@ export async function runAndValidateAxiom(
       `- Session #${f.sessionNumber} (${f.timestamp}): ${f.phase} ${f.action} — ${f.errors.join('; ')}`
     ).join("\n");
     prevContext += `\n\n### Recent session failures:\n${failureLines}\nConsider these when proposing code changes.`;
+  }
+
+  // Detect repeated critiques across recent sessions
+  const allEntries = loadAllJournalEntries();
+  const repeatedCritique = detectRepeatedCritiques(allEntries);
+  if (repeatedCritique) {
+    prevContext += `\n\n### REPETITION ALERT
+You have repeated this same critique in the last 3 sessions without taking action:
+"${repeatedCritique}"
+This session you MUST either:
+1. Create a concrete rule or self-task to address this gap
+2. Propose a code change via codeChanges to fix it
+3. Explicitly state why this gap is unfixable and commit to STOP repeating it
+Reflection without action is not evolution.`;
   }
 
   try {

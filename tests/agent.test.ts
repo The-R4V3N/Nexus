@@ -1,4 +1,95 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { JournalEntry } from "../src/types";
+
+// Helper to create a minimal JournalEntry with a specific whatFailed
+function makeEntry(whatFailed: string, sessionNumber = 1): JournalEntry {
+  return {
+    sessionNumber,
+    date: "2025-01-01",
+    title: "Test Session",
+    oracleSummary: "summary",
+    axiomSummary: "axiom summary",
+    fullAnalysis: {
+      timestamp: new Date(),
+      sessionId: "nx-test",
+      marketSnapshots: [],
+      analysis: "test",
+      setups: [],
+      bias: { overall: "neutral", notes: "" },
+      keyLevels: [],
+      confidence: 50,
+    },
+    reflection: {
+      timestamp: new Date(),
+      sessionId: "nx-test",
+      whatWorked: "good stuff",
+      whatFailed,
+      cognitiveBiases: [],
+      ruleUpdates: [],
+      newSystemPromptSections: "",
+      evolutionSummary: "evolved",
+    },
+    ruleCount: 10,
+    systemPromptVersion: 1,
+  };
+}
+
+// ── detectRepeatedCritiques ─────────────────────────────────
+
+describe("detectRepeatedCritiques", () => {
+  it("returns empty string when fewer than 3 entries", async () => {
+    const { detectRepeatedCritiques } = await import("../src/agent");
+    const entries = [
+      makeEntry("Some critique about missing setups", 1),
+      makeEntry("Some critique about missing setups", 2),
+    ];
+    expect(detectRepeatedCritiques(entries)).toBe("");
+  });
+
+  it("returns empty string when critiques are all different", async () => {
+    const { detectRepeatedCritiques } = await import("../src/agent");
+    const entries = [
+      makeEntry("The analysis lacked proper entry levels for forex pairs", 1),
+      makeEntry("Bitcoin correlation analysis was completely absent from the review", 2),
+      makeEntry("Gold risk-off signals were ignored during the session analysis", 3),
+    ];
+    expect(detectRepeatedCritiques(entries)).toBe("");
+  });
+
+  it("returns the repeated phrase when all 3 entries share similar critique", async () => {
+    const { detectRepeatedCritiques } = await import("../src/agent");
+    const sharedCritique = "The analysis failed to include proper entry and stop levels for identified setups";
+    const entries = [
+      makeEntry(sharedCritique + ". Also some unique content for session one.", 1),
+      makeEntry(sharedCritique + ". Different unique content for session two here.", 2),
+      makeEntry(sharedCritique + ". Yet another unique observation for session three.", 3),
+    ];
+    const result = detectRepeatedCritiques(entries);
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it("returns empty string when only 2 of 3 entries share the critique", async () => {
+    const { detectRepeatedCritiques } = await import("../src/agent");
+    const sharedCritique = "The analysis failed to include proper entry and stop levels for identified setups";
+    const entries = [
+      makeEntry(sharedCritique + ". Some unique content here.", 1),
+      makeEntry("A completely different critique about macro analysis being weak and unfocused", 2),
+      makeEntry(sharedCritique + ". More unique content here.", 3),
+    ];
+    const result = detectRepeatedCritiques(entries);
+    expect(result).toBe("");
+  });
+
+  it("returns empty string when one critique is empty", async () => {
+    const { detectRepeatedCritiques } = await import("../src/agent");
+    const entries = [
+      makeEntry("Some critique", 1),
+      makeEntry("", 2),
+      makeEntry("Some critique", 3),
+    ];
+    expect(detectRepeatedCritiques(entries)).toBe("");
+  });
+});
 
 // We test the exported phase functions from agent.ts
 // Note: fetchAllInputData and runAndValidateOracle require network/API calls,
