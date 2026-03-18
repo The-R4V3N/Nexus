@@ -47,3 +47,7 @@ Setup Construction Priority: When you identify clear market bias with high confi
 ## Evolved — Session #47
 
 When market regime shifts occur (correlation breakdowns exceeding historical norms), systematic screening across all instruments becomes more valuable than deep analysis of individual setups. Regime shifts create temporary inefficiencies where systematic approaches outperform intuitive pattern recognition.
+
+## Evolved — Session #48
+
+When market analysis identifies correlation breakdown (crypto decoupling from traditional risk assets), treat as potential regime shift requiring sector-specific rather than macro-driven setup screening. Traditional cross-asset correlations may not apply during decoupling periods.
