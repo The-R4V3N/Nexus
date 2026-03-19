@@ -389,55 +389,67 @@
   }
 
   .setups-row {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 6px;
     margin-top: 10px;
   }
 
-  .setup-chip {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 4px 8px;
-    font-size: 9px;
+  .setup-card {
     border: 1px solid var(--border);
     background: var(--bg);
-    width: 100%;
+    padding: 8px 10px;
+    position: relative;
+    overflow: hidden;
   }
 
-  @media (min-width: 769px) {
-    .setups-row { flex-direction: row; flex-wrap: wrap; margin-top: 12px; }
-    .setup-chip { width: auto; padding: 3px 10px; font-size: 10px; }
+  .setup-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
   }
 
-  .setup-chip.bullish { border-color: rgba(57,211,83,0.3); }
-  .setup-chip.bearish { border-color: rgba(248,81,73,0.3); }
+  .setup-card.bullish::before { background: var(--green); }
+  .setup-card.bearish::before { background: var(--red); }
 
-  .setup-name { color: var(--cyan); font-weight: 700; }
-  .setup-type { color: var(--text-dim); }
-  .setup-dir  { font-weight: 700; }
+  .setup-card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    padding-left: 6px;
+  }
 
-  .setup-chip.bullish .setup-dir { color: var(--green); }
-  .setup-chip.bearish .setup-dir { color: var(--red); }
+  .setup-name { color: var(--cyan); font-weight: 700; font-size: 11px; }
+  .setup-dir  { font-weight: 700; font-size: 11px; }
+  .setup-type { color: var(--text-dim); font-size: 9px; letter-spacing: 0.05em; }
+
+  .setup-card.bullish .setup-dir { color: var(--green); }
+  .setup-card.bearish .setup-dir { color: var(--red); }
 
   .setup-specs {
-    width: 100%;
-    font-size: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px 8px;
+    font-size: 9px;
     color: var(--amber-dim);
-    margin-top: 3px;
-    padding-top: 3px;
+    padding: 4px 6px;
+    margin-top: 4px;
     border-top: 1px solid var(--border);
     letter-spacing: 0.02em;
-    overflow-wrap: break-word;
-    word-break: break-word;
   }
+
+  .setup-specs span { display: block; }
 
   .no-setup { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; }
 
   @media (min-width: 769px) {
-    .setup-specs { font-size: 9px; }
+    .setups-row { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .setup-card { padding: 10px 12px; }
+    .setup-name { font-size: 12px; }
+    .setup-type { font-size: 10px; }
+    .setup-specs { font-size: 10px; }
     .no-setup { font-size: 10px; }
   }
 
@@ -696,41 +708,53 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major risk-off sentiment dominates with significant asset selloffs. Precious metals leading the decline - Gold down 6.76% (-$337), Silver down 9.77% (-$7.84), both exceeding 2x average moves. European indices showing severe weakness: DAX -3.18% (-750 points), FTSE -2.35% (-241 points). US indices moderately lower with Dow -1.32% (-615 points), S&amp;P 500 -0.95% (-63 points). Crypto broadly negative with Bitcoin -3.37% (-$2,452), BNB -4.80% (-$32). Multiple forex pairs showing &gt;2x average moves including USD/JPY -1.00% (-159 pips), EUR/CAD +1.24%, GBP/CAD +1.31%.<br><br>**Intraday Analysis:** USD strength evident across multiple pairs with USD/CAD +0.67% and CAD/JPY -1.66% suggesting broad USD bid. Assuming this reflects flight-to-quality dollar demand given risk-off environment. JPY pairs broadly lower (USD/JPY -159 pips, EUR/JPY -80 pips, GBP/JPY -78 pips) indicating JPY strength typical of risk-off periods. VIX elevated at 25.09% confirming heightened volatility environment. European session appears to have driven the initial selloff given magnitude of DAX/FTSE declines.<br><br>**Cross-Asset Dynamics:** Clear risk-off correlation breakdown - typically defensive Gold falling heavily (-6.76%) alongside equities rather than providing safe haven. This suggests potential forced liquidation or margin calls rather than fundamental risk aversion. Crypto selling aligns with equity weakness, maintaining traditional risk-on correlation. Bond yields declining (10Y at 4.20%) consistent with flight-to-quality, but magnitude insufficient to offset equity/commodity selling. USD strength against most currencies except JPY indicates selective safe-haven flows rather than broad dollar weakness.<br><br>**Technical Confluence Analysis:** Valid confluences enumerated: (1) VIX &gt;25 confirming elevated volatility environment, (2) Multiple assets exceeding 2x average moves indicating momentum persistence, (3) Cross-asset correlation maintaining risk-off theme except for Gold anomaly, (4) USD strength confirmed across multiple pairs. Four confluences identified = 80% technical confluence. Confidence: 61% — TC (80%), MA (40%), RR (60%). Macro alignment reduced due to Gold correlation breakdown challenging traditional risk-off framework.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:4580 S:4650 T:4450<br>RR:1.86 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 4580</span><span>S: 4650</span><span>T: 4450</span><span>RR: 1.86</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">USD/JPY</span>
-      <span class="setup-type">PDH/PDL</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:157.9 S:158.5 T:156.8<br>RR:1.83 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">USD/JPY</span>
+        <span class="setup-type">PDH/PDL</span>
+      </div>
+      <div class="setup-specs"><span>E: 157.9</span><span>S: 158.5</span><span>T: 156.8</span><span>RR: 1.83</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">PDH/PDL</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:69500 S:70800 T:67800<br>RR:1.31 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">PDH/PDL</span>
+      </div>
+      <div class="setup-specs"><span>E: 69500</span><span>S: 70800</span><span>T: 67800</span><span>RR: 1.31</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">DAX</span>
-      <span class="setup-type">PDH/PDL</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:22850 S:23100 T:22500<br>RR:1.4 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">DAX</span>
+        <span class="setup-type">PDH/PDL</span>
+      </div>
+      <div class="setup-specs"><span>E: 22850</span><span>S: 23100</span><span>T: 22500</span><span>RR: 1.4</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Silver</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:73.5 S:76 T:68<br>RR:2.2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Silver</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 73.5</span><span>S: 76</span><span>T: 68</span><span>RR: 2.2</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">PDH/PDL</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.159 S:1.165 T:1.148<br>RR:1.83 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">PDH/PDL</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.159</span><span>S: 1.165</span><span>T: 1.148</span><span>RR: 1.83</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -778,23 +802,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major risk-off move across markets with exceptional selling pressure. Gold collapsing -7.67% ($383 decline), silver down -11.29%, suggesting forced liquidation rather than traditional safe-haven flows. EUR strengthening against USD (+0.58% EUR/USD) while simultaneously strengthening against CHF (+0.98% EUR/CHF), indicating broad USD weakness. USD/JPY falling -0.97% with yen strength typical of risk-off environments. European indices leading declines: DAX -3.18%, FTSE -2.35%, both exceeding 2x average moves.<br><br>**Intraday Analysis:** Asian session likely established range boundaries that London is now breaking decisively lower across risk assets. DXY weakness (inferred from EUR/USD strength and broad USD weakness against JPY) supporting commodity currencies minimally - AUD/USD flat despite gold collapse suggests internal commodity complex divergence. Crypto following risk-off theme with BTC -4.11%, suggesting correlation with traditional risk assets remains intact. Assuming geopolitical tensions or liquidity event driving forced selling given magnitude across precious metals.<br><br>**Cross-Asset Dynamics:** Critical correlation breakdown: Gold falling -7.67% during equity decline represents liquidity-driven selling rather than flight-to-safety flows. Traditional gold/equity inverse correlation failing suggests institutional forced selling or margin calls. Oil rising +2.82% while metals collapse indicates supply-side rather than demand-side commodity story. Crypto/equity correlation maintaining with both declining in tandem. JPY strength against USD (-0.97% USD/JPY) aligns with risk-off but magnitude insufficient given equity declines.<br><br>**Technical Confluence Analysis:** Valid confluences identified: (1) Multi-asset risk-off trend alignment, (2) USD weakness across JPY/EUR crosses, (3) Correlation breakdown in precious metals signaling forced selling, (4) Volume/momentum confirmation via &gt;2x average moves in 8+ instruments. Confidence: 72% — TC (80%), MA (60%), RR (70%). Technical confluence strong with 4 valid confluences, macro alignment moderate due to gold/equity correlation breakdown, risk/reward clarity high given structural level proximity.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24250 S:24400 T:23900<br>RR:2.33 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24250</span><span>S: 24400</span><span>T: 23900</span><span>RR: 2.33</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:4580 S:4650 T:4400<br>RR:2.57 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 4580</span><span>S: 4650</span><span>T: 4400</span><span>RR: 2.57</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:69500 S:71200 T:67500<br>RR:1.18 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 69500</span><span>S: 71200</span><span>T: 67500</span><span>RR: 1.18</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -837,23 +867,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Markets showing severe risk-off conditions with major indices declining 2-3%: NASDAQ -2.16% (-539.9pts), S&amp;P 500 -2.23% (-151.1pts), Dow -2.51% (-1192.1pts). European indices experiencing similar selloff with DAX -3.39% (-800.3pts), FTSE -2.93% (-301.6pts). Most significantly, precious metals experiencing historic declines: Gold -8.54% (-$426.60), Silver -15.21% (-$12.21), Platinum -10.20% (-$213.10) - all exceeding &gt;2x average moves and representing 2+ standard deviation events suggesting forced liquidation rather than traditional flight-to-safety dynamics.<br><br>**Intraday Analysis:** USD strength dominating FX markets with USD/CHF +1.11%, USD/CAD +0.74%, both exceeding 2x average moves. DXY strength (per USD basket performance) creating inverse correlation with risk assets as expected per r005. CHF crosses showing particular volatility: CHF/JPY -1.32% (-2.67pts), EUR/CHF +0.75%, GBP/CHF +0.73% - all &gt;2x average moves. Assuming this represents broad deleveraging, the magnitude suggests institutional rebalancing rather than retail panic.<br><br>**Cross-Asset Dynamics:** Significant correlation breakdown occurring - traditional safe havens (Gold, Silver) falling alongside risk assets (equities, crypto). Bitcoin -4.79% (-$3489), crypto broadly down 2-5%, while crude oil counter-trending +2.79% (+$2.61). This pattern suggests liquidity-driven selling rather than fundamental risk-off, as gold typically rises during equity selloffs. VIX at 22.37% (elevated but not extreme) with 10Y yield at 4.20% indicates bond market still functioning as safe haven. The simultaneous selling of metals and equities exceeding historical correlation patterns by estimated 1.5-2 standard deviations.<br><br>**Technical Confluence Analysis:** Confluences identified: (1) Clear trend alignment across all risk assets declining, (2) Multiple assets showing &gt;2x average moves confirming momentum, (3) USD strength providing macro driver, (4) Volume spike implied by magnitude of moves. Technical confluence: 4 confluences = 80%. Macro alignment: 70% given clear USD strength theme but correlation breakdown reduces to 60%. Risk/reward clarity: 65% as volatility creates both opportunity and risk. Confidence: 68% — TC (80%), MA (60%), RR (65%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:4580 S:4620 T:4480<br>RR:2.5 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 4580</span><span>S: 4620</span><span>T: 4480</span><span>RR: 2.5</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24400 S:24500 T:24200<br>RR:2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24400</span><span>S: 24500</span><span>T: 24200</span><span>RR: 2</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">USD/CHF</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:0.796 S:0.792 T:0.802<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">USD/CHF</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 0.796</span><span>S: 0.792</span><span>T: 0.802</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -978,23 +1014,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** US indices showing significant selling pressure with S&amp;P 500 down -1.40% (94 points), Dow down -1.71% (812 points), and NASDAQ 100 down -1.18% (294 points) - all exceeding 2x average daily moves indicating institutional distribution. USD showing broad strength with CHF crosses up 0.9%, CAD crosses up 0.76%, suggesting dollar bid across the board. Gold experiencing heavy selling at -3.38% ($171), Silver down -4.71%, indicating risk-off sentiment with safe haven rotation into USD rather than precious metals.<br><br>**Intraday Analysis:** London session dominated by USD strength and equity weakness, with DXY proxied through cross-currency strength (USD/CHF, USD/CAD both &gt;2x moves) correlating inversely with risk assets as expected per r005. Crypto showing divergence - Bitcoin flat +0.14% while Ethereum up +3.95%, suggesting selective altcoin strength despite broader risk-off. Asian range likely providing liquidity targets being swept in current London session. VIX at 22.37% (moderate elevation) aligning with equity selling pressure.<br><br>**Cross-Asset Dynamics:** Clear risk-off environment with traditional correlations intact - USD strength, equity weakness, precious metals selling. However, crypto showing partial decoupling with ETH leading altcoin rally (+3.95% ETH, +2.72% XRP, +3.04% ADA) while Bitcoin remains subdued. Gold&#039;s -3.38% decline alongside equity selling suggests dollar strength overpowering safe haven demand, indicating genuine USD bid rather than fear-driven flight to quality. Bond yields declining (10Y at 4.23%) supporting deflationary risk-off thesis.<br><br>**Technical Confluence Analysis:** Enumerating confluences: (1) Higher timeframe bearish bias on indices with &gt;2x daily moves, (2) USD strength confirmed across multiple crosses, (3) Risk-off correlation alignment (equities down, USD up, metals down), (4) Volume confirmation through magnitude of moves exceeding 2 standard deviations. Four valid confluences identified = 80% technical score. Confidence: 71% — TC (80%), MA (65%), RR (65%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24620 S:24720 T:24400<br>RR:2.2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24620</span><span>S: 24720</span><span>T: 24400</span><span>RR: 2.2</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:4850 S:4920 T:4750<br>RR:1.43 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 4850</span><span>S: 4920</span><span>T: 4750</span><span>RR: 1.43</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.1515 S:1.156 T:1.145<br>RR:1.44 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1515</span><span>S: 1.156</span><span>T: 1.145</span><span>RR: 1.44</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -1037,23 +1079,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Daily bias shows clear risk-off sentiment with major US indices down 1.07-1.33% (&gt;2x average moves for SPX/DOW), while gold selling off -3.87% ($195 drop) suggests de-risking rather than flight-to-safety. USD strength evident with DXY proxy measures showing CHF/USD +0.84% and USD/CAD +0.85% (both &gt;2x average). Bitcoin&#039;s +1.78% rise against this backdrop indicates potential correlation breakdown or crypto-specific factors.<br><br>**Intraday Analysis:** London session driving USD strength across the board, with commodity currencies (AUD -1.01%, NZD -1.24%) underperforming significantly. EUR showing relative weakness against all majors except GBP, with EUR/CHF, EUR/AUD, EUR/CAD all posting &gt;2x average moves higher (EUR weakness). Crypto sector showing internal rotation with ETH +6.74% and DOT +12.36% massively outperforming BTC, suggesting altcoin momentum rather than broad crypto strength.<br><br>**Cross-Asset Dynamics:** Traditional correlations partially breaking down - crypto rising while equities fall heavily, and gold selling with risk assets (unusual for flight-to-safety). However, USD strength correlating with equity weakness maintains some traditional risk-off dynamics. Commodities broadly weak (gold -3.87%, silver -5.39%, copper -2.15%) suggesting genuine risk-off rather than rotation. VIX at 23.51% indicates elevated but not extreme fear levels.<br><br>**Technical Confluence Analysis:** Valid confluences identified: (1) USD strength across multiple pairs with &gt;2x average moves, (2) equity weakness with volume confirmation via major index moves, (3) commodity complex weakness alignment, (4) crypto internal divergence suggesting sector-specific dynamics. Technical confluence: 80% (4 confluences), Macro alignment: 60% (partial correlation breakdown but USD/equity relationship intact), Risk/Reward: 70% (clear structural levels available). Confidence: 71% — TC (80%), MA (60%), RR (70%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24720 S:24780 T:24550<br>RR:2.83 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24720</span><span>S: 24780</span><span>T: 24550</span><span>RR: 2.83</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.15 S:1.1535 T:1.142<br>RR:2.29 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.15</span><span>S: 1.1535</span><span>T: 1.142</span><span>RR: 2.29</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:4850 S:4890 T:4750<br>RR:2.5 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 4850</span><span>S: 4890</span><span>T: 4750</span><span>RR: 2.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1096,23 +1144,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** US equities show significant bearish pressure with Dow Jones down -1.50% (-713 points, &gt;2x avg move), S&amp;P 500 -0.96%, and NASDAQ -0.71%. European indices diverge with DAX +0.38% and FTSE +0.48%, suggesting regional disparity. USD showing mixed signals - strengthening against CAD (+0.74%, &gt;2x avg move) and CHF crosses, but weakening against JPY pairs. Gold declining -1.09% (-$55.30, &gt;2x avg move) while crypto surges led by Ethereum +10.66% and Polkadot +15.37%.<br><br>**Intraday Analysis:** Crypto leading massive risk-on move with Bitcoin +3.80% to $73,922, assuming this reflects institutional accumulation or regulatory optimism. USD/CAD surging +0.74% suggests commodity-driven weakness in CAD, confirmed by crude oil&#039;s -5.51% decline. CHF crosses showing broad strength (EUR/CHF +0.49%, GBP/CHF +0.46%) indicating safe-haven rotation within currencies. VIX at 23.51% suggests elevated but manageable volatility levels.<br><br>**Cross-Asset Dynamics:** Significant correlation breakdown evident - crypto surging while traditional risk assets (equities) decline and safe havens (gold, JPY) strengthen. This exceeds typical risk-on/risk-off patterns, suggesting crypto decoupling from traditional macro. Oil&#039;s -5.51% decline weighing on commodity currencies (CAD, potentially AUD -0.24%). Bond yields at 4.23% with positive yield curve (0.52% spread) supporting USD selectively.<br><br>**Technical Confluence Analysis:** Enumerated confluences for potential setups: (1) Bitcoin trend alignment with crypto sector momentum, (2) USD/CAD structure break above daily resistance, (3) Gold interaction with psychological $5000 level rejection, (4) EUR/USD holding above 1.15 support amid USD mixed signals. Technical confluence scoring: 3-4 confluences align across multiple instruments = 60-80% range. Confidence: 72% — TC (80%), MA (60%), RR (75%)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:74000 S:72500 T:75000<br>RR:0.67 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 74000</span><span>S: 72500</span><span>T: 75000</span><span>RR: 0.67</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">USD/CAD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:1.372 S:1.365 T:1.375<br>RR:0.43 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">USD/CAD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.372</span><span>S: 1.365</span><span>T: 1.375</span><span>RR: 0.43</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:4990 S:5010 T:4950<br>RR:2 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 4990</span><span>S: 5010</span><span>T: 4950</span><span>RR: 2</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1155,23 +1209,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major risk-asset divergence dominates current conditions. Crypto leading with Bitcoin +3.81%, Ethereum +10.52% (&gt;2x avg), while US equities decline significantly - Dow -1.50% (&gt;2x avg), S&amp;P 500 -0.96%, Nasdaq -0.71%. Gold selling heavily -1.96% (&gt;2x avg), Silver -5.75% (&gt;2x avg) contradicts typical risk-off positioning. CAD strength notable with USD/CAD +0.63% (&gt;2x avg), EUR/CAD +0.65% (&gt;2x avg).<br><br>**Intraday Analysis:** Clear correlation breakdown occurring - crypto rallying while traditional risk assets decline suggests potential regime shift or sector-specific drivers rather than macro risk sentiment. Assuming geopolitical tensions contribute to precious metals selling (counter-intuitive to typical safe-haven flows), this indicates market complexity beyond standard risk-on/off framework. DXY strength implied by broad USD gains against majors except CAD.<br><br>**Cross-Asset Dynamics:** Severe correlation breakdown quantified by crypto +7-10% simultaneous with equity declines and precious metals collapse. This exceeds normal market noise (&gt;2 standard deviations from typical risk correlations). VIX at 23.51% suggests moderate stress, yet crypto strength indicates capital rotation rather than broad risk aversion. Traditional safe havens (gold, yen) failing while speculative assets rally represents potential paradigm shift.<br><br>**Technical Confluence Analysis:** Counted confluences: (1) clear trend divergence across asset classes, (2) multiple &gt;2x average moves confirming momentum, (3) psychological level breaks in crypto, (4) liquidity sweep patterns in precious metals. Four valid confluences = 80% technical score. Confidence: 68% — TC (80%), MA (40%), RR (70%)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:74000 S:72500 T:76500<br>RR:1.67 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 74000</span><span>S: 72500</span><span>T: 76500</span><span>RR: 1.67</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:5000 S:5050 T:4900<br>RR:2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 5000</span><span>S: 5050</span><span>T: 4900</span><span>RR: 2</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">PDH</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24750 S:24850 T:24550<br>RR:2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">PDH</span>
+      </div>
+      <div class="setup-specs"><span>E: 24750</span><span>S: 24850</span><span>T: 24550</span><span>RR: 2</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -1214,17 +1274,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major cross-asset divergence dominates the landscape. Crypto is experiencing massive gains with Bitcoin +4.13% at $73,901, Ethereum +10.69% at $2,316, while equities are under significant pressure with NASDAQ -0.90%, S&amp;P 500 -0.98%, and Dow Jones -1.40% (667 point decline). Gold is selling off sharply -2.16% to $5,005, and silver down -5.49%. This represents a breakdown of traditional risk-on/risk-off correlations.<br><br>**Intraday Analysis:** DXY strength is evident through broad USD gains - USD/CAD +0.99%, USD/CHF +0.92%, USD/JPY +0.61%, while commodity currencies weaken (AUD/USD -0.46%, NZD/USD -1.23%). The correlation between crypto strength and equity weakness is highly unusual, suggesting different risk premiums being priced. Assuming this reflects institutional crypto adoption versus traditional equity concerns, rather than standard risk sentiment.<br><br>**Cross-Asset Dynamics:** Traditional correlations are breaking down significantly. Typically, crypto and equities move together as risk assets, but we&#039;re seeing crypto surge while stocks decline. Gold&#039;s decline during equity weakness contradicts safe-haven flows. VIX at 23.51% suggests moderate stress, but not extreme fear that would typically accompany a -1.40% Dow decline. This divergence magnitude appears to exceed normal market noise.<br><br>**Technical Confluence Analysis:** For crypto setups - valid confluences include: (1) trend alignment with 4H bullish momentum, (2) volume confirmation on breakouts, (3) psychological level interaction (BTC approaching $75k). Count: 3 confluences = 60% technical score. For gold - confluences include: (1) breakdown below previous support, (2) momentum confirmation downward. Count: 2 confluences = 40% technical score. Confidence: 52% — TC (60% crypto, 40% gold average = 50%), MA (40% due to correlation breakdown), RR (65% clear levels available)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:74200 S:72500 T:76500<br>RR:1.35 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 74200</span><span>S: 72500</span><span>T: 76500</span><span>RR: 1.35</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:4990 S:5050 T:4920<br>RR:1.17 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 4990</span><span>S: 5050</span><span>T: 4920</span><span>RR: 1.17</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -1308,17 +1372,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Markets showing mixed risk sentiment with modest equity gains (NAS100 +0.50%, S&amp;P500 +0.40%, DAX +0.32%) while crypto experiences selling pressure (BTC -0.72%, ETH -1.06%). Currency markets display USD weakness against majors (EUR/USD +0.57%, GBP/USD +0.48%, USD/JPY -0.24%). Gold advancing +0.64% to 5025.80 while crude oil surges +3.41% suggests inflationary pressures or supply concerns. VIX at 27.19% indicates elevated volatility environment requiring confidence adjustments.<br><br>**Intraday Analysis:** European session showing risk-on bias in traditional assets but crypto divergence creating mixed signals. USD weakness evident across majors with EUR/USD breaking above 1.15 psychological level. Oil&#039;s +3.41% surge assuming geopolitical tensions or supply disruptions driving energy complex higher. Asian session likely established range boundaries around current levels with London potentially targeting liquidity above/below these ranges.<br><br>**Cross-Asset Dynamics:** Notable divergence between traditional risk assets (equities higher) and crypto (broadly lower), suggesting different risk premiums being priced. Gold rising alongside equities indicates inflation hedge demand rather than pure risk-off. Strong oil performance with modest equity gains suggests commodity-specific drivers rather than broad risk-on sentiment. Bond yields at 4.28% with elevated VIX creates challenging correlation environment.<br><br>**Technical Confluence Analysis:** Counting valid confluences: (1) EUR/USD trend alignment with USD weakness, (2) psychological level break at 1.15, (3) momentum confirmation in commodity complex. Limited confluence count (3) warrants 60% technical confidence. Confidence: 51% — TC (60%), MA (40%), RR (50%)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:1.1505 S:1.148 T:1.155<br>RR:1.8 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1505</span><span>S: 1.148</span><span>T: 1.155</span><span>RR: 1.8</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5030 S:4985 T:5080<br>RR:1.1 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 5030</span><span>S: 4985</span><span>T: 5080</span><span>RR: 1.1</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1361,17 +1429,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** US indices show modest bullish momentum with NASDAQ +0.50% (121.76 points), S&amp;P 500 +0.40% (26.76 points), and Dow +0.58% (268.56 points). European indices mixed with DAX -0.11% (-25.64 points) while FTSE +0.12% (+12.49 points). USD/JPY extends higher to 159.20 (+0.11%), approaching key psychological 160 level. VIX at 27.19% remains elevated, suggesting underlying tension despite equity gains. **Intraday Analysis:** Risk-on sentiment appears driven by equity strength, though modest forex moves suggest cautious positioning. DXY proxy analysis via USD/JPY strength indicates dollar firmness, which typically pressures risk assets - creating divergence with equity gains. Crude oil surge +1.83% to $95.21 suggests either supply concerns or risk-on commodity demand, assuming geopolitical tensions from Iran conflict reports are impacting energy markets. **Cross-Asset Dynamics:** Correlation breakdown evident: equities rising while VIX remains elevated above 25, USD strengthening against JPY while risk assets gain, and gold holding steady +0.14% despite dollar strength. Bitcoin +0.47% aligning with equity moves suggests crypto following traditional risk-on patterns. This mixed correlation environment suggests transitional regime rather than clear directional conviction. **Technical Confluence Analysis:** For NAS100 - counted confluences: (1) daily uptrend continuation, (2) break above prior session high at 24606. For EUR/USD - confluences: (1) USD strength via JPY proxy. Limited technical confluences available due to narrow ranges. Confidence breakdown: TC=40% (limited confluences), MA=30% (correlation breakdown), RR=50% (modest clear levels).</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:24660 S:24600 T:24760<br>RR:1.67 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24660</span><span>S: 24600</span><span>T: 24760</span><span>RR: 1.67</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">USD/JPY</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:159.3 S:158.5 T:160.5<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">USD/JPY</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 159.3</span><span>S: 158.5</span><span>T: 160.5</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1414,23 +1486,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major indices show modest bullish continuation with NAS100 +0.51% (124 points), S&amp;P 500 +0.31%, and Dow +0.55%. EUR/USD declined -0.32% (37 pips) to 1.1485, while GBP/JPY dropped -0.52% (110 pips) to 211.45. Gold retreated -0.61% ($31) from recent highs to $5031, suggesting some profit-taking after the recent rally to new all-time highs.<br><br>**Intraday Analysis:** Risk-on sentiment prevails with crypto leading gains - ETH +4.70%, BTC +1.54%, and several altcoins posting 3-10% gains. Oil&#039;s sharp -3.28% decline to $95.47 appears disconnected from broader risk appetite, potentially driven by supply concerns or profit-taking after recent strength. The VIX at 27.29% indicates elevated volatility expectations, though equity indices continue grinding higher. Without real-time DXY data, USD strength is evident through EUR/USD and GBP weakness, though commodity currencies (AUD/CAD) show mixed performance.<br><br>**Cross-Asset Dynamics:** Notable divergence between crypto strength and precious metals weakness - typically both serve as alternative assets but moving inversely today. Bond yields at 4.27% (10Y) with positive curve (0.55% spread) supports equity valuations while pressuring gold. The correlation breakdown between crypto rising (+1.5-4.7%) while gold falls (-0.61%) suggests different risk premiums being priced - potentially crypto benefiting from institutional flows while gold faces yield competition.<br><br>**Technical Confluence Analysis:** Counting confluences for key setups: (1) NAS100 has trend alignment with higher timeframe bullish bias, (2) holding above previous session lows, (3) volume supporting the advance. Bitcoin shows (1) trend continuation, (2) break above previous resistance around 73500, (3) momentum confirmation with 1.54% gain. EUR/USD shows (1) trend alignment with bearish bias, (2) rejection from 1.15 psychological level. Confidence: 58% — TC (60%), MA (55%), RR (60%)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:24665 S:24610 T:24720<br>RR:1 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24665</span><span>S: 24610</span><span>T: 24720</span><span>RR: 1</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:73950 S:73200 T:75200<br>RR:1.67 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 73950</span><span>S: 73200</span><span>T: 75200</span><span>RR: 1.67</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.148 S:1.1505 T:1.145<br>RR:1.2 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.148</span><span>S: 1.1505</span><span>T: 1.145</span><span>RR: 1.2</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1478,17 +1556,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major US indices showing significant weakness with NASDAQ down -2.34% (-584 points), S&amp;P 500 down -2.12% (-144 points), suggesting risk-off sentiment on the daily timeframe. European indices mixed with DAX only -0.55% while FTSE flat, indicating regional divergence. USD showing mixed signals across pairs - strengthening against EUR (-76 pips), GBP (-84 pips), AUD (-89 pips) but only marginal gains against JPY (+7 pips), suggesting selective dollar strength rather than broad-based rally.<br><br>**Intraday Analysis:** Asian session appears to have established range lows based on current price action, with London session likely to test these levels. VIX elevated at 27.29% confirms heightened volatility environment. DXY direction (unavailable but inferred from USD pair performance) shows selective strength primarily against commodity currencies and EUR/GBP, while JPY pairs remain relatively stable. If confirmed, this could be attributed to continued Middle East tensions based on geopolitical headlines mentioning Iran war propaganda.<br><br>**Cross-Asset Dynamics:** Notable correlation breakdown occurring - crypto showing strong performance (BTC +0.92%, ETH +3.39%, several altcoins +4-11%) while equities selling off heavily. This divergence from typical risk-on/risk-off correlations suggests potential regime shift or crypto-specific drivers. Gold declining -1.15% despite equity weakness is unusual, typically gold rises in risk-off environments. Oil up +1.72% potentially reflecting geopolitical premium.<br><br>**Technical Confluence Analysis:** Enumerating confluences for NASDAQ: (1) breach of daily support structure, (2) high volume selling pressure, (3) VIX spike confirmation. Three valid confluences = 60% technical score. Confidence breakdown: TC (60%), MA (30% due to correlation breakdowns), RR (40% due to elevated volatility reducing setup clarity). Overall confidence significantly reduced due to regime-shifting cross-asset behavior.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24500 T:24000<br>RR:2.33 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24500</span><span>T: 24000</span><span>RR: 2.33</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.1425 S:1.148 T:1.135<br>RR:1.36 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1425</span><span>S: 1.148</span><span>T: 1.135</span><span>RR: 1.36</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -1528,17 +1610,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Daily bias remains bearish across risk assets with significant magnitude moves. NAS100 down -2.34% (-584 points), S&amp;P500 -2.12% (-144 points), both exceeding 1 standard deviation moves. EUR/USD declined -0.61% (-70 pips), GBP/USD -0.70% (-93 pips), while USD/JPY marginally up +0.11% (+17 pips). VIX elevated at 27.29%, indicating heightened volatility regime requiring confidence adjustments per evolved rules.<br><br>**Intraday Analysis:** Risk-off sentiment dominates with DXY proxy measures (USD/CHF +0.51%, USD/CAD +0.51%) suggesting dollar strength. Major forex pairs correlating inversely with USD strength as expected per r005. Gold declined -0.50% (-$25), unusual for risk-off environment - assuming this reflects liquidation pressure rather than safe-haven demand, though causation unconfirmed per r011. Asian session likely established key liquidity levels that London may target.<br><br>**Cross-Asset Dynamics:** Notable correlation breakdown observed - crypto showing resilience (BTC -0.28%, ETH -0.27%) while equities sell heavily, suggesting potential regime shift per evolved session rules. Traditional risk-on/risk-off correlations breaking down with gold falling in risk-off environment. Bond yields at 4.27% with positive yield curve (10Y-2Y +0.55%) indicating different macro regime than typical risk-off scenarios.<br><br>**Technical Confluence Analysis:** For NAS100 bearish setup - confluences enumerated: (1) trend alignment with daily bearish bias, (2) break below previous swing low at 24400 area, (3) liquidity sweep of Asian lows completed, (4) volume confirmation on breakdown. Four confluences = 80% technical score. Confidence: 58% — TC (80%), MA (40%), RR (50%). Macro alignment reduced due to unusual cross-asset divergences and correlation breakdown.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24500 T:24000<br>RR:2.33 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24500</span><span>T: 24000</span><span>RR: 2.33</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.144 S:1.148 T:1.138<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.144</span><span>S: 1.148</span><span>T: 1.138</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1581,23 +1667,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major risk-off movement across equity markets with NASDAQ 100 down -2.34% (-584 points), S&amp;P 500 down -2.12% (-143 points), and Dow down -1.81% (-858 points). These moves exceed 1-standard deviation for daily ranges. USD showing broad strength with EUR/USD down -0.99% (-114 pips), GBP/USD down -1.08% (-145 pips), and AUD/USD down -1.89% (-135 pips). VIX elevated at 27.29% confirming heightened volatility regime.<br><br>**Intraday Analysis:** Clear USD strength session with DXY proxies (major USD pairs) all declining significantly. Risk-off sentiment dominates with equity indices breaking below session lows. Assuming correlation alignment, the USD strength suggests defensive positioning. Gold&#039;s modest +0.18% rise despite broad risk-off indicates potential safe-haven demand conflict with USD strength. 10Y-2Y spread at 0.55% suggests normal yield curve positioning.<br><br>**Cross-Asset Dynamics:** Unusual divergence observed - crypto showing resilience with Bitcoin +0.79% and Ethereum +1.53% during equity selloff. Traditional risk-off correlation breaking down as crypto rises while stocks fall heavily. This suggests potential regime transition signal rather than normal correlation. Commodities mixed with precious metals flat to positive while base metals showing some strength (Copper +0.75%).<br><br>**Technical Confluence Analysis:** For NASDAQ 100 setup: (1) break below session support, (2) momentum divergence with crypto, (3) volume confirmation on decline, (4) psychological 24400 level nearby. Four confluences = 80% technical confidence. Confidence: 58% — TC (80%), MA (30%), RR (60%). Macro alignment weak due to crypto-equity divergence indicating correlation breakdown.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24450 T:24200<br>RR:1.5 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24450</span><span>T: 24200</span><span>RR: 1.5</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.1425 S:1.145 T:1.138<br>RR:1.8 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1425</span><span>S: 1.145</span><span>T: 1.138</span><span>RR: 1.8</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:71800 S:71500 T:72500<br>RR:2.3 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 71800</span><span>S: 71500</span><span>T: 72500</span><span>RR: 2.3</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1640,17 +1732,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major risk-off sentiment dominates with US indices posting significant declines: NASDAQ -2.34% (-584 points), S&amp;P 500 -2.12% (-144 points), Dow -1.81% (-859 points). These moves exceed 1-standard deviation for intraday ranges, suggesting institutional de-risking. USD strength evident across forex pairs with EUR/USD -1.01% (-117 pips), GBP/USD -1.03% (-138 pips), AUD/USD -1.96% (-140 pips). Daily bias remains bearish for risk assets with structural breaks below key supports.<br><br>**Intraday Analysis:** London session showing continued USD strength with broad-based selling in risk assets. VIX elevated at 27.29% confirming fear premium, while 10Y yield at 4.27% suggests bond selling alongside equities (correlation breakdown signal). Assuming geopolitical tensions around Strait of Hormuz contribute to risk-off flows, but price action suggests deeper structural concerns. Asian session ranges being violated to the downside across multiple timeframes.<br><br>**Cross-Asset Dynamics:** Notable divergence emerges with Bitcoin +0.43% and Ethereum +0.72% rising while traditional risk assets sell off heavily. Gold modestly positive (+0.18%) but underperforming typical risk-off expectations. This crypto-equities divergence and muted gold response suggest either late-cycle rotation or potential regime shift in traditional correlations. High yield spreads widening to 3.17% confirms credit stress building.<br><br>**Technical Confluence Analysis:** Confluences identified: (1) trend alignment bearish on 4H across indices, (2) structural breaks below session lows, (3) VIX spike above 25 resistance, (4) USD strength across multiple pairs. Technical confluence: 80% (4+ confluences). Macro alignment: 70% (clear risk-off but crypto divergence). RR clarity: 60% (clear levels but volatile environment). Confidence: 72% — TC (80%), MA (70%), RR (60%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24450 T:24100<br>RR:2.5 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24450</span><span>T: 24100</span><span>RR: 2.5</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.142 S:1.145 T:1.136<br>RR:2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.142</span><span>S: 1.145</span><span>T: 1.136</span><span>RR: 2</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -1698,23 +1794,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major risk-off sentiment dominates with broad-based equity selloffs: NASDAQ -2.34% (-584 points), S&amp;P 500 -2.12% (-143 points), and Dow -1.81% (-858 points). These moves exceed 1 standard deviation for daily ranges, indicating significant institutional positioning. EUR/USD declined -1.04% (-120 pips) and GBP/USD fell -1.21% (-162 pips), suggesting USD strength across major pairs.<br><br>**Intraday Analysis:** Assuming geopolitical tensions (Iran-Israel conflict) are driving risk-off flows, we see classic defensive positioning. USD/JPY +0.41% indicates mixed JPY flows - typically JPY would strengthen more in pure risk-off. AUD/USD -2.08% shows commodity currency weakness. VIX at 27.29% confirms elevated fear levels, while 10Y yields at 4.27% suggest bond buying but not flight-to-quality extremes.<br><br>**Cross-Asset Dynamics:** Gold +0.18% and Silver +0.53% show modest safe-haven demand but not proportional to equity declines, suggesting liquidity concerns over pure fear. Bitcoin +0.44% diverges from traditional risk-off correlation, potentially indicating crypto&#039;s evolving safe-haven characteristics. Oil flat at $98.71 despite Middle East tensions suggests supply concerns are balanced by demand destruction fears.<br><br>**Technical Confluence Analysis:** Counted confluences for NASDAQ: (1) trend break below 24500 support, (2) volume spike on decline, (3) rejection at previous support turned resistance. EUR/USD: (1) break of 1.1450 support, (2) DXY strength correlation. Gold: (1) holding above 5000 psychological level. Technical confluence: 60%, Macro alignment: 80% (classic risk-off except crypto), Risk/reward: 70% (clear levels). Confidence: 68% — TC (60%), MA (80%), RR (70%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">Support Break</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24500 T:24000<br>RR:2.33 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">Support Break</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24500</span><span>T: 24000</span><span>RR: 2.33</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Support Break</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.14 S:1.145 T:1.13<br>RR:2 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Support Break</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.14</span><span>S: 1.145</span><span>T: 1.13</span><span>RR: 2</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Support Hold</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5050 S:5000 T:5150<br>RR:2 TF:1D</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Support Hold</span>
+      </div>
+      <div class="setup-specs"><span>E: 5050</span><span>S: 5000</span><span>T: 5150</span><span>RR: 2</span><span>TF: 1D</span></div>
     </div></div>
         </div>
 
@@ -1757,23 +1859,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major risk-off sentiment dominates with significant equity selloffs across all regions. NASDAQ 100 down -2.34% (-584 points), S&amp;P 500 -2.12% (-144 points), and Dow -1.81% (-859 points) - all exceeding 1-standard deviation daily moves. Forex showing broad USD strength with EUR/USD -1.04% (-120 pips), GBP/USD -1.19% (-159 pips), and AUD/USD suffering worst at -2.08% (-148 pips). Gold declining -1.06% despite risk-off conditions suggests liquidity crunch dynamics.<br><br>**Intraday Analysis:** Asian session likely established range boundaries that London has decisively broken to downside across risk assets. USD strength correlating with VIX spike to 27.29% and 10Y yields rising to 4.27%, suggesting flight-to-quality but with yield curve steepening (10Y-2Y at 0.55%). Oil&#039;s +3.11% surge assuming Middle East supply disruption creating stagflationary headwinds. Cross-JPY pairs like GBP/JPY down -0.76% showing yen safe-haven flows.<br><br>**Cross-Asset Dynamics:** Classical risk-off pattern partially broken - gold falling alongside equities suggests forced liquidation rather than safe-haven rotation. Oil strength amid broad commodity weakness (silver -3.93%, nat gas -3.15%) points to geopolitical premium. Bitcoin&#039;s modest -0.45% decline shows relative resilience vs traditional risk assets. High yield spreads widening to 3.17% confirms credit stress building.<br><br>**Technical Confluence Analysis:** Counted confluences for NAS100: (1) HTF daily trend break, (2) Asian low liquidity sweep, (3) volume expansion on breakdown, (4) correlation with VIX spike = 4 confluences = 80% technical score. Macro alignment strong at 75% given consistent risk-off signals. RR clarity high at 80% with defined support zones. Confidence: 78% — TC (80%), MA (75%), RR (80%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24480 T:24100<br>RR:1.92 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24480</span><span>T: 24100</span><span>RR: 1.92</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.142 S:1.1455 T:1.136<br>RR:1.71 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.142</span><span>S: 1.1455</span><span>T: 1.136</span><span>RR: 1.71</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:5050 S:5110 T:4980<br>RR:1.17 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 5050</span><span>S: 5110</span><span>T: 4980</span><span>RR: 1.17</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1816,17 +1924,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** Major risk-off sentiment dominates with significant selloffs across US indices - NASDAQ down -2.34% (-584 points), S&amp;P 500 down -2.12% (-144 points), indicating institutional selling pressure. Gold decline of -1.06% (-$54) suggests this isn&#039;t classic flight-to-safety but potentially liquidation-driven. EUR/USD down -1.04% (-120 pips) and GBP/USD down -1.19% (-159 pips) indicate broad USD strength. VIX elevated at 27.29% confirms heightened volatility expectations.<br><br>**Intraday Analysis:** USD strength evident across forex pairs with JPY crosses showing mixed signals - USD/JPY up +0.41% while GBP/JPY down -0.76%, suggesting USD strength overpowering JPY safe-haven flows. Crude oil&#039;s +3.11% surge contrasts sharply with broader risk-off tone, assuming geopolitical tensions or supply concerns if confirmed. Natural gas down -3.15% shows energy sector divergence.<br><br>**Cross-Asset Dynamics:** Classic risk-off correlations partially breaking down - typically defensive gold falling alongside risk assets suggests forced selling or margin calls. Bitcoin down only -0.53% showing relative resilience compared to traditional markets. Silver&#039;s -3.93% decline exceeds gold&#039;s, indicating industrial demand concerns. Bond proxy unavailable but elevated VIX and equity selloff suggest potential flight to Treasuries.<br><br>**Technical Confluence Analysis:** Enumerating confluences for focus instruments: (1) NASDAQ below key psychological 24500, (2) EUR/USD testing 1.1400 support zone, (3) Gold breaking below 5100 handle. Three valid confluences identified. Confidence: 58% — TC (60%), MA (70%), RR (40%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24600 T:24000<br>RR:1.4 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24600</span><span>T: 24000</span><span>RR: 1.4</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.14 S:1.145 T:1.13<br>RR:2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.14</span><span>S: 1.145</span><span>T: 1.13</span><span>RR: 2</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -1869,17 +1981,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Starting with higher timeframe analysis, US equity indices show strong bearish momentum on the daily timeframe with NAS100 down 584 points (-2.34%) and S&amp;P 500 declining 144 points (-2.12%). This represents significant selling pressure exceeding normal daily ranges. The VIX spike to 27.29% suggests fear-driven liquidation, while the 10Y yield rise to 4.27% indicates bond selling alongside equities - unusual risk-off behavior that typically sees flight to treasuries. USD strength is evident across forex pairs with EUR/USD falling 120 pips (-1.04%) to 1.1423 and GBP/USD declining 159 pips (-1.19%) to 1.3223, assuming this reflects the elevated USD Trade Weighted Index despite the FRED showing it down. The correlation breakdown between bonds and stocks, plus crude oil rallying 2.98 points (+3.11%) to $98.71 amid broad risk-off, suggests supply concerns potentially driving the sell-off. Gold&#039;s decline of $54 (-1.06%) to $5,061 contradicts typical safe-haven flows, indicating possible margin calls or dollar strength overpowering defensive demand. Bitcoin&#039;s relatively modest 0.48% decline shows crypto resilience compared to traditional risk assets. Technical confluence analysis counts: (1) trend alignment with higher TF bearish bias, (2) volume confirmation via VIX spike, (3) correlation breakdown signals. Macro alignment shows mixed signals with defensive assets behaving unusually. Risk/reward clarity remains high given clear directional momentum. Confidence: 58% — TC (60%), MA (40%), RR (80%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24500 T:24000<br>RR:2.33 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24500</span><span>T: 24000</span><span>RR: 2.33</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.142 S:1.145 T:1.138<br>RR:1.33 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.142</span><span>S: 1.145</span><span>T: 1.138</span><span>RR: 1.33</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -1927,23 +2043,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Starting with higher timeframe analysis, the daily bias remains bearish across risk assets with NAS100 down 584 points (-2.34%), S&amp;P 500 declining 143 points (-2.12%), and crypto selling off with BTC down $352 (-0.50%) and ETH falling $17 (-0.85%). The magnitude of these moves suggests risk-off sentiment, with NAS100&#039;s 2.34% decline exceeding typical daily ranges and potentially signaling continuation rather than mean reversion. Looking at DXY proxy measures, the 10Y Treasury yield at 4.27% and elevated VIX at 27.29% suggest dollar strength and risk aversion, which correlates with the observed weakness in EUR/USD (-120 pips to 1.1423) and GBP/USD (-159 pips to 1.3223). Gold&#039;s decline of $54 (-1.06%) to $5061 contradicts typical risk-off behavior where gold acts as a safe haven, suggesting potential technical selling or assuming strong dollar dynamics override safe-haven demand. The correlation breakdown between falling gold and rising yields/VIX indicates either profit-taking in precious metals or technical structure failure. Oil&#039;s +2.98 surge to $98.71 appears disconnected from broader risk-off sentiment, potentially driven by supply concerns if confirmed by geopolitical developments. Silver&#039;s aggressive 3.93% decline to $81.34 amplifies the metals weakness theme. Cross-asset analysis reveals defensive rotation with JPY strength (USD/JPY +64 pips to 159.72) and commodity currency weakness (AUD/USD -148 pips, -2.08%), confirming the risk-off narrative. Confidence: 72% — TC (80%), MA (70%), RR (60%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24500 T:24000<br>RR:2.33 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24500</span><span>T: 24000</span><span>RR: 2.33</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.142 S:1.145 T:1.135<br>RR:2.33 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.142</span><span>S: 1.145</span><span>T: 1.135</span><span>RR: 2.33</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">OB</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:5050 S:5100 T:4950<br>RR:2 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">OB</span>
+      </div>
+      <div class="setup-specs"><span>E: 5050</span><span>S: 5100</span><span>T: 4950</span><span>RR: 2</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -1986,17 +2108,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">**Higher Timeframe Context:** On the daily timeframe, risk assets are showing bearish momentum with major indices declining 1.8-2.3%. The NASDAQ 100&#039;s 584-point (-2.34%) decline suggests institutional selling pressure, while the S&amp;P 500&#039;s 144-point (-2.12%) drop confirms broad risk-off sentiment. The VIX at 27.29% (elevated) and 10Y yield at 4.27% (rising) indicate fear and potential Fed hawkishness concerns.<br><br>**Intraday Analysis:** USD strength is evident across major pairs, with EUR/USD dropping 120 pips (-1.04%) to 1.1423 and GBP/USD falling 159 pips (-1.19%) to 1.3223. Assuming DXY strength based on broad USD gains, this creates headwinds for risk assets and commodities. Gold&#039;s 54-point (-1.06%) decline to 5061 despite risk-off conditions suggests USD strength is overriding safe-haven demand. Crude oil&#039;s 2.98 (+3.11%) surge to 98.71 creates an interesting divergence, potentially suggesting supply concerns if confirmed by geopolitical developments.<br><br>**Cross-Asset Dynamics:** The correlation between falling indices and rising USD is intact, but Gold&#039;s decline alongside equities suggests USD dominance rather than pure risk-off flows. Bitcoin&#039;s modest -0.50% decline shows relative resilience compared to traditional risk assets. Silver&#039;s -3.93% crash significantly outpaces Gold, indicating industrial metals weakness and risk asset correlation.<br><br>**Technical Confluence Analysis:** For NASDAQ 100, I identify 3 confluences: (1) break below session lows around 24350, (2) volume-driven selling pressure evidenced by range expansion, (3) VIX spike confirming fear. For EUR/USD, 2 confluences: (1) USD strength trend continuation, (2) break of 1.1450 support level. Confidence: 58% — TC (60%), MA (50%), RR (65%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24330 S:24450 T:24100<br>RR:1.92 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24330</span><span>S: 24450</span><span>T: 24100</span><span>RR: 1.92</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.142 S:1.145 T:1.138<br>RR:1.33 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.142</span><span>S: 1.145</span><span>T: 1.138</span><span>RR: 1.33</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2039,23 +2165,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily timeframe bias across major assets leans bearish with significant institutional selling pressure. NASDAQ 100 declined -2.34% (584 points), S&amp;P 500 dropped -2.12% (144 points), and Dow fell -1.81% (859 points), suggesting broad risk-off sentiment. The VIX spike to 27.29% confirms elevated fear levels, while the 10Y yield rising to 4.27% indicates potential hawkish repricing or flight-to-quality flows. USD strength is evident across forex pairs: EUR/USD declined -1.04% to 1.1423, GBP/USD fell -1.19% to 1.3223, and AUD/USD dropped -2.08% to 0.6981, assuming continued dollar demand from risk-off flows or potential Fed policy expectations. Gold&#039;s -1.06% decline to $5061 contradicts typical safe-haven behavior, suggesting either liquidation pressure or rate-driven selling. Oil&#039;s +3.11% surge to $98.71 stands as the notable outlier, potentially driven by supply concerns if confirmed by geopolitical developments. The correlation breakdown between traditional safe havens (gold declining) and risk assets (all falling) suggests institutional deleveraging rather than simple risk-off rotation. Bitcoin&#039;s -0.44% decline aligns with broader risk asset weakness. Intraday setups favor continuation of the bearish momentum on any relief rallies, with focus on rejection zones around previous support levels now acting as resistance. Confidence: 72% — TC (80%), MA (60%), RR (70%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24420 S:24550 T:24150<br>RR:2.08 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 24420</span><span>S: 24550</span><span>T: 24150</span><span>RR: 2.08</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.143 S:1.146 T:1.138<br>RR:1.67 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.143</span><span>S: 1.146</span><span>T: 1.138</span><span>RR: 1.67</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:5070 S:5100 T:5010<br>RR:2 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 5070</span><span>S: 5100</span><span>T: 5010</span><span>RR: 2</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2103,17 +2235,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily bias shows clear risk-off sentiment across major asset classes, with equities under pressure and USD strength dominating forex markets. NASDAQ 100 declined 590 points (-2.37%) breaking below recent support, while S&amp;P 500 dropped 135 points (-2.01%), suggesting institutional deleveraging. European indices followed with DAX down 192 points (-0.82%) and FTSE declining 92 points (-0.89%). USD strength is evident across all major pairs - EUR/USD fell 105 pips (-0.91%) to 1.1438, GBP/USD dropped 144 pips (-1.08%) to 1.3238, and AUD/USD declined significantly by 126 pips (-1.77%) to 0.7003. Without access to DXY data, proxy measures suggest dollar strength via broad-based USD gains across all crosses. Gold&#039;s 64-point decline (-1.25%) to 5051.80 contradicts typical safe-haven flows during equity weakness, suggesting liquidity-driven selling or assuming position unwinding ahead of potential Fed policy signals. Crude oil&#039;s 3% surge to 98.73 contrasts sharply with risk-off elsewhere, potentially assuming geopolitical tensions or supply concerns. Bitcoin&#039;s modest 0.94% gain to 71,154 while traditional markets sell off indicates potential decoupling or defensive rotation within risk assets. Intraday structure shows Asian range lows being tested across indices, with London session likely targeting liquidity below these levels before any potential recovery. Technical confluence scoring: Multiple trend breaks in forex (2 confluences), equity structure deterioration (2 confluences), but mixed signals in commodities reduce clarity. Macro alignment shows moderate correlation breakdown between traditional safe havens and risk assets. Risk/reward clarity is moderate given clear directional moves but uncertain continuation patterns. Confidence: 58% — TC (60%), MA (50%), RR (65%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.142 S:1.1465 T:1.135<br>RR:1.56 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.142</span><span>S: 1.1465</span><span>T: 1.135</span><span>RR: 1.56</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24450 T:24150<br>RR:2 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24450</span><span>T: 24150</span><span>RR: 2</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2156,17 +2292,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily bias analysis reveals a mixed environment with US indices showing significant weakness while crypto and metals maintain bullish momentum. NASDAQ 100 declined 422 points (-1.69%), S&amp;P 500 dropped 108 points (-1.61%), and Dow Jones fell 1028 points (-2.16%), suggesting institutional distribution or profit-taking from recent highs. However, Bitcoin surged 2540 points (+3.60%) to 73,033, while Ethereum gained 111 points (+5.40%), indicating divergent risk sentiment between traditional and digital assets.<br><br>Intraday forex action shows USD strength across most pairs, with EUR/USD declining 63 pips (-0.55%) to 1.14800 and GBP/USD falling 112 pips (-0.84%) to 1.32700. Assuming DXY is strengthening based on broad USD gains, this creates headwinds for risk assets and commodities. However, USD/JPY&#039;s modest 23-pip (+0.15%) gain to 159.31 suggests yen weakness rather than pure dollar strength, implying potential BoJ intervention concerns at these elevated levels.<br><br>Gold&#039;s marginal 3.50 (+0.07%) gain to 5119.30 despite USD strength suggests underlying bid from risk-off flows, potentially supporting the bearish equity thesis. Crude oil&#039;s 1.90 decline (-1.98%) to 93.83 aligns with broader risk-off sentiment. The divergence between crypto strength and traditional asset weakness creates conflicting signals for overall market direction.<br><br>Confidence: 45% — TC (40%), MA (30%), RR (70%). Technical confluence is limited with mixed signals across asset classes. Macro alignment is weak due to crypto-equity divergence contradicting typical risk correlations. Risk/reward clarity is high given clear levels in major instruments.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24530 S:24650 T:24300<br>RR:1.9 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24530</span><span>S: 24650</span><span>T: 24300</span><span>RR: 1.9</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.1475 S:1.15 T:1.142<br>RR:2.2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1475</span><span>S: 1.15</span><span>T: 1.142</span><span>RR: 2.2</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -2209,23 +2349,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Higher timeframe analysis reveals a risk-off tone across major asset classes. The Dow Jones declined 1,028.66 points (-2.16%), marking the steepest selloff among indices, while the S&amp;P 500 dropped 108.86 points (-1.61%) and NASDAQ 100 fell 422.89 points (-1.69%). This suggests institutional rotation out of equities, with the Dow&#039;s outperformance in decline indicating defensive positioning away from growth-sensitive sectors.<br><br>Forex markets show broad USD strength, with EUR/USD declining 95 pips (-0.82%) to 1.14480 and GBP/USD falling 113 pips (-0.84%) to 1.32690. USD/JPY gained 30.2 pips (+0.19%) to 159.38, suggesting DXY strength is driving these moves. The correlation appears intact as risk assets (equities, crypto) and USD strength typically align during risk-off periods. Gold&#039;s 28.8 point decline (-0.56%) to 5087.00 contradicts typical safe-haven flows, implying USD strength is overriding defensive positioning.<br><br>Crypto presents a notable divergence, with Bitcoin gaining 1,005.31 points (+1.43%) to 71,498.77 and Ethereum rising 23.13 points (+1.12%) to 2,096.26. This positive performance against the broader risk-off backdrop suggests crypto-specific flows or institutional accumulation, assuming no major crypto-specific catalysts drove the move. The magnitude of Bitcoin&#039;s move represents approximately 1.4% daily range, within normal volatility parameters.<br><br>Commodities show mixed signals with crude oil advancing 1.43 points (+1.49%) to 97.16 and natural gas surging 7.4 cents (+2.29%) to 3.3070, suggesting supply concerns or seasonal factors. Silver&#039;s decline of 2.24 points (-2.64%) to 82.44 aligns with risk-off sentiment and industrial metal weakness. Confidence: 72% — TC (80%), MA (60%), RR (70%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24520 S:24650 T:24250<br>RR:2.08 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24520</span><span>S: 24650</span><span>T: 24250</span><span>RR: 2.08</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.1445 S:1.1465 T:1.14<br>RR:2.25 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1445</span><span>S: 1.1465</span><span>T: 1.14</span><span>RR: 2.25</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">OB</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:5085 S:5115 T:5040<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">OB</span>
+      </div>
+      <div class="setup-specs"><span>E: 5085</span><span>S: 5115</span><span>T: 5040</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2268,17 +2414,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Starting with higher timeframe analysis, major US indices are displaying clear bearish momentum on the daily timeframe, with NAS100 down 422.88 points (-1.69%), S&amp;P 500 declining 108.86 points (-1.61%), and Dow Jones suffering the largest decline at 1028.66 points (-2.16%). This broad-based equity weakness suggests institutional selling pressure across all market cap ranges. European indices are following suit with DAX down 378.98 points (-1.58%) and FTSE 100 declining 107.05 points (-1.03%).<br><br>Without direct DXY data available, I&#039;m using currency basket performance as a proxy measure - the USD is showing mixed signals with USD/JPY declining 0.52 points (-0.03%) while USD/CAD gains 0.18 points (+0.13%). EUR/USD and GBP/USD both declining (0.10% and 0.13% respectively) suggests modest USD strength, which would typically pressure risk assets and align with the equity weakness observed. The correlation appears intact given the inverse relationship between USD strength and equity performance.<br><br>Commodities present a stark divergence - crude oil surging 8.57 points (+9.82%) to 95.82 represents massive displacement and suggests either supply disruption concerns or geopolitical risk premium, assuming any fundamental catalyst is confirmed. This contrasts sharply with precious metals weakness, as Gold declines 61.60 points (-1.19%) and Silver falls 0.78 points (-0.91%). This divergence is unusual as both typically benefit from risk-off sentiment, suggesting the oil move may be supply-specific rather than broad risk-off positioning.<br><br>Crypto assets are bucking the risk-off trend with Bitcoin gaining 910.81 points (+1.29%) and Ethereum up 39.52 points (+1.91%). This divergence from traditional risk assets could indicate crypto-specific flows or institutional positioning that&#039;s independent of broader market sentiment. The strength in crypto alongside equity weakness creates mixed signals for overall risk appetite assessment.<br><br>Confidence: 58% — TC (65%), MA (45%), RR (65%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24520 S:24650 T:24200<br>RR:2.46 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24520</span><span>S: 24650</span><span>T: 24200</span><span>RR: 2.46</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:5100 S:5130 T:5040<br>RR:2 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 5100</span><span>S: 5130</span><span>T: 5040</span><span>RR: 2</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -2326,17 +2476,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Looking at the higher timeframe daily bias first, the market shows a risk-off tone with major indices declining while safe havens strengthen. The DAX led losses at -1.42% (-341 points), followed by FTSE 100 down -0.80% (-83.27 points), while the Dow Jones dropped -0.68% (-323.53 points). The S&amp;P 500 declined -0.30% (-20.19 points) and NASDAQ remained nearly flat at -0.01% (-2.24 points), suggesting tech resilience. Gold surged +0.29% (+$15) to $5,182.40, confirming its role as a risk-off hedge. Silver dramatically outperformed with a +2.49% (+$2.12) move to $87.19, indicating broader precious metals strength. Crude oil exploded +7.98% (+$6.96) to $94.21, assuming geopolitical tensions or supply concerns given the magnitude of the move. Without DXY data available, using currency basket performance as a proxy: USD strength is evident against EUR (-0.60%) and GBP (-0.28%), while showing relative weakness against JPY with USD/JPY rising +0.53% to 158.95. This mixed USD performance suggests defensive rotation rather than broad dollar strength. The correlation between falling risk assets and rising safe havens (gold, JPY strength) confirms the risk-off sentiment. Bitcoin&#039;s modest -0.22% decline to $70,051.86 while Ethereum gained +0.12% suggests crypto resilience despite broader risk-off flows. Confidence: 72% — TC (75%), MA (70%), RR (70%)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Momentum Continuation</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5185 S:5150 T:5220<br>RR:1 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Momentum Continuation</span>
+      </div>
+      <div class="setup-specs"><span>E: 5185</span><span>S: 5150</span><span>T: 5220</span><span>RR: 1</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Bear Flag Continuation</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.1535 S:1.157 T:1.149<br>RR:1.29 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Bear Flag Continuation</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1535</span><span>S: 1.157</span><span>T: 1.149</span><span>RR: 1.29</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -2379,17 +2533,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Starting with higher timeframe analysis, the daily bias shows mixed signals across major asset classes. US indices are displaying bearish momentum with NAS100 down 0.01% but trading near session lows at 24,856, while the Dow Jones shows stronger bearish pressure declining 323 points (-0.68%). European indices are under more significant pressure with DAX falling 328 points (-1.37%), suggesting European weakness may be leading. Without direct DXY data, proxy measures indicate USD strength through JPY weakness - USD/JPY gained 59 pips (+0.37%) to 158.70, approaching key resistance at 159.24 highs. This USD strength correlates with the broader risk-off sentiment in equities. Gold&#039;s 23.50 rise (+0.45%) to 5,190.90 confirms defensive positioning, while Silver&#039;s stronger 2.60% surge to 87.28 suggests supply concerns potentially driving metals higher. Energy markets show significant strength with Crude Oil spiking 3.16 points (+3.62%) to 90.41, reaching intraday highs near 96.00 - assuming geopolitical tensions or supply disruptions if confirmed. Bitcoin&#039;s decline of 445 points (-0.63%) aligns with broader risk-off flows. The correlation pattern shows traditional risk-off behavior with USD strength, metals bid, and risk assets under pressure. However, the energy surge creates complexity in the macro thesis. Intraday setups remain challenging given the mixed signals, with GBP/JPY showing relative strength (+0.20%) despite broader JPY weakness, suggesting Sterling resilience. The Asian session appears to have set liquidity levels that European markets are now testing. Confidence: 55% — TC (60%), MA (45%), RR (60%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24900 S:25050 T:24650<br>RR:1.67 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24900</span><span>S: 25050</span><span>T: 24650</span><span>RR: 1.67</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5185 S:5155 T:5230<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 5185</span><span>S: 5155</span><span>T: 5230</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2432,17 +2590,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily bias analysis shows mixed signals across asset classes. USD/JPY reached 159.21 (+109 pips, +0.69%), approaching critical intervention levels that historically trigger BoJ action. NAS100 shows marginal weakness at 24965.01 (-22 points, -0.09%) while European indices diverge positively with DAX up 231 points (+0.99%). This divergence suggests regional monetary policy expectations may be driving flows rather than broad risk sentiment.<br><br>Commodities present the strongest directional signal with crude oil surging 10.46 (+12.53%) and natural gas up 0.238 (+7.88%), assuming geopolitical tensions or supply disruptions are driving energy markets. Gold&#039;s decline of $93.80 (-1.79%) alongside rising equities suggests risk-on sentiment, though this contradicts the energy surge. Silver&#039;s outsized drop of $4.96 (-5.57%) indicates industrial demand concerns may be weighing on industrial metals.<br><br>Intraday structure on NAS100 shows consolidation within yesterday&#039;s range, with Asian session defining liquidity between 24856-25152. London session appears to be respecting this range while energy sector rotation potentially supports selective buying. EUR/USD weakness of 73 pips (-0.63%) to 1.1538 suggests USD strength, though without DXY data, this assessment relies on cross-currency performance showing broad dollar gains across majors.<br><br>Cryptocurrency stability with Bitcoin at 70257 (+0.08%) and Ethereum flat suggests institutional flows remain balanced. The correlation breakdown between risk assets (flat crypto, mixed equities) and commodities (strong energy, weak metals) indicates sector-specific rather than macro-driven moves, assuming no major fundamental catalysts are confirmed. This environment favors range-bound strategies over directional momentum plays.<br><br>Confidence: 42% — TC (35%), MA (45%), RR (55%). Technical confluence is limited due to mixed signals across timeframes and asset classes. Macro alignment shows moderate conviction based on observable price action patterns. Risk/reward clarity benefits from defined ranges in major instruments, though breakout setups lack strong conviction levels.</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:24880 S:24800 T:25100<br>RR:2.75 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24880</span><span>S: 24800</span><span>T: 25100</span><span>RR: 2.75</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">USD/JPY</span>
-      <span class="setup-type">Resistance</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:159.4 S:159.7 T:158.5<br>RR:3 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">USD/JPY</span>
+        <span class="setup-type">Resistance</span>
+      </div>
+      <div class="setup-specs"><span>E: 159.4</span><span>S: 159.7</span><span>T: 158.5</span><span>RR: 3</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2485,17 +2647,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Starting with higher timeframe bias, the daily charts suggest a mixed environment with defensive rotation underway. The Dow&#039;s 349-point decline (-0.73%) contrasts sharply with European strength (DAX +230 points, FTSE +104 points), implying geographic divergence in risk sentiment. US indices show breadth deterioration with NASDAQ (-32 points) and S&amp;P (-28 points) underperforming, while commodities surge aggressively - crude oil +3.81 (+4.57%) and natural gas +0.18 (+6.09%). Without DXY data available, using USD/JPY as a proxy shows dollar strength (+108 pips to 158.94), which typically pressures risk assets but conflicts with today&#039;s commodity rally.<br><br>Intraday action reveals stark sector rotation with defensive assets outperforming. Gold&#039;s -46.50 decline (-0.89%) appears corrective within a broader uptrend, suggesting profit-taking rather than sentiment shift given simultaneous commodity strength. Crypto shows resilience with Bitcoin +652 points (+0.93%) and Ethereum +35.39 (+1.74%), indicating risk appetite persists in digital assets despite equity weakness. The AUD/USD surge of +86 pips (+1.22%) aligns with commodity strength, assuming Australian dollar benefits from resource rally.<br><br>Cross-asset analysis reveals correlation breakdown exceeding normal ranges. Typically correlated risk assets (indices and crypto) diverge significantly - US equities declining while crypto advances and European indices rally. This suggests either: (1) geographic rotation from US to European assets, or (2) sector-specific factors driving individual moves rather than broad sentiment shifts. The energy complex&#039;s explosive move may be assuming supply concerns or geopolitical tensions, though without confirmed catalysts, attributing causation remains speculative.<br><br>Confidence: 58% — TC (65%), MA (45%), RR (65%). Technical confluence shows clear patterns across multiple timeframes, but macro alignment suffers from conflicting cross-asset signals. Risk/reward remains solid with defined levels across focus instruments.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24920 S:25000 T:24800<br>RR:1.5 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24920</span><span>S: 25000</span><span>T: 24800</span><span>RR: 1.5</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.157 S:1.16 T:1.152<br>RR:1.67 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.157</span><span>S: 1.16</span><span>T: 1.152</span><span>RR: 1.67</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2538,17 +2704,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily bias analysis reveals mixed conditions across major asset classes. USD/JPY shows strong daily bullish momentum, advancing +1.0070 pips (+0.64%) to 158.85, approaching critical resistance near 159.00. Gold exhibits daily bearish pressure, declining -43.20 points (-0.83%) to 5186.50, suggesting risk-on sentiment or USD strength. Bitcoin maintains daily bullish structure, gaining +1030.57 points (+1.47%) to 70957.49.<br><br>Intraday analysis shows divergent cross-asset behavior. Crude oil&#039;s sharp +3.2600 rally (+3.91%) to 86.71 suggests supply concerns or geopolitical premium, assuming no confirmed catalyst. Natural gas mirrors this with +4.70% gains. European indices (DAX +0.99%, FTSE +1.02%) outperform US counterparts (SPX -0.43%, NAS -0.05%), indicating regional rotation. Without DXY data, proxy analysis via currency crosses shows USD strength against EUR (-0.34%) but weakness vs JPY carry trades.<br><br>The commodity surge paired with mixed equity performance suggests transitional market conditions. Silver&#039;s -3.78% decline diverges from typical precious metals correlation, potentially indicating industrial demand concerns. AUD/USD&#039;s +1.19% rally aligns with commodity strength, supporting the resource currency thesis.<br><br>Confidence: 52% — TC (60%), MA (40%), RR (55%). Technical confluence exists in USD/JPY and Bitcoin setups, but macro alignment remains unclear without confirmed catalysts for energy moves. Risk/reward clarity is moderate given mixed cross-asset signals.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">USD/JPY</span>
-      <span class="setup-type">Resistance Test</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:158.7 S:159.2 T:157.8<br>RR:1.8 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">USD/JPY</span>
+        <span class="setup-type">Resistance Test</span>
+      </div>
+      <div class="setup-specs"><span>E: 158.7</span><span>S: 159.2</span><span>T: 157.8</span><span>RR: 1.8</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Support Test</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5165 S:5140 T:5210<br>RR:1.8 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Support Test</span>
+      </div>
+      <div class="setup-specs"><span>E: 5165</span><span>S: 5140</span><span>T: 5210</span><span>RR: 1.8</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2591,11 +2761,13 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily bias analysis shows mixed signals across major asset classes. US indices (NAS100 -0.26%, SPX -0.66%, DJI -1.11%) display bearish pressure with the Dow showing the most significant decline of 528 points, while European indices (DAX +0.75%, FTSE +0.69%) demonstrate bullish momentum. This divergence suggests regional risk sentiment differences rather than broad directional consensus.<br><br>Intraday price action reveals notable volatility in commodities with crude oil surging +4.29% (+$3.58 to $87.03) and natural gas climbing +4.14%, suggesting energy sector strength. Conversely, precious metals face selling pressure with gold declining -0.95% (-$49.70) and silver experiencing sharp selling at -4.36% (-$3.89). Without DXY data available, using EUR/USD (-0.41%) and broader USD strength against GBP (-0.21%) as proxy measures suggests dollar bullishness, which would typically correlate with commodity weakness - though energy is bucking this trend, assuming supply-side factors if confirmed.<br><br>Crypto markets show modest bullishness with Bitcoin gaining +0.51% (+$354) and Ethereum +0.67%, outperforming US equities but underperforming commodities. The AUD/USD surge of +1.16% (+82 pips) stands out as the strongest forex move, potentially reflecting commodity currency strength given energy&#039;s performance. Cross-asset correlation appears strained with defensive assets (gold) declining while risk assets show mixed performance.<br><br>Quantitative context: Most moves fall within normal ranges (1-2 standard deviations) except silver&#039;s -4.36% decline which appears large relative to typical sessions, and crude oil&#039;s +4.29% surge. The mixed directional signals across asset classes with no clear risk-on or risk-off theme creates challenging setup conditions. Confidence: 45% — TC (40%), MA (35%), RR (65%)</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">PDH</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24900 S:25050 T:24750<br>RR:1 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">PDH</span>
+      </div>
+      <div class="setup-specs"><span>E: 24900</span><span>S: 25050</span><span>T: 24750</span><span>RR: 1</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -2638,17 +2810,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Starting with the higher timeframe (daily) bias, equity indices show strong bullish momentum with the NASDAQ 100 gaining 313.45 points (+1.27%) and DAX surging 559.26 points (+2.39%) - both representing normal to large moves within their recent ranges. The intraday action suggests continuation of the broader risk-on sentiment established over recent sessions. Without DXY data, I&#039;m using currency cross-rates as proxy measures - the USD/JPY strength at +0.26% to 158.25 and moderate EUR/USD stability at +0.01% suggests USD maintaining strength but not aggressively so, which typically supports risk assets when not extreme.<br><br>Commodity markets show mixed signals with crude oil posting a strong +2.37% gain to $85.43, while gold declined -0.50% to $5203.50 and silver fell -2.10% to $87.22. This divergence - energy up while precious metals down - suggests selective commodity demand rather than broad inflation fears. The crypto space shows defensive behavior with Bitcoin down -0.31% and Ethereum declining -1.12%, indicating some risk-off flow within digital assets despite equity strength.<br><br>The Asian range appears to have been established between key support and resistance levels, with London session activity suggesting liquidity sweeps before directional moves. The correlation between rising crude oil and equity strength, combined with precious metals weakness, implies confidence in economic growth rather than stagflation concerns - assuming this reflects fundamental positioning rather than technical flows.<br><br>Quantifying the moves relative to normal ranges: NASDAQ&#039;s 1.27% gain represents a normal-to-large move, DAX&#039;s 2.39% surge is large, while forex pairs show subdued volatility with most moves under 0.5%. This suggests equity-focused momentum rather than broad market volatility. Confidence: 72% — TC (75%), MA (70%), RR (70%)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:24980 S:24850 T:25150<br>RR:1.31 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24980</span><span>S: 24850</span><span>T: 25150</span><span>RR: 1.31</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">GBP/JPY</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:212.6 S:211.4 T:213.2<br>RR:1.33 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">GBP/JPY</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 212.6</span><span>S: 211.4</span><span>T: 213.2</span><span>RR: 1.33</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2691,17 +2867,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily bias analysis shows mixed conditions with gold exhibiting extreme bullish momentum (+2.11% to 5198.80, representing a &gt;3 standard deviation move), while crude oil faces severe bearish pressure (-10.15% to 85.15, also &gt;3 standard deviation move). Indices display moderate bullish sentiment with NASDAQ 100 gaining 313.45 points (+1.27%) and DAX leading European markets with +377.60 points (+1.60%). Without DXY data available, using currency cross-rates as proxy: EUR/USD minimal gain (+0.07%) suggests USD stability, while AUD/USD&#039;s notable +0.92% advance implies risk-on sentiment in commodity currencies.<br><br>Intraday structure shows conflicting signals across asset classes. Precious metals exhibiting parabolic behavior with silver surging +5.21%, suggesting potential fear-driven flows or supply disruption concerns. Energy complex divergence with oil&#039;s -10.15% decline potentially indicating oversupply concerns or demand destruction fears, assuming geopolitical or inventory data drove this extreme move. Equity indices maintaining upward momentum suggests risk appetite remains intact despite commodity volatility.<br><br>Crypto markets showing consolidation with Bitcoin flat (+0.08%) and Ethereum nearly unchanged (+0.01%), indicating indecision within digital assets. This sideways action contrasts sharply with precious metals&#039; explosive moves, creating interesting cross-asset divergence patterns. The correlation breakdown between traditional safe havens (gold surging) and risk assets (indices rising) exceeds normal parameters.<br><br>Confidence: 42% — TC (50%), MA (35%), RR (40%). Technical confluence moderate with clear levels in metals and indices, macro alignment weakened by conflicting signals across asset classes, risk/reward clarity limited by extreme volatility in key commodities creating uncertain follow-through potential.</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5210 S:5150 T:5280<br>RR:1.17 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 5210</span><span>S: 5150</span><span>T: 5280</span><span>RR: 1.17</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:25000 S:24800 T:25300<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 25000</span><span>S: 24800</span><span>T: 25300</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2749,23 +2929,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily timeframe shows risk-on sentiment with broad-based strength across equities and commodities, while USD weakness dominates forex. NAS100 gained 313 points (+1.27%), breaking above 25000 psychological level with strong momentum. S&amp;P500 advanced 41 points (+0.62%) maintaining bullish structure above 6750 support. European indices outperformed with DAX surging 377 points (+1.60%) and FTSE gaining 127 points (+1.24%). Bitcoin rallied $1,911 (+2.79%) reclaiming 70k, while Ethereum added $50 (+2.54%), suggesting crypto strength aligned with risk-on flows. Metals saw exceptional moves with Gold gaining $111 (+2.19%) to fresh highs at 5202, and Silver exploding $4.66 (+5.55%) - magnitude context unavailable but appears extreme relative to typical daily ranges. Crude oil collapsed $8.30 (-8.76%) in what appears to be a large magnitude move, potentially driven by supply/demand rebalancing though causation unconfirmed. USD weakness evident across majors with EUR/USD gaining 89 pips (+0.77%), GBP/USD up 118 pips (+0.89%), and AUD/USD surging 155 pips (+2.23%) - assuming DXY declined based on broad USD weakness pattern. Risk-asset correlation appears intact with equities, crypto, and metals all advancing while USD retreats. Confidence: 72% — TC (75%), MA (70%), RR (70%)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:25050 S:24800 T:25400<br>RR:1.4 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 25050</span><span>S: 24800</span><span>T: 25400</span><span>RR: 1.4</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:1.162 S:1.155 T:1.17<br>RR:1.14 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.162</span><span>S: 1.155</span><span>T: 1.17</span><span>RR: 1.14</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5210 S:5150 T:5300<br>RR:1.5 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 5210</span><span>S: 5150</span><span>T: 5300</span><span>RR: 1.5</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -2808,23 +2994,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily timeframe shows broad risk-on sentiment with major indices breaking above previous session highs. NAS100 gained 349 points (+1.42%), S&amp;P 500 rose 53 points (+0.79%), while European indices outperformed with DAX up 378 points (+1.60%) and FTSE gaining 127 points (+1.24%). These moves represent normal-to-large magnitude moves (1.5-2 SD range) suggesting sustained momentum rather than noise. DXY direction appears weak based on USD weakness across major pairs - EUR/USD gained 98 pips (+0.85%), GBP/USD rose 123 pips (+0.92%), and AUD/USD surged 168 pips (+2.41%), indicating broad dollar weakness supporting risk asset strength.<br><br>Commodity complex shows divergent signals with precious metals surging - Gold up $115 (+2.27%) and Silver exploding $4.71 (+5.61%) - while crude oil collapsed $9.58 (-10.11%). This unusual pattern suggests either supply-side crude disruption or precious metals responding to different drivers, assuming no major geopolitical events confirmed. Bitcoin&#039;s $1,723 gain (+2.52%) to $70,126 aligns with risk-on flows and dollar weakness, trading within established range but showing momentum.<br><br>Intraday structure across risk assets shows clean breakouts from overnight ranges with sustained follow-through. NAS100 cleared 25,000 psychological level with conviction, while forex majors show coordinated USD weakness. The correlation between falling USD (evidenced by major pair strength) and rising risk assets remains intact. Gold&#039;s strength alongside risk assets suggests either technical breakout momentum or safe-haven demand from unconfirmed catalysts.<br><br>Confidence: 72% — TC (75%), MA (70%), RR (70%). Technical confluence strong across multiple asset classes with clear directional moves. Macro alignment solid with coordinated USD weakness and risk-on flows, though commodities divergence creates some uncertainty. Risk/reward clarity good with defined levels holding.</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:25050 S:24900 T:25300<br>RR:1.67 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 25050</span><span>S: 24900</span><span>T: 25300</span><span>RR: 1.67</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:1.164 S:1.16 T:1.172<br>RR:2 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.164</span><span>S: 1.16</span><span>T: 1.172</span><span>RR: 2</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5220 S:5100 T:5400<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 5220</span><span>S: 5100</span><span>T: 5400</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2867,23 +3059,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily timeframe analysis shows broad risk-on sentiment with indices breaking higher and USD weakness prevalent across major pairs. The NASDAQ 100&#039;s +360 point (+1.46%) move represents approximately a 1.5 standard deviation move based on recent volatility, while the EUR/USD&#039;s +104 pip gain to 1.1627 and AUD/USD&#039;s exceptional +168 pip (+2.41%) rally indicate significant dollar selling pressure, assuming this correlates with DXY weakness (proxy data unavailable for direct DXY confirmation). Gold&#039;s +$114.50 (+2.25%) surge to $5,206 alongside rising risk assets suggests this may be dollar debasement rather than traditional risk-off flows. Bitcoin&#039;s +$1,575 (+2.30%) move to near $70K confirms broad liquidity expansion. However, crude oil&#039;s brutal -10.92% collapse creates a conflicting narrative that requires monitoring for potential demand destruction concerns. The magnitude of moves across asset classes (most exceeding 1 standard deviation) suggests institutional repositioning rather than retail-driven activity. From an intraday perspective, the Asian session appears to have established the day&#039;s range lows with London session driving the breakouts higher. European indices (DAX +1.60%, FTSE +1.24%) confirm regional strength, while the GBP/JPY&#039;s +130 pip move to 212.03 shows risk appetite extending to carry trades. Confidence: 72% — TC (75%), MA (65%), RR (75%)</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">NASDAQ 100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:25050 S:24900 T:25200<br>RR:1 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NASDAQ 100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 25050</span><span>S: 24900</span><span>T: 25200</span><span>RR: 1</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:1.163 S:1.1595 T:1.168<br>RR:1.43 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.163</span><span>S: 1.1595</span><span>T: 1.168</span><span>RR: 1.43</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5210 S:5145 T:5280<br>RR:1.08 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 5210</span><span>S: 5145</span><span>T: 5280</span><span>RR: 1.08</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2926,23 +3124,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Starting with higher timeframe (daily) bias: Broad risk-on sentiment is evident with NAS100 gaining 516 points (+2.10%), S&amp;P 500 up 96 points (+1.42%), and Bitcoin surging 2,902 points (+4.24%). The magnitude of these moves - particularly Bitcoin&#039;s 4.24% gain - suggests large moves (2-3 standard deviations) indicating strong momentum shifts. DXY direction context unavailable, but USD weakness is implied by EUR/USD gaining 144 pips (+1.25%) and GBP/USD advancing 174 pips (+1.31%), suggesting inverse correlation with risk assets holding. The standout divergence is crude oil&#039;s extreme decline of 14.38 points (-15.17%), which appears disconnected from the broader risk-on theme - assuming this reflects supply-side developments or geopolitical shifts rather than demand destruction. Silver&#039;s 5.77-point surge (+6.87%) aligns with the risk-on narrative while also suggesting potential inflation hedging demand.<br><br>Intraday structure analysis reveals NAS100 breaking above 25,000 psychological resistance with strong momentum, creating potential for continuation toward 25,300-25,400 zone. The crypto space shows defensive rotation with Bitcoin dominance rising alongside absolute gains, indicating institutional flows rather than retail speculation. GBP/JPY&#039;s 139-pip gain (+0.66%) reflects yen weakness amid risk-on flows, though the magnitude is normal (1-2 SD) compared to other moves.<br><br>Key confluences supporting bullish bias: (1) synchronized equity strength across US and European indices, (2) crypto leading with institutional characteristics, (3) commodity complex mixed but metals outperforming energy, (4) USD weakness enabling EM/risk asset flows. The crude oil collapse requires monitoring as potential leading indicator of economic concerns.<br><br>Confidence: 72% — technical confluence (25%), macro alignment (30%), risk/reward clarity (17%). Risk-on momentum is clear but crude oil divergence and lack of DXY data reduce technical precision.</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:25180 S:24900 T:25400<br>RR:0.79 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 25180</span><span>S: 24900</span><span>T: 25400</span><span>RR: 0.79</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:1.168 S:1.165 T:1.172<br>RR:1.33 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.168</span><span>S: 1.165</span><span>T: 1.172</span><span>RR: 1.33</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:71500 S:69500 T:73500<br>RR:1 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 71500</span><span>S: 69500</span><span>T: 73500</span><span>RR: 1</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -2985,23 +3189,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily bias analysis reveals a risk-on environment with significant USD weakness driving broad-based rallies across risk assets. The DXY (assumed declining based on USD weakness across all major pairs) is creating favorable conditions for EUR/USD (+1.08% to 1.1647) and GBP/USD (+1.21% to 1.3462). AUD/USD shows exceptional strength at +2.28%, suggesting commodity-linked currency outperformance. Gold&#039;s +2.40% surge to 5213.60 alongside rising equities (DAX +1.42%, FTSE +1.17%) indicates both risk-on flows and potential dollar debasement concerns. Bitcoin&#039;s +3.58% rally to 70,849 confirms broader risk appetite. Crude oil&#039;s -5.93% decline to 89.15 creates an interesting divergence, potentially indicating supply-side factors or recession fears conflicting with the risk-on narrative. Intraday momentum remains strong across precious metals and crypto, with silver leading at +6.70%. The correlation breakdown between oil and other risk assets suggests mixed underlying drivers. Confidence: 72% — technical confluence (75%), macro alignment (70%), risk/reward clarity (70%). The USD weakness theme is consistent across forex pairs, while metals and crypto show strong momentum continuation patterns.</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:1.165 S:1.16 T:1.172<br>RR:1.4 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.165</span><span>S: 1.16</span><span>T: 1.172</span><span>RR: 1.4</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">FVG</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5220 S:5180 T:5280<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">FVG</span>
+      </div>
+      <div class="setup-specs"><span>E: 5220</span><span>S: 5180</span><span>T: 5280</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip neutral">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">PDL</span>
-      <span class="setup-dir">&#x2014;</span>
-      <div class="setup-specs">E:24980 S:24900 T:25100<br>RR:1.5 TF:1H</div>
+    <div class="setup-card neutral">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2014;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">PDL</span>
+      </div>
+      <div class="setup-specs"><span>E: 24980</span><span>S: 24900</span><span>T: 25100</span><span>RR: 1.5</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -3049,23 +3259,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Higher timeframe analysis shows a risk-on environment with major indices holding above key daily support levels despite modest pullbacks. The NASDAQ 100 declined 53 points (-0.21%) to 24,967, remaining well above the 24,000 psychological support. The S&amp;P 500 dropped 35 points (-0.51%) to 6,796, but holds above its 20-day moving average zone around 6,750. Daily bias remains constructive for risk assets given the shallow nature of these corrections.<br><br>Intraday action reveals USD weakness across the board, with EUR/USD gaining 132 pips (+1.15%) to 1.1655 and GBP/USD advancing 171 pips (+1.29%) to 1.3472. Without DXY data available, the broad USD weakness suggests risk-on sentiment, typically correlating with equity strength. However, the divergence between falling indices and rising forex pairs indicates potential correlation breakdown or positioning adjustments.<br><br>Commodity complex shows extreme divergence: crude oil crashed 904 pips (-9.54%) to $85.73 - a large 2+ standard deviation move suggesting potential supply concerns or demand destruction fears. Conversely, precious metals surged with gold gaining $84 (+1.65%) to $5,187 and silver jumping $4.93 (+5.84%) to $89.45. This gold/oil divergence typically signals geopolitical or monetary policy uncertainty, assuming no specific news catalyst confirmed.<br><br>Crypto markets demonstrate clear risk-on appetite with Bitcoin advancing $2,038 (+2.98%) to $70,440 and Ethereum gaining $60.59 (+3.04%) to $2,054. The synchronized crypto rally aligns with precious metals strength, suggesting safe haven demand rather than pure risk-on sentiment. Cross-asset correlations appear stressed, with traditional risk-off assets (gold) rising alongside risk-on crypto.<br><br>Confidence: 45% — technical confluence (60%), macro alignment (20%), risk/reward clarity (55%). The conflicting signals across asset classes and correlation breakdown limit conviction despite clear technical setups.</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:1.1665 S:1.162 T:1.172<br>RR:1.2 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1665</span><span>S: 1.162</span><span>T: 1.172</span><span>RR: 1.2</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">CISD</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5195 S:5150 T:5250<br>RR:1.2 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">CISD</span>
+      </div>
+      <div class="setup-specs"><span>E: 5195</span><span>S: 5150</span><span>T: 5250</span><span>RR: 1.2</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">FVG</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:70500 S:69500 T:72000<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">FVG</span>
+      </div>
+      <div class="setup-specs"><span>E: 70500</span><span>S: 69500</span><span>T: 72000</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -3113,23 +3329,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Starting with higher timeframe bias: Daily charts suggest a risk-off environment with European indices (DAX -1.71%, FTSE -1.58%) showing significant weakness while US indices display more modest declines (NAS100 -0.21%, S&amp;P500 -0.51%). This divergence implies potential late-session European weakness bleeding into US open. Gold&#039;s +0.87% rise alongside this equity weakness confirms defensive positioning, with precious metals typically leading risk-off moves. DXY direction unavailable, but USD strength is implied by EUR/USD&#039;s modest +0.85% gain being overshadowed by broader risk-off sentiment - correlation context suggests USD should strengthen in this environment. Crude oil&#039;s -7.40% decline (magnitude: large, &gt;2 SD move) represents the session&#039;s most significant development, assuming this reflects supply concerns or demand destruction fears rather than technical factors. Silver&#039;s exceptional +3.82% performance alongside gold suggests precious metals complex benefiting from safe-haven flows. Intraday structure shows Asian range compression in major pairs, with London session likely targeting these liquidity zones before establishing directional bias. Bitcoin&#039;s flat performance (+0.02%) during risk-off suggests crypto-equity correlation may be weakening, requiring careful monitoring. Cross-asset divergences present mixed signals: precious metals bullish, commodities bearish, equities moderately bearish, forex showing USD strength themes. Confidence: 55% — technical confluence (20%), macro alignment (25%), risk/reward clarity (10%). Technical setups lack clear HTF confirmation, macro signals conflict between safe-haven demand and commodity weakness.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24300 S:25020 T:23800<br>RR:0.69 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24300</span><span>S: 25020</span><span>T: 23800</span><span>RR: 0.69</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip neutral">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2014;</span>
+    <div class="setup-card neutral">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2014;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Other</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:5170 S:5100 T:5250<br>RR:1.14 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 5170</span><span>S: 5100</span><span>T: 5250</span><span>RR: 1.14</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -3172,17 +3394,21 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily timeframe analysis shows divergent sectoral performance with crypto leading risk-on momentum while traditional equities face headwinds. Bitcoin surged +4.72% (+3114 points) to 69,084, breaking above the 69K psychological level, while major indices declined: NAS100 -0.21% (-53 points), S&amp;P500 -0.51% (-35 points), and European indices suffered steeper losses with DAX -1.71% (-406 points). This suggests crypto is decoupling from traditional risk assets, possibly indicating sector-specific factors rather than broad risk sentiment. Gold declined -0.27% (-13.70) to 5,145, contradicting typical risk-off behavior given equity weakness, which implies the move may be profit-taking rather than fundamental shift. DXY direction context unavailable from current data, limiting forex correlation analysis. GBP/JPY gained +1.45% (+145 pips) to 211.86, showing strong momentum that typically aligns with risk-on sentiment, creating conflicting signals with equity weakness. Oil crashed -6.93% (-6.30) to 84.60, representing a large move (assuming normal daily volatility context unavailable) that could indicate supply concerns or demand destruction fears. The divergence between crypto strength, commodity weakness, and mixed equity/FX signals creates uncertainty around dominant market theme. Confidence: 45% — technical confluence (60%), macro alignment (20%), risk/reward clarity (55%).</div>
           <div class="setups-row">
-    <div class="setup-chip bullish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:69100 S:67500 T:71500<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 69100</span><span>S: 67500</span><span>T: 71500</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">GBP/JPY</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:212 S:210.5 T:214<br>RR:1.3 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">GBP/JPY</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 212</span><span>S: 210.5</span><span>T: 214</span><span>RR: 1.3</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -3230,23 +3456,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily bias analysis first: NAS100 shows bearish structure after failing to hold above 25,000 psychological level, now testing support around 24,900. EUR/USD remains in a daily consolidation pattern between 1.15-1.17 range. GBP/JPY has broken above 210.00 daily resistance, suggesting bullish continuation. Gold maintains daily uptrend above 5,000 despite today&#039;s minor pullback. Bitcoin has reclaimed daily support at 68,000 with strong momentum.<br><br>Intraday moves are significant: NAS100 declined 100.79 points (-0.40%), showing normal volatility within 1-2 standard deviations. Bitcoin surged 2,968 points (+4.50%), representing a large move of 2-3 standard deviations. Silver gained 2.59 (+3.08%), also a large move. Crude oil dropped 3.44 (-3.78%), a substantial decline. DXY direction unclear from provided data, limiting correlation analysis confidence.<br><br>Cross-asset divergence notable: risk-on crypto (BTC +4.50%) conflicts with risk-off equities (NAS100 -0.40%), suggesting mixed sentiment. Gold&#039;s minor decline (-0.30%) while maintaining uptrend implies consolidation rather than risk-off flow. Oil&#039;s sharp drop (-3.78%) may reflect supply concerns, assuming no confirmed geopolitical developments.<br><br>Confidence: 45% — technical confluence (50%), macro alignment (30%), risk/reward clarity (55%). Mixed signals across asset classes prevent higher confidence.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Support Test</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24850 S:25000 T:24600<br>RR:1.67 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Support Test</span>
+      </div>
+      <div class="setup-specs"><span>E: 24850</span><span>S: 25000</span><span>T: 24600</span><span>RR: 1.67</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">GBP/JPY</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:212 S:210 T:214<br>RR:1 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">GBP/JPY</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 212</span><span>S: 210</span><span>T: 214</span><span>RR: 1</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">Momentum Follow</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:69000 S:67000 T:71000<br>RR:1 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">Momentum Follow</span>
+      </div>
+      <div class="setup-specs"><span>E: 69000</span><span>S: 67000</span><span>T: 71000</span><span>RR: 1</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -3289,23 +3521,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Daily timeframe analysis shows indices establishing a bearish bias with NAS100 down -377.57 points (-1.51%), S&amp;P 500 declining -113.26 points (-1.66%), and DAX falling -406.38 points (-1.71%) - these moves represent normal 1-2 standard deviation declines based on recent volatility. Risk-off sentiment is evident with gold declining -22.80 points (-0.44%) while crude oil surged +4.56 points (+5.02%), suggesting potential supply concerns rather than broader risk aversion. Crypto provides a contrarian signal with Bitcoin gaining +2503.34 points (+3.79%) and Ethereum up +76.78 points (+3.96%), indicating defensive positioning within crypto rather than broad risk-off.<br><br>DXY direction appears bullish based on USD strength against EUR (-0.18%) and weakness against JPY crosses, with GBP/JPY gaining +165.10 pips (+0.78%) and USD/JPY advancing +79.90 pips (+0.51%). This mixed USD performance suggests selective strength rather than broad dollar rally. The correlation breakdown between traditional risk assets (indices down) and crypto (strongly up) exceeds typical ranges, indicating potential regime shift or sector rotation.<br><br>Intraday structure shows indices breaking below Asian session lows with NAS100 testing the 24289.22 support zone. EUR/USD is approaching the 1.1587 level with clean bearish momentum, while GBP/JPY shows bullish continuation above 212.00. Bitcoin&#039;s break above 68000 with strong volume suggests institutional accumulation, assuming no major regulatory developments.<br><br>Confidence: 45% — technical confluence (60%), macro alignment (20%), risk/reward clarity (55%). The divergence between asset classes creates uncertainty in macro alignment, while technical setups show clear patterns but mixed directional signals across instruments.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24280 S:24450 T:24050<br>RR:1.35 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24280</span><span>S: 24450</span><span>T: 24050</span><span>RR: 1.35</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:1.1585 S:1.1605 T:1.155<br>RR:1.75 TF:4H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 1.1585</span><span>S: 1.1605</span><span>T: 1.155</span><span>RR: 1.75</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">OB</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:68200 S:67500 T:69500<br>RR:1.86 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">OB</span>
+      </div>
+      <div class="setup-specs"><span>E: 68200</span><span>S: 67500</span><span>T: 69500</span><span>RR: 1.86</span><span>TF: 4H</span></div>
     </div></div>
         </div>
 
@@ -3348,23 +3586,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Current market conditions show significant risk-off sentiment across traditional risk assets, with indices experiencing large moves (&gt;1.5% declines represent approximately 2+ standard deviation moves based on typical daily ranges). NASDAQ 100 down 1.55%, S&amp;P 500 down 1.71%, and DAX down 1.71% all suggest broad-based selling pressure. However, this is contrasted by strong performance in alternative assets - Bitcoin up 4.57% and crude oil up 4.70% represent substantial moves that may indicate portfolio reallocation rather than pure risk-off behavior. Gold&#039;s 0.94% decline is notable given the equity weakness, which contradicts typical safe-haven flows and suggests potential USD strength or commodity-specific factors. The forex market shows mixed signals with USD/JPY gaining 0.47% (suggesting USD strength), while USD/CAD fell 0.67% (suggesting commodity currency strength aligning with oil&#039;s rally). GBP strength across both USD and JPY pairs indicates potential GBP-specific factors. The divergence between traditional risk assets (equities down) and alternative assets (crypto/oil up) creates conflicting cross-asset signals that exceed normal correlation patterns by an estimated 2+ standard deviations from typical risk-on/risk-off alignment. Silver&#039;s modest 0.72% gain versus gold&#039;s decline adds another layer of complexity to precious metals positioning. This setup suggests either a rotation trade in progress or fundamental shifts in asset class relationships that warrant cautious positioning until clearer directional confirmation emerges.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24600 T:24000<br>RR:1.4 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24600</span><span>T: 24000</span><span>RR: 1.4</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Bitcoin</span>
-      <span class="setup-type">FVG</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:68500 S:67500 T:70000<br>RR:1.5 TF:4H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Bitcoin</span>
+        <span class="setup-type">FVG</span>
+      </div>
+      <div class="setup-specs"><span>E: 68500</span><span>S: 67500</span><span>T: 70000</span><span>RR: 1.5</span><span>TF: 4H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">GBP/JPY</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:211.5 S:210.5 T:213<br>RR:1.5 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">GBP/JPY</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 211.5</span><span>S: 210.5</span><span>T: 213</span><span>RR: 1.5</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -3407,23 +3651,29 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Market shows significant divergence across asset classes with risk assets declining while defensive assets and crypto surge. Major indices (NAS100 -1.64%, SPX -1.82%, DJI -1.79%) are experiencing coordinated selling pressure, suggesting broad risk-off sentiment. However, this narrative is challenged by Bitcoin&#039;s explosive +4.25% rally to 68,771, alongside Ethereum&#039;s +4.33% move - a stark contradiction to traditional risk-off flows where crypto typically correlates with equities. The magnitude of these crypto moves appears large (likely 2-3 SD) based on intraday ranges, though historical context is unavailable for precise classification.<br><br>Forex markets reveal USD strength with key divergences. EUR/USD declined -0.13% to 1.1593, while GBP/USD managed +0.25% gains, suggesting GBP outperformance potentially driven by BoE policy expectations (assuming no confirmed news catalyst). USD/JPY&#039;s +0.35% climb to 158.09 indicates continued dollar strength, though this appears normal magnitude within recent ranges. The standout is GBP/JPY&#039;s +0.61% surge to 211.70, combining both GBP strength and yen weakness - this cross often leads risk sentiment shifts.<br><br>Commodity complex shows mixed signals that complicate the risk-off thesis. Gold&#039;s -1.01% decline to 5,106 contradicts typical safe-haven flows during equity weakness, suggesting either profit-taking after recent gains or dollar strength overwhelming defensive demand. Crude oil&#039;s explosive +6.23% rally to 96.56 represents an extreme move (likely &gt;3 SD) that typically indicates supply disruption concerns or geopolitical tensions, though causation remains unconfirmed. Silver&#039;s modest +0.47% gain provides little directional clarity.<br><br>The correlation breakdown between traditional risk assets (equities down, crypto up) exceeds normal parameters and suggests either: (1) crypto decoupling from macro sentiment, or (2) sector rotation within risk assets. Without 2+ strong confluences aligning across asset classes, overall market bias remains mixed despite the predominant equity weakness.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
-      <div class="setup-specs">E:24350 S:24500 T:24100<br>RR:1.67 TF:1H</div>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
+      <div class="setup-specs"><span>E: 24350</span><span>S: 24500</span><span>T: 24100</span><span>RR: 1.67</span><span>TF: 1H</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">GBP/JPY</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:211.8 S:210.8 T:212.8<br>RR:1 TF:15m</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">GBP/JPY</span>
+        <span class="setup-type">MSS</span>
+      </div>
+      <div class="setup-specs"><span>E: 211.8</span><span>S: 210.8</span><span>T: 212.8</span><span>RR: 1</span><span>TF: 15m</span></div>
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
-      <div class="setup-specs">E:68800 S:67800 T:70000<br>RR:1.2 TF:1H</div>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">Other</span>
+      </div>
+      <div class="setup-specs"><span>E: 68800</span><span>S: 67800</span><span>T: 70000</span><span>RR: 1.2</span><span>TF: 1H</span></div>
     </div></div>
         </div>
 
@@ -3466,28 +3716,36 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Current market conditions show a pronounced risk-off sentiment with major US indices experiencing large drawdowns (NAS100 -2.61%, SPX -2.63%, magnitude context unavailable due to lack of historical standard deviation data). Interestingly, this equity weakness coincides with crypto strength (BTC +4.88%, ETH +4.64%), suggesting potential correlation breakdown or rotation rather than broad risk-off flow. Crude oil&#039;s extreme 13.56% surge to 103.23 appears to be driving inflationary concerns, assuming geopolitical or supply-side catalysts are involved, though specific causation remains unconfirmed.<br><br>Forex markets reflect mixed USD strength with JPY pairs leading (USD/JPY +0.55% to 158.40), while USD/CAD weakness (-0.73%) suggests commodity currency strength potentially linked to oil&#039;s rally. EUR/USD&#039;s modest decline (-0.33% to 1.1570) indicates limited DXY strength, contradicting the typical inverse correlation with risk assets. Gold&#039;s -1.51% decline during equity weakness is atypical, as XAU normally leads risk-off moves, potentially indicating liquidity-driven selling or position squaring rather than genuine haven demand.<br><br>The technical picture shows equal highs across NAS100 around 24,489 level being respected as resistance, with price failing to sustain above this liquidity zone. Bitcoin&#039;s break above 69,000 represents a potential market structure shift, assuming the previous swing high near this level is confirmed breached on daily timeframe. However, the divergence between traditional risk assets and crypto requires caution in broader bias assignment.<br><br>Asian session ranges appear intact across most forex pairs, suggesting London session may target these liquidity levels. The oil spike creates uncertainty for inflation-sensitive assets and central bank policy expectations, though without confirmed news catalysts, this remains speculative. Current conditions favor defensive positioning given the mixed signals across asset classes.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">MSS</span>
+      </div>
       
     </div>
-    <div class="setup-chip neutral">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">PDH/PDL</span>
-      <span class="setup-dir">&#x2014;</span>
+    <div class="setup-card neutral">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2014;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">PDH/PDL</span>
+      </div>
       
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Other</span>
+      </div>
       
     </div></div>
         </div>
@@ -3531,22 +3789,28 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Global risk sentiment appears conflicted based on cross-asset price action. Equities show broad-based selling pressure with indices down 1.8-2.5%, suggesting defensive positioning. However, risk assets like Bitcoin (+3.02%) and Ethereum (+3.41%) are rallying strongly, creating an unusual divergence. This correlation breakdown may indicate crypto-specific catalysts rather than broader risk-on sentiment. The 11.84% surge in crude oil stands out as the session&#039;s most significant move, potentially signaling supply concerns or geopolitical tensions, though without confirmed catalysts, this remains speculative. USD strength is mixed - gaining against EUR (-0.44%) and GBP (-0.14%) but weakening against CAD (-0.92%), suggesting selective dollar demand rather than broad DXY momentum. Gold&#039;s -0.91% decline alongside rising crude oil creates conflicting safe-haven signals, complicating the macro narrative. The Asian session range appears to be defining key liquidity levels, with London likely to test these boundaries. Technical setups require careful confluence analysis given the mixed correlations across asset classes.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
       
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">MSS</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">FVG</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">FVG</span>
+      </div>
       
     </div></div>
         </div>
@@ -3595,34 +3859,44 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">The market is showing a clear risk-off environment with significant divergence between traditional risk assets and safe havens. Major equity indices are experiencing substantial declines, with the Dow Jones leading losses at -2.54%, followed closely by FTSE 100 at -2.68%. This broad-based equity weakness suggests institutional deleveraging or defensive positioning. Interestingly, this equity weakness coincides with a notable rally in commodities, with crude oil surging +10.74% and natural gas up +5.15%, which could suggest supply concerns or geopolitical tensions affecting energy markets.<br><br>The forex market presents mixed signals that require careful interpretation. USD/JPY&#039;s +0.58% move to 158.46 suggests continued dollar strength against the yen, potentially indicating risk-on sentiment in currency markets or divergent monetary policy expectations. However, EUR/USD&#039;s -0.40% decline and GBP/USD&#039;s modest -0.15% drop indicate dollar strength across major pairs. The contradiction between equity weakness and dollar strength is noteworthy - typically, risk-off scenarios would favor yen strength over dollar strength.<br><br>Crypto markets are bucking the traditional risk-asset correlation, with Bitcoin gaining +2.22% and Ethereum up +2.33% while equities decline sharply. This divergence could suggest crypto is operating on different fundamental drivers or experiencing technical buying despite broader risk-off sentiment. Gold&#039;s -0.95% decline is particularly interesting given the equity weakness - traditionally, gold would rally during risk-off periods, suggesting this may be a technical correction rather than fundamental flight-to-safety.<br><br>The correlation breakdown between traditional safe havens (gold declining) and risk assets (equities declining, crypto rising) exceeds normal relationships. This suggests either technical repositioning ahead of major news flow or conflicting fundamental drivers across asset classes. The energy complex strength while industrial metals remain subdued points to supply-side concerns rather than demand-driven commodity strength.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
       
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">GBP/JPY</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">GBP/JPY</span>
+        <span class="setup-type">Other</span>
+      </div>
       
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Other</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">Other</span>
+      </div>
       
     </div></div>
         </div>
@@ -3671,34 +3945,44 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">The market is showing a pronounced risk-off environment with major indices experiencing significant selloffs (NAS100 -1.80%, S&amp;P500 -1.88%, Dow -2.54%) while safe-haven assets present a mixed picture. USD/JPY&#039;s strong rally to 158.56 (+0.65%) suggests USD strength, which typically pressures risk assets and is consistent with the equity decline. However, Bitcoin (+1.81%) and Ethereum (+2.08%) are bucking the risk-off trend, indicating potential decoupling or specific crypto-positive catalysts.<br><br>Commodities are presenting conflicting signals with crude oil surging dramatically (+14.19% to $103.80) - this magnitude of move suggests either supply disruption concerns or significant geopolitical developments, assuming confirmed news exists. Natural gas is also up sharply (+5.62%). Meanwhile, gold&#039;s decline (-0.96%) despite equity weakness is unusual and may reflect USD strength overwhelming safe-haven demand. This creates an interesting divergence worth monitoring.<br><br>Forex markets show broad USD strength with EUR/USD (-0.47%) and GBP/USD (-0.28%) both declining, while USD/CAD&#039;s drop (-0.86%) likely reflects oil strength benefiting the Canadian dollar. The Asian session appears to have set liquidity levels that London may test, particularly around yesterday&#039;s ranges in major pairs.<br><br>The technical picture suggests we&#039;re in a regime shift with traditional correlations breaking down. The combination of falling equities, rising USD, surging oil, and declining gold creates a complex macro environment that requires careful position sizing and clear invalidation levels.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">USD/JPY</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">USD/JPY</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
       
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">FVG</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">FVG</span>
+      </div>
       
     </div>
-    <div class="setup-chip neutral">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2014;</span>
+    <div class="setup-card neutral">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2014;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">Other</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">MSS</span>
+      </div>
       
     </div></div>
         </div>
@@ -3747,34 +4031,44 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Markets are showing a classic risk-off scenario with equity indices deeply red (-1.8% to -2.7%) while commodities, particularly energy, are surging. Crude oil&#039;s massive +25% move suggests potential supply disruption concerns, though without confirmed news, this remains observational. The correlation patterns are telling: USD strength across most pairs (except JPY crosses where USD/JPY +0.74%) combined with falling risk assets and rising safe havens like gold (despite its -0.94% pullback from recent highs near 5210). The crypto space is bucking the broader risk-off trend with BTC +1.15% and ETH +1.49%, which could indicate either late-cycle speculation or crypto decoupling from traditional risk assets. Natural gas&#039;s +8.41% surge alongside crude oil implies broader energy supply concerns rather than isolated oil issues.<br><br>The forex dynamics reveal interesting divergences: while most USD pairs show dollar strength, USD/JPY&#039;s rise to 158.70 suggests yen weakness is overpowering dollar strength, potentially indicating intervention concerns or yield differential pressures. GBP/JPY holding relatively well at 211.18 despite broader GBP weakness against USD shows the yen is the primary weak link. EUR/USD&#039;s -0.67% decline to 1.153 puts it near critical technical levels that could define the weekly bias.<br><br>The severity of equity selloffs (DOW -2.54%, DAX -2.54%) combined with energy spikes creates a stagflationary setup if sustained. Gold&#039;s pullback from highs may be profit-taking rather than sentiment shift, as the broader macro environment (falling stocks, rising commodities) typically supports precious metals. Bitcoin&#039;s resilience above 66k while traditional markets tank could signal institutional accumulation or flight-to-alternative assets, though this divergence rarely sustains long-term.<br><br>Structurally, this appears to be early stages of risk-off repositioning rather than a sustained trend change. The magnitude of moves across asset classes suggests either significant fundamental catalyst (unconfirmed) or technical breakdown triggering systematic selling. Key will be whether these moves sustain beyond current session or represent temporary volatility spike.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">MSS</span>
+      </div>
       
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
       
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">USD/JPY</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">USD/JPY</span>
+        <span class="setup-type">Other</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">OB</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">OB</span>
+      </div>
       
     </div>
-    <div class="setup-chip neutral">
-      <span class="setup-name">BTC</span>
-      <span class="setup-type">Other</span>
-      <span class="setup-dir">&#x2014;</span>
+    <div class="setup-card neutral">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2014;</span>
+        <span class="setup-name">BTC</span>
+        <span class="setup-type">Other</span>
+      </div>
       
     </div></div>
         </div>
@@ -3823,28 +4117,36 @@
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">Market is showing clear risk-off sentiment with significant selloffs across US indices (NAS100 -1.80%, SPX -1.88%, DOW -2.54%) while safe-haven assets rally strongly - Gold +1.84%, Silver +3.21%. This divergence suggests fear-driven flows. Oil&#039;s massive +12.21% spike indicates supply concerns or geopolitical tensions, which aligns with the risk-off theme. DXY strength is implied by EUR/USD weakness (-0.13%) and USD/JPY strength (+0.50%), creating headwinds for risk assets.<br><br>Crypto is showing relative strength with Bitcoin only down -0.41% and Ethereum flat, suggesting institutional crypto adoption may be decoupling from traditional risk-off correlations. However, this could be temporary if equities continue falling. The Asian session likely established key ranges that London has begun to work - USD/JPY&#039;s +78 pip move suggests London is driving USD strength.<br><br>GBP/JPY&#039;s +176 pip rally (+0.84%) is notable as it&#039;s moving against the risk-off theme, potentially indicating BoJ intervention fears or specific GBP strength. This cross often leads directional moves in risk sentiment. Gold&#039;s push to new highs at 5185 with strong momentum suggests this risk-off move has legs.<br><br>Key focus should be on whether US indices can hold current lows or if we see further capitulation. The oil spike combined with gold&#039;s rally and broad equity weakness suggests external macro pressures (geopolitical?) rather than just technical selling.</div>
           <div class="setups-row">
-    <div class="setup-chip bearish">
-      <span class="setup-name">NAS100</span>
-      <span class="setup-type">Liquidity Sweep</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">NAS100</span>
+        <span class="setup-type">Liquidity Sweep</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">Gold</span>
-      <span class="setup-type">CISD</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">Gold</span>
+        <span class="setup-type">CISD</span>
+      </div>
       
     </div>
-    <div class="setup-chip bullish">
-      <span class="setup-name">GBP/JPY</span>
-      <span class="setup-type">MSS</span>
-      <span class="setup-dir">&#x2191;</span>
+    <div class="setup-card bullish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2191;</span>
+        <span class="setup-name">GBP/JPY</span>
+        <span class="setup-type">MSS</span>
+      </div>
       
     </div>
-    <div class="setup-chip bearish">
-      <span class="setup-name">EUR/USD</span>
-      <span class="setup-type">PDL</span>
-      <span class="setup-dir">&#x2193;</span>
+    <div class="setup-card bearish">
+      <div class="setup-card-header">
+        <span class="setup-dir">&#x2193;</span>
+        <span class="setup-name">EUR/USD</span>
+        <span class="setup-type">PDL</span>
+      </div>
       
     </div></div>
         </div>

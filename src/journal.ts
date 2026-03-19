@@ -234,13 +234,15 @@ function buildEntryHTML(entry: JournalEntry, index: number): string {
   const setupsHTML = entry.fullAnalysis.setups.map((s: any) => {
     const hasSpecs = s.entry && s.entry !== 0;
     const specsLine = hasSpecs
-      ? `<div class="setup-specs">E:${s.entry} S:${s.stop} T:${s.target}<br>RR:${s.RR} TF:${escapeHTML(s.timeframe ?? "")}</div>`
+      ? `<div class="setup-specs"><span>E: ${s.entry}</span><span>S: ${s.stop}</span><span>T: ${s.target}</span><span>RR: ${s.RR}</span><span>TF: ${escapeHTML(s.timeframe ?? "")}</span></div>`
       : "";
     return `
-    <div class="setup-chip ${escapeHTML(s.direction)}">
-      <span class="setup-name">${escapeHTML(s.instrument)}</span>
-      <span class="setup-type">${escapeHTML(s.type)}</span>
-      <span class="setup-dir">${s.direction === "bullish" ? "&#x2191;" : s.direction === "bearish" ? "&#x2193;" : "&#x2014;"}</span>
+    <div class="setup-card ${escapeHTML(s.direction)}">
+      <div class="setup-card-header">
+        <span class="setup-dir">${s.direction === "bullish" ? "&#x2191;" : s.direction === "bearish" ? "&#x2193;" : "&#x2014;"}</span>
+        <span class="setup-name">${escapeHTML(s.instrument)}</span>
+        <span class="setup-type">${escapeHTML(s.type)}</span>
+      </div>
       ${specsLine}
     </div>`;
   }).join("");
@@ -703,55 +705,67 @@ function buildPageHTML(
   }
 
   .setups-row {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 6px;
     margin-top: 10px;
   }
 
-  .setup-chip {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 4px 8px;
-    font-size: 9px;
+  .setup-card {
     border: 1px solid var(--border);
     background: var(--bg);
-    width: 100%;
+    padding: 8px 10px;
+    position: relative;
+    overflow: hidden;
   }
 
-  @media (min-width: 769px) {
-    .setups-row { flex-direction: row; flex-wrap: wrap; margin-top: 12px; }
-    .setup-chip { width: auto; padding: 3px 10px; font-size: 10px; }
+  .setup-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
   }
 
-  .setup-chip.bullish { border-color: rgba(57,211,83,0.3); }
-  .setup-chip.bearish { border-color: rgba(248,81,73,0.3); }
+  .setup-card.bullish::before { background: var(--green); }
+  .setup-card.bearish::before { background: var(--red); }
 
-  .setup-name { color: var(--cyan); font-weight: 700; }
-  .setup-type { color: var(--text-dim); }
-  .setup-dir  { font-weight: 700; }
+  .setup-card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    padding-left: 6px;
+  }
 
-  .setup-chip.bullish .setup-dir { color: var(--green); }
-  .setup-chip.bearish .setup-dir { color: var(--red); }
+  .setup-name { color: var(--cyan); font-weight: 700; font-size: 11px; }
+  .setup-dir  { font-weight: 700; font-size: 11px; }
+  .setup-type { color: var(--text-dim); font-size: 9px; letter-spacing: 0.05em; }
+
+  .setup-card.bullish .setup-dir { color: var(--green); }
+  .setup-card.bearish .setup-dir { color: var(--red); }
 
   .setup-specs {
-    width: 100%;
-    font-size: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px 8px;
+    font-size: 9px;
     color: var(--amber-dim);
-    margin-top: 3px;
-    padding-top: 3px;
+    padding: 4px 6px;
+    margin-top: 4px;
     border-top: 1px solid var(--border);
     letter-spacing: 0.02em;
-    overflow-wrap: break-word;
-    word-break: break-word;
   }
+
+  .setup-specs span { display: block; }
 
   .no-setup { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; }
 
   @media (min-width: 769px) {
-    .setup-specs { font-size: 9px; }
+    .setups-row { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .setup-card { padding: 10px 12px; }
+    .setup-name { font-size: 12px; }
+    .setup-type { font-size: 10px; }
+    .setup-specs { font-size: 10px; }
     .no-setup { font-size: 10px; }
   }
 
