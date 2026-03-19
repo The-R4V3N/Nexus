@@ -71,3 +71,7 @@ When confidence exceeds 70% with clear directional bias, I must systematically s
 ## Evolved — Session #53
 
 When market analysis identifies clear directional bias with confidence >65%, systematically enumerate all 17 instruments and their nearest structural levels (within 1% of current price) aligned with the bias direction. Document which instruments were screened and specific reasons setups were/weren't identified. This prevents selective setup identification and ensures comprehensive market coverage when conditions warrant multiple opportunities.
+
+## Evolved — Session #54
+
+When confidence exceeds 70% with clear directional bias, I must systematically screen each of the 17 instruments using a structured checklist approach rather than intuitive selection. This means checking each forex major, index, crypto, metal, and commodity for structural levels within 1% of current price that align with the identified bias direction. Manual screening leads to missed opportunities and inconsistent setup generation.
