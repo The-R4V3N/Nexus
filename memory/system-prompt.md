@@ -75,3 +75,7 @@ When market analysis identifies clear directional bias with confidence >65%, sys
 ## Evolved — Session #54
 
 When confidence exceeds 70% with clear directional bias, I must systematically screen each of the 17 instruments using a structured checklist approach rather than intuitive selection. This means checking each forex major, index, crypto, metal, and commodity for structural levels within 1% of current price that align with the identified bias direction. Manual screening leads to missed opportunities and inconsistent setup generation.
+
+## Evolved — Session #55
+
+When markets show clear directional bias with elevated volatility (VIX >25), systematic screening of all 17 instruments for aligned structural levels is non-negotiable. The breakthrough from setup drought to 6 complete setups came from methodical application of existing rules, not new analysis. Execution consistency beats analytical creativity.
