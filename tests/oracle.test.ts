@@ -1,15 +1,348 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// We'll test the R:R warning by importing runOracleAnalysis indirectly.
-// Since the warning is logged via console.warn in the setup filtering section,
-// we test it by verifying the warning is emitted for setups with RR < 1.0.
+// ── Export presence tests ──────────────────────────────────
 
-// The warning logic is inside runOracleAnalysis which requires API calls,
-// so we extract and test the warning behavior by importing and calling
-// the function that processes setups. Since the warning is inline in
-// runOracleAnalysis, we'll need to test it via a focused unit approach.
+describe("oracle module exports", () => {
+  it("exports runOracleAnalysis", async () => {
+    const oracle = await import("../src/oracle");
+    expect(typeof oracle.runOracleAnalysis).toBe("function");
+  });
 
-// For now, we test the exported warnPoorRiskReward helper.
+  it("exports warnPoorRiskReward", async () => {
+    const oracle = await import("../src/oracle");
+    expect(typeof oracle.warnPoorRiskReward).toBe("function");
+  });
+});
+
+// ── Two-call split integration tests ──────────────────────
+
+describe("runOracleAnalysis two-call split", () => {
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+    logSpy.mockRestore();
+    vi.restoreAllMocks();
+  });
+
+  it("makes two sequential API calls and merges results", async () => {
+    // Mock the Anthropic client
+    const analysisResponse = {
+      analysis: "**Higher Timeframe Context:** Market is bullish. **Intraday Analysis:** Strong momentum. **Cross-Asset Dynamics:** Correlations intact. **Technical Confluence Analysis:** Confidence: 65% — TC (70%), MA (60%), RR (60%)",
+      bias: { overall: "bullish", notes: "Strong uptrend" },
+      keyLevels: [{ instrument: "Gold", level: 2000, type: "support", notes: "Key level" }],
+      confidence: 65,
+    };
+
+    const setupsResponse = [
+      {
+        instrument: "Gold",
+        type: "FVG",
+        direction: "bullish",
+        description: "FVG at 2000",
+        invalidation: "Break below 1980",
+        entry: 2000,
+        stop: 1980,
+        target: 2040,
+        RR: 2.0,
+        timeframe: "4H",
+      },
+    ];
+
+    let callCount = 0;
+    const mockClient = {
+      messages: {
+        create: vi.fn(async () => {
+          callCount++;
+          const responseJSON = callCount === 1
+            ? JSON.stringify(analysisResponse)
+            : JSON.stringify(setupsResponse);
+          return {
+            stop_reason: "end_turn",
+            content: [{ type: "text", text: responseJSON }],
+          };
+        }),
+      },
+    };
+
+    // Mock fs and dependencies
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return {
+        ...actual,
+        existsSync: (p: string) => {
+          if (p.includes("system-prompt") || p.includes("analysis-rules")) return false;
+          return actual.existsSync(p);
+        },
+      };
+    });
+
+    // Clear module cache so mocks take effect
+    vi.resetModules();
+
+    const { runOracleAnalysis } = await import("../src/oracle");
+
+    const snapshots = [
+      {
+        symbol: "GC=F", name: "Gold", category: "commodities" as const,
+        price: 2010, previousClose: 2000, change: 10, changePercent: 0.5,
+        high: 2020, low: 1995, timestamp: new Date(),
+      },
+    ];
+
+    const result = await runOracleAnalysis(
+      mockClient as any,
+      snapshots,
+      "test-session",
+      1,
+      "",
+      ""
+    );
+
+    // Should have made exactly 2 API calls
+    expect(mockClient.messages.create).toHaveBeenCalledTimes(2);
+
+    // Result should have analysis from call 1
+    expect(result.analysis).toContain("Higher Timeframe Context");
+    expect(result.bias.overall).toBe("bullish");
+    expect(result.keyLevels).toHaveLength(1);
+
+    // Result should have setups from call 2
+    expect(result.setups).toHaveLength(1);
+    expect(result.setups[0].instrument).toBe("Gold");
+    expect(result.setups[0].entry).toBe(2000);
+  });
+
+  it("continues with empty setups when call 2 fails", async () => {
+    const analysisResponse = {
+      analysis: "**Higher Timeframe Context:** Bearish. **Intraday Analysis:** Weak. **Cross-Asset Dynamics:** Risk-off. **Technical Confluence Analysis:** Confidence: 45% — TC (50%), MA (40%), RR (40%)",
+      bias: { overall: "bearish", notes: "Downtrend" },
+      keyLevels: [],
+      confidence: 45,
+    };
+
+    let callCount = 0;
+    const mockClient = {
+      messages: {
+        create: vi.fn(async () => {
+          callCount++;
+          if (callCount === 1) {
+            return {
+              stop_reason: "end_turn",
+              content: [{ type: "text", text: JSON.stringify(analysisResponse) }],
+            };
+          }
+          // Call 2 fails
+          throw new Error("API error on setup call");
+        }),
+      },
+    };
+
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return {
+        ...actual,
+        existsSync: (p: string) => {
+          if (p.includes("system-prompt") || p.includes("analysis-rules")) return false;
+          return actual.existsSync(p);
+        },
+      };
+    });
+
+    vi.resetModules();
+    const { runOracleAnalysis } = await import("../src/oracle");
+
+    const snapshots = [
+      {
+        symbol: "GC=F", name: "Gold", category: "commodities" as const,
+        price: 2010, previousClose: 2000, change: 10, changePercent: 0.5,
+        high: 2020, low: 1995, timestamp: new Date(),
+      },
+    ];
+
+    const result = await runOracleAnalysis(
+      mockClient as any,
+      snapshots,
+      "test-session",
+      2,
+      "",
+      ""
+    );
+
+    // Should still return valid result with empty setups
+    expect(result.analysis).toContain("Bearish");
+    expect(result.bias.overall).toBe("bearish");
+    expect(result.setups).toHaveLength(0);
+    // Confidence should NOT be forced to 35 since it's already <= 60
+    expect(result.confidence).toBe(45);
+
+    // Should have warned about setup call failure
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("ORACLE setup construction failed")
+    );
+  });
+
+  it("logs spinner messages for both calls", async () => {
+    const analysisResponse = {
+      analysis: "**Higher Timeframe Context:** Neutral. **Intraday Analysis:** Choppy. **Cross-Asset Dynamics:** Mixed. **Technical Confluence Analysis:** Confidence: 40% — TC (40%), MA (40%), RR (40%)",
+      bias: { overall: "neutral", notes: "No clear direction" },
+      keyLevels: [],
+      confidence: 40,
+    };
+
+    let callCount = 0;
+    const mockClient = {
+      messages: {
+        create: vi.fn(async () => ({
+          stop_reason: "end_turn",
+          content: [{ type: "text", text: JSON.stringify(callCount++ === 0 ? analysisResponse : []) }],
+        })),
+      },
+    };
+
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return {
+        ...actual,
+        existsSync: (p: string) => {
+          if (p.includes("system-prompt") || p.includes("analysis-rules")) return false;
+          return actual.existsSync(p);
+        },
+      };
+    });
+
+    vi.resetModules();
+    const { runOracleAnalysis } = await import("../src/oracle");
+
+    const snapshots = [
+      {
+        symbol: "GC=F", name: "Gold", category: "commodities" as const,
+        price: 2010, previousClose: 2000, change: 10, changePercent: 0.5,
+        high: 2020, low: 1995, timestamp: new Date(),
+      },
+    ];
+
+    await runOracleAnalysis(mockClient as any, snapshots, "test-session", 3, "", "");
+
+    // Should have logged both phase messages
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("ORACLE analyzing market structure"));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("ORACLE constructing setups"));
+  });
+
+  it("throws when call 1 (analysis) fails", async () => {
+    const mockClient = {
+      messages: {
+        create: vi.fn(async () => {
+          throw new Error("API error on analysis call");
+        }),
+      },
+    };
+
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return {
+        ...actual,
+        existsSync: (p: string) => {
+          if (p.includes("system-prompt") || p.includes("analysis-rules")) return false;
+          return actual.existsSync(p);
+        },
+      };
+    });
+
+    vi.resetModules();
+    const { runOracleAnalysis } = await import("../src/oracle");
+
+    const snapshots = [
+      {
+        symbol: "GC=F", name: "Gold", category: "commodities" as const,
+        price: 2010, previousClose: 2000, change: 10, changePercent: 0.5,
+        high: 2020, low: 1995, timestamp: new Date(),
+      },
+    ];
+
+    await expect(
+      runOracleAnalysis(mockClient as any, snapshots, "test-session", 4, "", "")
+    ).rejects.toThrow("API error on analysis call");
+  });
+
+  it("applies setup validation filter to call 2 results", async () => {
+    const analysisResponse = {
+      analysis: "**Higher Timeframe Context:** Bullish. **Intraday Analysis:** Strong. **Cross-Asset Dynamics:** Risk-on. **Technical Confluence Analysis:** Confidence: 70% — TC (80%), MA (60%), RR (70%)",
+      bias: { overall: "bullish", notes: "Strong uptrend" },
+      keyLevels: [],
+      confidence: 70,
+    };
+
+    // One valid setup, one with entry=0 (invalid), one missing timeframe
+    const setupsResponse = [
+      {
+        instrument: "Gold", type: "FVG", direction: "bullish",
+        description: "Valid", invalidation: "None",
+        entry: 2000, stop: 1980, target: 2040, RR: 2.0, timeframe: "4H",
+      },
+      {
+        instrument: "Silver", type: "OB", direction: "bullish",
+        description: "Zero entry", invalidation: "None",
+        entry: 0, stop: 25, target: 30, RR: 1.5, timeframe: "1H",
+      },
+      {
+        instrument: "BTC", type: "MSS", direction: "bullish",
+        description: "Missing TF", invalidation: "None",
+        entry: 50000, stop: 49000, target: 52000, RR: 2.0,
+      },
+    ];
+
+    let callCount = 0;
+    const mockClient = {
+      messages: {
+        create: vi.fn(async () => {
+          callCount++;
+          return {
+            stop_reason: "end_turn",
+            content: [{ type: "text", text: JSON.stringify(callCount === 1 ? analysisResponse : setupsResponse) }],
+          };
+        }),
+      },
+    };
+
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return {
+        ...actual,
+        existsSync: (p: string) => {
+          if (p.includes("system-prompt") || p.includes("analysis-rules")) return false;
+          return actual.existsSync(p);
+        },
+      };
+    });
+
+    vi.resetModules();
+    const { runOracleAnalysis } = await import("../src/oracle");
+
+    const snapshots = [
+      {
+        symbol: "GC=F", name: "Gold", category: "commodities" as const,
+        price: 2010, previousClose: 2000, change: 10, changePercent: 0.5,
+        high: 2020, low: 1995, timestamp: new Date(),
+      },
+    ];
+
+    const result = await runOracleAnalysis(mockClient as any, snapshots, "test-session", 5, "", "");
+
+    // Only the Gold setup should survive validation
+    expect(result.setups).toHaveLength(1);
+    expect(result.setups[0].instrument).toBe("Gold");
+  });
+});
+
+// ── warnPoorRiskReward tests ──────────────────────────────
+
 describe("warnPoorRiskReward", () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
 

@@ -37,26 +37,28 @@ function makeEntry(whatFailed: string, sessionNumber = 1): JournalEntry {
 // ── detectRepeatedCritiques ─────────────────────────────────
 
 describe("detectRepeatedCritiques", () => {
-  it("returns empty string when fewer than 3 entries", async () => {
+  it("returns empty critique when fewer than 3 entries", async () => {
     const { detectRepeatedCritiques } = await import("../src/agent");
     const entries = [
       makeEntry("Some critique about missing setups", 1),
       makeEntry("Some critique about missing setups", 2),
     ];
-    expect(detectRepeatedCritiques(entries)).toBe("");
+    const result = detectRepeatedCritiques(entries);
+    expect(result.critique).toBe("");
+    expect(result.count).toBe(0);
   });
 
-  it("returns empty string when critiques are all different", async () => {
+  it("returns empty critique when critiques are all different", async () => {
     const { detectRepeatedCritiques } = await import("../src/agent");
     const entries = [
       makeEntry("The analysis lacked proper entry levels for forex pairs", 1),
       makeEntry("Bitcoin correlation analysis was completely absent from the review", 2),
       makeEntry("Gold risk-off signals were ignored during the session analysis", 3),
     ];
-    expect(detectRepeatedCritiques(entries)).toBe("");
+    expect(detectRepeatedCritiques(entries).critique).toBe("");
   });
 
-  it("returns the repeated phrase when all 3 entries share similar critique", async () => {
+  it("returns the repeated phrase and count when entries share similar critique", async () => {
     const { detectRepeatedCritiques } = await import("../src/agent");
     const sharedCritique = "The analysis failed to include proper entry and stop levels for identified setups";
     const entries = [
@@ -65,10 +67,11 @@ describe("detectRepeatedCritiques", () => {
       makeEntry(sharedCritique + ". Yet another unique observation for session three.", 3),
     ];
     const result = detectRepeatedCritiques(entries);
-    expect(result.length).toBeGreaterThan(0);
+    expect(result.critique.length).toBeGreaterThan(0);
+    expect(result.count).toBeGreaterThanOrEqual(3);
   });
 
-  it("returns empty string when only 2 of 3 entries share the critique", async () => {
+  it("returns empty critique when only 2 of 3 entries share the critique", async () => {
     const { detectRepeatedCritiques } = await import("../src/agent");
     const sharedCritique = "The analysis failed to include proper entry and stop levels for identified setups";
     const entries = [
@@ -76,18 +79,17 @@ describe("detectRepeatedCritiques", () => {
       makeEntry("A completely different critique about macro analysis being weak and unfocused", 2),
       makeEntry(sharedCritique + ". More unique content here.", 3),
     ];
-    const result = detectRepeatedCritiques(entries);
-    expect(result).toBe("");
+    expect(detectRepeatedCritiques(entries).critique).toBe("");
   });
 
-  it("returns empty string when one critique is empty", async () => {
+  it("returns empty critique when one critique is empty", async () => {
     const { detectRepeatedCritiques } = await import("../src/agent");
     const entries = [
       makeEntry("Some critique", 1),
       makeEntry("", 2),
       makeEntry("Some critique", 3),
     ];
-    expect(detectRepeatedCritiques(entries)).toBe("");
+    expect(detectRepeatedCritiques(entries).critique).toBe("");
   });
 });
 

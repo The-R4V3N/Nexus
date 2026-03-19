@@ -55,11 +55,26 @@ export function stripSurrogates(str: string): string {
 export function extractJSONFromResponse(rawText: string): string {
   let jsonText = rawText.replace(/```json\n?|```\n?/g, "").trim();
 
-  const firstBrace = jsonText.indexOf("{");
-  const lastBrace  = jsonText.lastIndexOf("}");
-  if (firstBrace > 0 || (lastBrace !== -1 && lastBrace < jsonText.length - 1)) {
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      jsonText = jsonText.slice(firstBrace, lastBrace + 1);
+  // Detect whether the response is a JSON array or object
+  const firstBrace   = jsonText.indexOf("{");
+  const firstBracket = jsonText.indexOf("[");
+
+  // Choose the earlier delimiter — array or object
+  const isArray = firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace);
+
+  if (isArray) {
+    const lastBracket = jsonText.lastIndexOf("]");
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+      if (firstBracket > 0 || lastBracket < jsonText.length - 1) {
+        jsonText = jsonText.slice(firstBracket, lastBracket + 1);
+      }
+    }
+  } else {
+    const lastBrace = jsonText.lastIndexOf("}");
+    if (firstBrace > 0 || (lastBrace !== -1 && lastBrace < jsonText.length - 1)) {
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonText = jsonText.slice(firstBrace, lastBrace + 1);
+      }
     }
   }
 

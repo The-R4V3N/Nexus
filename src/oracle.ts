@@ -1,6 +1,7 @@
 // ============================================================
 // NEXUS — ORACLE Module
 // Analyzes market data using ICT concepts + evolving rules
+// Two-call architecture: ORACLE-ANALYSIS then ORACLE-SETUPS
 // ============================================================
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -46,7 +47,7 @@ function validateAnalysisCompleteness(analysis: any): string[] {
     errors.push("Missing confidence value");
   } else {
     // Look for mathematical breakdown in analysis text
-    const hasBreakdown = /\b(\d+(?:\.\d+)?%?\s*[+\-×÷*/]\s*\d+(?:\.\d+)?%?|\w+:\s*\d+(?:\.\d+)?%?)/i.test(analysis.analysis || "");
+    const hasBreakdown = /\b(\d+(?:\.\d+)?%?\s*[+\-\u00d7\u00f7*/]\s*\d+(?:\.\d+)?%?|\w+:\s*\d+(?:\.\d+)?%?)/i.test(analysis.analysis || "");
     if (!hasBreakdown) {
       errors.push("Confidence calculation missing mathematical breakdown (r014 format required)");
     }
@@ -74,7 +75,42 @@ function validateAnalysisCompleteness(analysis: any): string[] {
   return errors;
 }
 
-// ── Oracle Analysis ────────────────────────────────────────
+// ── JSON parsing helper ────────────────────────────────────
+
+function parseOracleJSON(rawText: string, label: string): any {
+  const jsonText = extractJSONFromResponse(rawText);
+
+  try {
+    return JSON.parse(jsonText);
+  } catch {
+    let salvaged = salvageJSON(jsonText);
+
+    if (!salvaged) {
+      const cutPoints: number[] = [];
+      const re = /",\s*"/g;
+      let match;
+      while ((match = re.exec(jsonText)) !== null) {
+        cutPoints.push(match.index + 1);
+      }
+      for (let i = cutPoints.length - 1; i >= 0; i--) {
+        salvaged = salvageJSON(jsonText.slice(0, cutPoints[i]));
+        if (salvaged) {
+          console.warn(`  \u26a0 ORACLE ${label} response truncated \u2014 salvaged by cutting at field boundary`);
+          break;
+        }
+      }
+    }
+
+    if (salvaged) {
+      console.warn(`  \u26a0 ORACLE ${label} returned malformed JSON \u2014 salvaged partial response`);
+      return salvaged;
+    } else {
+      return null; // caller decides whether to throw or fallback
+    }
+  }
+}
+
+// ── Oracle Analysis (two-call architecture) ────────────────
 
 export async function runOracleAnalysis(
   client: Anthropic,
@@ -90,7 +126,10 @@ export async function runOracleAnalysis(
   const marketData    = formatSnapshotsForPrompt(snapshots);
   const rulesText     = formatRulesForPrompt(rules);
 
-  const userMessage = `
+  // ── CALL 1: ORACLE-ANALYSIS ──────────────────────────────
+  // Focuses purely on market analysis — no setup construction
+
+  const analysisUserMessage = `
 ${marketData}
 
 ${macroContext ? macroContext + "\n\n" : ""}${rulesText}
@@ -98,9 +137,9 @@ ${macroContext ? macroContext + "\n\n" : ""}${rulesText}
 ${communityIssues ? communityIssues + "\n\n" : ""}SESSION: #${sessionNumber}
 TIMESTAMP: ${new Date().toISOString()}
 
-Analyze the current market conditions. Follow your analysis rules exactly.
+Analyze the current market conditions. Focus ONLY on market analysis \u2014 do NOT identify trade setups.
 
-FORMAT REQUIREMENTS — your analysis MUST include these elements:
+FORMAT REQUIREMENTS:
 
 1. NARRATIVE (analysis field): Structure as 4 labeled sections using **Bold:** headers:
    **Higher Timeframe Context:** Daily bias, major index/forex moves with magnitude (pips/points/%)
@@ -109,59 +148,26 @@ FORMAT REQUIREMENTS — your analysis MUST include these elements:
    **Technical Confluence Analysis:** Enumerate confluences per r022, then state confidence breakdown
    Each section should be its own paragraph. Do NOT merge them into a single block of text.
 
-2. SETUPS: Every setup MUST have ALL numeric fields filled with REAL price levels:
-   - entry: actual price (e.g. 25050.00), NOT 0
-   - stop: actual price below/above entry
-   - target: actual price for profit target
-   - RR: calculated as |target - entry| / |entry - stop| (must be > 0)
-   - timeframe: one of "15m", "1H", "4H", "1D"
-   If you cannot determine precise levels for a setup, DO NOT include it. Only include setups
-   where you can specify all five fields. Fewer complete setups beats more incomplete ones.
-   If fewer than 2 confluences align, set confidence below 40 (per r010).
-
-   SETUP CONSTRUCTION — when you have clear directional bias with 2+ confluences, you MUST
-   construct at least one setup using these structural reference points:
-   - ENTRY: nearest support/resistance level, session high/low, or FVG boundary
-   - STOP: beyond the next structural level in the opposite direction, or 1x ATR from entry
-   - TARGET: next liquidity level, psychological round number, or previous swing high/low
-   - If price is extended from entry levels, use a pullback entry at the nearest retracement zone
-
-   High confidence (>60%) with zero setups is contradictory. If you have conviction but can't
-   find precise levels, use the current session's high/low or the previous day's high/low as
-   structural anchors.
-
-3. CONFIDENCE: Calculate using this formula — do NOT invent your own:
+2. CONFIDENCE: Calculate using this formula \u2014 do NOT invent your own:
    - Score three components independently (0-100 each):
      technical confluence (TC), macro alignment (MA), risk/reward clarity (RR)
-   - Overall = (TC × 0.4) + (MA × 0.3) + (RR × 0.3), rounded to nearest integer
-   - Write in your analysis: "Confidence: X% — TC (Y%), MA (Z%), RR (W%)"
-   - Example: TC=70, MA=50, RR=60 → (70×0.4)+(50×0.3)+(60×0.3) = 28+15+18 = 61%
+   - Overall = (TC \u00d7 0.4) + (MA \u00d7 0.3) + (RR \u00d7 0.3), rounded to nearest integer
+   - Write in your analysis: "Confidence: X% \u2014 TC (Y%), MA (Z%), RR (W%)"
+   - Example: TC=70, MA=50, RR=60 \u2192 (70\u00d70.4)+(50\u00d70.3)+(60\u00d70.3) = 28+15+18 = 61%
 
-4. BIAS: "mixed" requires specific justification — conflicting signals across 3+ asset classes
+3. BIAS: "mixed" requires specific justification \u2014 conflicting signals across 3+ asset classes
    or correlation breakdown. Otherwise pick a direction (per r015).
 
-Respond in this JSON structure:
+4. KEY LEVELS: Identify important support/resistance levels across all instruments.
+
+Respond in JSON:
 
 {
   "analysis": "Full narrative with quantified moves, HTF-first structure, and confidence breakdown",
   "bias": {
     "overall": "bullish|bearish|neutral|mixed",
-    "notes": "Brief explanation — if mixed, state which signals conflict"
+    "notes": "Brief explanation \u2014 if mixed, state which signals conflict"
   },
-  "setups": [
-    {
-      "instrument": "Name",
-      "type": "FVG|OB|Liquidity Sweep|MSS|CISD|PDH/PDL|Other",
-      "direction": "bullish|bearish|neutral",
-      "description": "What you see and why — include confluences",
-      "invalidation": "What would invalidate this",
-      "entry": 1234.56,
-      "stop": 1230.00,
-      "target": 1240.00,
-      "RR": 1.5,
-      "timeframe": "15m|1H|4H|1D"
-    }
-  ],
   "keyLevels": [
     {
       "instrument": "Name",
@@ -178,68 +184,131 @@ Do not calculate 73% in your narrative and return 50% in the JSON.
 
 Only respond with the JSON, no other text.`;
 
-  const response = await client.messages.create({
+  console.log("  ORACLE analyzing market structure...");
+
+  const analysisResponse = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: getMaxOracleOutputTokens(), // ORACLE needs room for full JSON analysis with detailed setups
+    max_tokens: getMaxOracleOutputTokens(),
     system: stripSurrogates(systemPrompt),
-    messages: [{ role: "user", content: stripSurrogates(userMessage) }],
+    messages: [{ role: "user", content: stripSurrogates(analysisUserMessage) }],
   });
 
-  const wasTruncated = response.stop_reason === "max_tokens";
-  if (wasTruncated) {
-    console.warn("  ⚠ ORACLE response was truncated (hit max_tokens) — will attempt salvage");
+  const analysisWasTruncated = analysisResponse.stop_reason === "max_tokens";
+  if (analysisWasTruncated) {
+    console.warn("  \u26a0 ORACLE analysis response was truncated (hit max_tokens) \u2014 will attempt salvage");
   }
 
-  const rawText = response.content
+  const analysisRawText = analysisResponse.content
     .filter((b) => b.type === "text")
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  // Extract JSON from response — handle markdown fences, preamble text, trailing text
-  const jsonText = extractJSONFromResponse(rawText);
-
-  let parsed: any;
-
-  try {
-    parsed = JSON.parse(jsonText);
-  } catch {
-    let salvaged = salvageJSON(jsonText);
-
-    // If basic salvage failed (likely truncated mid-string), try harder:
-    // Find positions where complete "value", patterns end and try salvaging from there
-    if (!salvaged) {
-      const cutPoints: number[] = [];
-      const re = /",\s*"/g;
-      let match;
-      while ((match = re.exec(jsonText)) !== null) {
-        cutPoints.push(match.index + 1);
-      }
-      for (let i = cutPoints.length - 1; i >= 0; i--) {
-        salvaged = salvageJSON(jsonText.slice(0, cutPoints[i]));
-        if (salvaged) {
-          console.warn("  ⚠ ORACLE response truncated — salvaged by cutting at field boundary");
-          break;
-        }
-      }
-    }
-
-    if (salvaged) {
-      parsed = salvaged;
-      console.warn("  ⚠ ORACLE returned malformed JSON — salvaged partial response");
-    } else {
-      console.error(`  ✗ ORACLE raw response (first 500 chars): ${rawText.slice(0, 500)}`);
-      throw new Error("ORACLE returned unparseable JSON and salvage failed");
-    }
+  const parsed = parseOracleJSON(analysisRawText, "analysis");
+  if (!parsed) {
+    console.error(`  \u2717 ORACLE analysis raw response (first 500 chars): ${analysisRawText.slice(0, 500)}`);
+    throw new Error("ORACLE returned unparseable JSON and salvage failed");
   }
 
-  // Validate analysis completeness — warn but don't kill the session
+  // ── CALL 2: ORACLE-SETUPS ──────────────────────────────────
+  // Takes analysis results and constructs precise trade setups
+
+  const biasOverall = parsed.bias?.overall ?? "neutral";
+  const biasNotes   = parsed.bias?.notes ?? "";
+  const keyLevelsFormatted = (parsed.keyLevels ?? [])
+    .map((kl: any) => `${kl.instrument}: ${kl.level} (${kl.type}) \u2014 ${kl.notes}`)
+    .join("\n");
+
+  const setupsUserMessage = `You are NEXUS ORACLE's setup construction engine. You have just completed market analysis.
+
+YOUR ANALYSIS:
+${parsed.analysis ?? ""}
+
+YOUR BIAS: ${biasOverall} \u2014 ${biasNotes}
+YOUR CONFIDENCE: ${parsed.confidence ?? 50}%
+
+KEY LEVELS IDENTIFIED:
+${keyLevelsFormatted || "None identified"}
+
+CURRENT PRICES:
+${marketData}
+
+YOUR TASK: Construct trade setups aligned with your ${biasOverall} bias.
+
+RULES:
+- Scan ALL instruments for setups aligned with your bias direction
+- Every setup MUST have: entry, stop, target, RR, timeframe
+- ENTRY: nearest support/resistance, session high/low, or key level
+- STOP: beyond the next structural level, or 1x ATR from entry
+- TARGET: next liquidity level, psychological number, or swing point
+- RR must be > 1.0 \u2014 do not include setups with risk exceeding reward
+- If confidence > 60%, you MUST identify at least 2 setups
+- Include instrument, type, direction, description, and invalidation
+
+Respond with ONLY a JSON array:
+[
+  {
+    "instrument": "Name",
+    "type": "FVG|OB|Liquidity Sweep|MSS|CISD|PDH/PDL|Other",
+    "direction": "bullish|bearish|neutral",
+    "description": "What you see and why",
+    "invalidation": "What would invalidate this",
+    "entry": 1234.56,
+    "stop": 1230.00,
+    "target": 1240.00,
+    "RR": 1.5,
+    "timeframe": "15m|1H|4H|1D"
+  }
+]
+
+Only respond with the JSON array, no other text.`;
+
+  console.log("  ORACLE constructing setups...");
+
+  let rawSetups: any[] = [];
+  try {
+    const setupsResponse = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: getMaxOracleOutputTokens(),
+      system: stripSurrogates(systemPrompt),
+      messages: [{ role: "user", content: stripSurrogates(setupsUserMessage) }],
+    });
+
+    const setupsWasTruncated = setupsResponse.stop_reason === "max_tokens";
+    if (setupsWasTruncated) {
+      console.warn("  \u26a0 ORACLE setups response was truncated (hit max_tokens) \u2014 will attempt salvage");
+    }
+
+    const setupsRawText = setupsResponse.content
+      .filter((b) => b.type === "text")
+      .map((b) => (b as { type: "text"; text: string }).text)
+      .join("");
+
+    const setupsParsed = parseOracleJSON(setupsRawText, "setups");
+    if (!setupsParsed) {
+      console.warn("  \u26a0 ORACLE setup construction failed \u2014 continuing with analysis only");
+      rawSetups = [];
+    } else if (Array.isArray(setupsParsed)) {
+      rawSetups = setupsParsed;
+    } else if (setupsParsed && Array.isArray(setupsParsed.setups)) {
+      rawSetups = setupsParsed.setups;
+    } else {
+      rawSetups = [];
+    }
+  } catch (err) {
+    console.warn(`  \u26a0 ORACLE setup construction failed \u2014 continuing with analysis only: ${err}`);
+    rawSetups = [];
+  }
+
+  // ── Merge & validate both calls ────────────────────────────
+
+  // Validate analysis completeness
+  parsed.setups = rawSetups;
   const validationErrors = validateAnalysisCompleteness(parsed);
   if (validationErrors.length > 0) {
-    console.warn(`  ⚠ Analysis validation warnings: ${validationErrors.join('; ')}`);
+    console.warn(`  \u26a0 Analysis validation warnings: ${validationErrors.join('; ')}`);
   }
 
   // Filter out setups with missing or zero numeric fields
-  const rawSetups = parsed.setups ?? [];
   const validSetups = rawSetups.filter((s: any) => {
     const hasEntry  = typeof s.entry  === "number" && s.entry  !== 0;
     const hasStop   = typeof s.stop   === "number" && s.stop   !== 0;
@@ -247,7 +316,7 @@ Only respond with the JSON, no other text.`;
     const hasRR     = typeof s.RR     === "number" && s.RR     > 0;
     const hasTF     = typeof s.timeframe === "string" && s.timeframe.length > 0;
     if (!hasEntry || !hasStop || !hasTarget || !hasRR || !hasTF) {
-      console.warn(`  ⚠ Dropped incomplete setup: ${s.instrument ?? "unknown"} (entry=${s.entry}, stop=${s.stop}, target=${s.target}, RR=${s.RR}, TF=${s.timeframe})`);
+      console.warn(`  \u26a0 Dropped incomplete setup: ${s.instrument ?? "unknown"} (entry=${s.entry}, stop=${s.stop}, target=${s.target}, RR=${s.RR}, TF=${s.timeframe})`);
       return false;
     }
     return true;
@@ -256,7 +325,7 @@ Only respond with the JSON, no other text.`;
   warnPoorRiskReward(validSetups);
 
   if (validSetups.length < rawSetups.length) {
-    console.warn(`  ⚠ ${rawSetups.length - validSetups.length} setup(s) dropped for missing entry/stop/target/RR/timeframe`);
+    console.warn(`  \u26a0 ${rawSetups.length - validSetups.length} setup(s) dropped for missing entry/stop/target/RR/timeframe`);
   }
 
   // Fix undefined bias notes
@@ -269,7 +338,7 @@ Only respond with the JSON, no other text.`;
   // Enforce: high confidence with zero setups is contradictory
   let finalConfidence = resolveConfidence(parsed.analysis ?? "", parsed.confidence ?? 50);
   if (finalConfidence > 60 && validSetups.length === 0) {
-    console.warn(`  ⚠ ORACLE contradiction: ${finalConfidence}% confidence but 0 setups — forcing confidence to 35%`);
+    console.warn(`  \u26a0 ORACLE contradiction: ${finalConfidence}% confidence but 0 setups \u2014 forcing confidence to 35%`);
     finalConfidence = 35;
   }
 
@@ -290,7 +359,7 @@ Only respond with the JSON, no other text.`;
 export function warnPoorRiskReward(setups: any[]): void {
   for (const s of setups) {
     if (typeof s.RR === "number" && s.RR < 1.0) {
-      console.warn(`  \u26A0 Setup ${s.instrument ?? "unknown"} has poor risk/reward (RR=${s.RR.toFixed(2)}) \u2014 risk exceeds reward`);
+      console.warn(`  \u26a0 Setup ${s.instrument ?? "unknown"} has poor risk/reward (RR=${s.RR.toFixed(2)}) \u2014 risk exceeds reward`);
     }
   }
 }
@@ -323,7 +392,7 @@ function formatRulesForPrompt(rules: AnalysisRules): string {
 // ── Default initial state ──────────────────────────────────
 
 function getDefaultSystemPrompt(): string {
-  return `# NEXUS ORACLE — Market Intelligence System
+  return `# NEXUS ORACLE \u2014 Market Intelligence System
 
 You are NEXUS, a self-evolving market analysis AI. You analyze global financial markets using ICT (Inner Circle Trader) methodology and price action principles.
 
@@ -353,7 +422,7 @@ function getDefaultRules(): AnalysisRules {
     version:           1,
     lastUpdated:       new Date().toISOString(),
     focusInstruments:  ["NAS100", "EUR/USD", "GBP/JPY", "Gold", "BTC"],
-    sessionNotes:      "Initial ruleset — Day 0",
+    sessionNotes:      "Initial ruleset \u2014 Day 0",
     rules: [
       {
         id:                    "r001",
@@ -382,7 +451,7 @@ function getDefaultRules(): AnalysisRules {
       {
         id:                    "r004",
         category:              "liquidity",
-        description:           "Equal highs/lows are liquidity targets — price is drawn to them before reversing",
+        description:           "Equal highs/lows are liquidity targets \u2014 price is drawn to them before reversing",
         weight:                8,
         addedSession:          0,
         lastModifiedSession:   0,
@@ -390,7 +459,7 @@ function getDefaultRules(): AnalysisRules {
       {
         id:                    "r005",
         category:              "correlation",
-        description:           "Check DXY direction when analyzing forex pairs — risk assets (indices, crypto) typically inversely correlate with DXY",
+        description:           "Check DXY direction when analyzing forex pairs \u2014 risk assets (indices, crypto) typically inversely correlate with DXY",
         weight:                8,
         addedSession:          0,
         lastModifiedSession:   0,
@@ -398,7 +467,7 @@ function getDefaultRules(): AnalysisRules {
       {
         id:                    "r006",
         category:              "sessions",
-        description:           "Asian range defines liquidity for London session — London often sweeps Asian highs or lows before the true move",
+        description:           "Asian range defines liquidity for London session \u2014 London often sweeps Asian highs or lows before the true move",
         weight:                7,
         addedSession:          0,
         lastModifiedSession:   0,
@@ -414,7 +483,7 @@ function getDefaultRules(): AnalysisRules {
       {
         id:                    "r008",
         category:              "commodities",
-        description:           "Gold (XAU) often leads as a risk-off signal — rising gold with falling indices = fear in the market",
+        description:           "Gold (XAU) often leads as a risk-off signal \u2014 rising gold with falling indices = fear in the market",
         weight:                7,
         addedSession:          0,
         lastModifiedSession:   0,
@@ -422,7 +491,7 @@ function getDefaultRules(): AnalysisRules {
       {
         id:                    "r009",
         category:              "crypto",
-        description:           "Bitcoin dominance matters — if BTC rises while altcoins fall, sentiment is defensive within crypto",
+        description:           "Bitcoin dominance matters \u2014 if BTC rises while altcoins fall, sentiment is defensive within crypto",
         weight:                6,
         addedSession:          0,
         lastModifiedSession:   0,

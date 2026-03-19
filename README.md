@@ -134,10 +134,10 @@ GitHub Actions (Mon–Fri, 3 sessions per day)
     │       derives signals: yield curve inversion, VIX elevation, credit stress
     │       graceful degradation — missing keys or failed fetches don't break the session
     │
-    ├── 🔭 ORACLE — analyzes market structure (now with macro context)
-    │       bias, FVGs, order blocks, liquidity sweeps, setups
-    │       confidence score 0–100
-    │       truncated JSON salvaged via field-boundary cut points
+    ├── 🔭 ORACLE — two-call architecture
+    │       Call 1: market analysis — bias, confidence, key levels
+    │       Call 2: setup construction — entry/stop/target for all instruments
+    │       confidence score 0–100, truncated JSON salvaged
     │   ✅ ORACLE VALIDATION GATE — blocks bad analysis from entering memory
     │       recycled content detection (>80% similarity = blocked)
     │

@@ -143,12 +143,12 @@ function loadRules(): AnalysisRules {
 
 // ── Repetition Detection ──────────────────────────────────
 
-export function detectRepeatedCritiques(entries: import("./types").JournalEntry[]): string {
-  const recent = entries.slice(-3);
-  if (recent.length < 3) return "";
+export function detectRepeatedCritiques(entries: import("./types").JournalEntry[]): { critique: string; count: number } {
+  const recent = entries.slice(-5);
+  if (recent.length < 3) return { critique: "", count: 0 };
 
   const critiques = recent.map(e => e.reflection?.whatFailed ?? "");
-  if (critiques.some(c => c.length === 0)) return "";
+  if (critiques.some(c => c.length === 0)) return { critique: "", count: 0 };
 
   // Split first critique into sentences
   const sentences = critiques[0].split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
@@ -168,7 +168,20 @@ export function detectRepeatedCritiques(entries: import("./types").JournalEntry[
     if (appearsInAll) repeated.push(sentence);
   }
 
-  return repeated.length > 0 ? repeated[0] : "";
+  if (repeated.length === 0) return { critique: "", count: 0 };
+
+  // Count how many consecutive sessions share this critique
+  const allCritiques = entries.slice(-10).map(e => e.reflection?.whatFailed ?? "");
+  const words = new Set(repeated[0].toLowerCase().split(/\s+/));
+  let count = 0;
+  for (let i = allCritiques.length - 1; i >= 0; i--) {
+    const cWords = new Set(allCritiques[i].toLowerCase().split(/\s+/));
+    let overlap = 0;
+    for (const w of words) { if (cWords.has(w)) overlap++; }
+    if (overlap / words.size > 0.6) count++;
+    else break;
+  }
+  return { critique: repeated[0], count };
 }
 
 // ── Weekday guard ─────────────────────────────────────────
@@ -316,7 +329,7 @@ export async function runAndValidateOracle(
   macroText: string
 ): Promise<OracleAnalysis> {
   console.log(chalk.bold.yellow("  ── PHASE 2: ORACLE ANALYSIS ──\n"));
-  const oracleSpinner = ora({ text: "ORACLE analyzing market structure...", color: "yellow" }).start();
+  const oracleSpinner = ora({ text: "ORACLE analyzing (2 calls: analysis + setups)...", color: "yellow" }).start();
 
   let oracle;
   try {
@@ -395,16 +408,16 @@ export async function runAndValidateAxiom(
 
   // Detect repeated critiques across recent sessions
   const allEntries = loadAllJournalEntries();
-  const repeatedCritique = detectRepeatedCritiques(allEntries);
-  if (repeatedCritique) {
-    prevContext += `\n\n### REPETITION ALERT
-You have repeated this same critique in the last 3 sessions without taking action:
+  const { critique: repeatedCritique, count: repeatCount } = detectRepeatedCritiques(allEntries);
+  if (repeatedCritique && repeatCount >= 3) {
+    prevContext += `\n\n### REPETITION ALERT (${repeatCount} consecutive sessions)
+You have repeated this same critique for ${repeatCount} sessions without taking action:
 "${repeatedCritique}"
 This session you MUST either:
-1. Create a concrete rule or self-task to address this gap
+1. Open a self-task issue to track this gap (not a rule — a self-task)
 2. Propose a code change via codeChanges to fix it
 3. Explicitly state why this gap is unfixable and commit to STOP repeating it
-Reflection without action is not evolution.`;
+System prompt additions about this same topic do NOT count as action.`;
   }
 
   try {
