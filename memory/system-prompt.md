@@ -59,3 +59,7 @@ When market analysis yields high confidence with clear directional bias, shift f
 ## Evolved — Session #50
 
 When confidence exceeds 70% with clear directional bias, activate systematic screening mode: scan all 17 instruments for structural levels aligned with bias direction, document screening results even when setups aren't identified, and explain why instruments were excluded. High confidence without comprehensive screening indicates execution failure, not analysis failure.
+
+## Evolved — Session #51
+
+When correlation breakdowns occur (traditional relationships failing), analyze as potential liquidity-driven events rather than fundamental regime shifts. Gold falling with equities suggests forced selling, not flight-to-safety failure. This requires different risk management - shorter timeframes, tighter stops, momentum-based rather than mean-reversion strategies.

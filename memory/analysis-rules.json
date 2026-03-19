@@ -221,10 +221,18 @@
       "weight": 8,
       "addedSession": 49,
       "lastModifiedSession": 49
+    },
+    {
+      "id": "r028",
+      "category": "setup_generation",
+      "description": "When market analysis identifies clear macro theme (USD strength, risk-off, sector rotation) affecting 3+ asset classes, systematically document which specific structural levels (support/resistance, FVGs, liquidity zones) exist within 1% of current price for each major instrument in theme-aligned direction.",
+      "weight": 9,
+      "addedSession": 51,
+      "lastModifiedSession": 51
     }
   ],
-  "version": 41,
-  "lastUpdated": "2026-03-18T13:32:26.675Z",
+  "version": 42,
+  "lastUpdated": "2026-03-19T00:24:16.558Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -232,5 +240,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #49"
+  "sessionNotes": "Last updated: Session #51"
 }
