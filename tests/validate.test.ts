@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText } from "../src/validate";
+import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence } from "../src/validate";
 import type { OracleAnalysis, JournalEntry } from "../src/types";
 
 // ── calculateTextSimilarity ─────────────────────────────────
@@ -398,5 +398,37 @@ describe("validateAxiomOutput", () => {
       5, [prevEntry]
     );
     expect(result.warnings.some((w) => w.includes("Recycled reflection"))).toBe(true);
+  });
+});
+
+// ── resolveConfidence ────────────────────────────────────────
+
+describe("resolveConfidence", () => {
+  it("returns extracted text value when mismatch >10 points", () => {
+    // Text says 73%, JSON says 50% — diff is 23, so return text value
+    const analysis = "Confidence: 73% — TC (80%), MA (60%), RR (70%)";
+    expect(resolveConfidence(analysis, 50)).toBe(73);
+  });
+
+  it("returns JSON value when no confidence found in text", () => {
+    const analysis = "The market is bullish today with strong momentum";
+    expect(resolveConfidence(analysis, 65)).toBe(65);
+  });
+
+  it("returns JSON value when mismatch is <=10 points", () => {
+    // Text says 65%, JSON says 60% — diff is 5, within threshold
+    const analysis = "Confidence: 65%";
+    expect(resolveConfidence(analysis, 60)).toBe(60);
+  });
+
+  it("returns JSON value when mismatch is exactly 10 points (boundary)", () => {
+    // diff == 10, not > 10, so return JSON
+    const analysis = "Confidence: 70%";
+    expect(resolveConfidence(analysis, 60)).toBe(60);
+  });
+
+  it("returns extracted value when mismatch is 11 points (just over boundary)", () => {
+    const analysis = "Confidence: 71%";
+    expect(resolveConfidence(analysis, 60)).toBe(71);
   });
 });

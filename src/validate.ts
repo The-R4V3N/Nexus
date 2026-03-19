@@ -85,6 +85,16 @@ export function extractConfidenceFromText(text: string): number | null {
   return null;
 }
 
+// ── Confidence resolution ────────────────────────────────
+
+export function resolveConfidence(analysis: string, jsonConfidence: number): number {
+  const textConfidence = extractConfidenceFromText(analysis);
+  if (textConfidence !== null && Math.abs(textConfidence - jsonConfidence) > 10) {
+    return textConfidence;
+  }
+  return jsonConfidence;
+}
+
 // ── ORACLE Validator ──────────────────────────────────────
 
 export function validateOracleOutput(

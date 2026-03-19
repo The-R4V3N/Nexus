@@ -278,12 +278,15 @@ NEXUS runs a multi-layered defensive pipeline that prevents bad data from enteri
 
 **Pre-flight build check** — Every session starts with `tsc --noEmit`. If the codebase doesn't compile, the session aborts before making any API calls.
 
-**ORACLE validation gate** — After ORACLE runs, its output is validated before proceeding:
+**ORACLE validation gate** — After ORACLE runs, its output is validated and enforced before proceeding:
 
 - Analysis must be >200 characters (rejects empty/stub responses)
 - Confidence must be 0–100
-- Bias must be a valid value (BULLISH, BEARISH, MIXED)
+- Confidence consistency — if the narrative calculates a different confidence than the JSON field (>10 point divergence), the narrative value overrides the JSON
+- Confidence-setup enforcement — confidence >60% with zero setups is contradictory and forces confidence down to 35%
+- Bias must be a valid value (BULLISH, BEARISH, MIXED) with non-empty notes
 - Setups are checked for positive numbers and directional sanity (entry between stop and target)
+- Setups with R:R < 1.0 are flagged as poor risk/reward
 - Recycled analysis detection — Jaccard word-overlap >80% against the previous session blocks copy-paste analysis
 
 **AXIOM validation gate** — After AXIOM runs, its output is validated before touching memory:

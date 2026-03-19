@@ -13,6 +13,7 @@ import {
   salvageJSON, stripSurrogates, extractJSONFromResponse, groupBy,
   MEMORY_DIR, SYSTEM_PROMPT_PATH, ANALYSIS_RULES_PATH,
 } from "./utils";
+import { resolveConfidence } from "./validate";
 import type {
   MarketSnapshot,
   OracleAnalysis,
@@ -258,6 +259,20 @@ Only respond with the JSON, no other text.`;
     console.warn(`  ⚠ ${rawSetups.length - validSetups.length} setup(s) dropped for missing entry/stop/target/RR/timeframe`);
   }
 
+  // Fix undefined bias notes
+  if (parsed.bias) {
+    if (!parsed.bias.notes || parsed.bias.notes === "undefined" || parsed.bias.notes.trim() === "") {
+      parsed.bias.notes = `${(parsed.bias.overall ?? "neutral").toUpperCase()} bias identified`;
+    }
+  }
+
+  // Enforce: high confidence with zero setups is contradictory
+  let finalConfidence = resolveConfidence(parsed.analysis ?? "", parsed.confidence ?? 50);
+  if (finalConfidence > 60 && validSetups.length === 0) {
+    console.warn(`  ⚠ ORACLE contradiction: ${finalConfidence}% confidence but 0 setups — forcing confidence to 35%`);
+    finalConfidence = 35;
+  }
+
   return {
     timestamp:       new Date(),
     sessionId,
@@ -266,7 +281,7 @@ Only respond with the JSON, no other text.`;
     setups:          validSetups,
     bias:            parsed.bias           ?? { overall: "neutral", notes: "" },
     keyLevels:       parsed.keyLevels      ?? [],
-    confidence:      parsed.confidence     ?? 50,
+    confidence:      finalConfidence,
   };
 }
 
