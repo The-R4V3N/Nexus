@@ -283,6 +283,7 @@ function buildEntryHTML(entry: JournalEntry, index: number): string {
         <div class="oracle-col">
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">${escapeAndBreak(entry.fullAnalysis.analysis)}</div>
+          ${setupsHTML ? `<div class="setup-legend">FVG=Fair Value Gap &middot; OB=Order Block &middot; MSS=Market Structure Shift &middot; CISD=Change In State of Delivery &middot; PDH/PDL=Previous Day High/Low</div>` : ""}
           <div class="setups-row">${setupsHTML || '<span class="no-setup">NO SETUPS</span>'}</div>
         </div>
 
@@ -757,6 +758,18 @@ function buildPageHTML(
   }
 
   .setup-specs span { display: block; }
+
+  .setup-legend {
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 0.03em;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    line-height: 1.6;
+  }
 
   .no-setup { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; }
 
