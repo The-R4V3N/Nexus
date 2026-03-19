@@ -234,7 +234,7 @@ function buildEntryHTML(entry: JournalEntry, index: number): string {
   const setupsHTML = entry.fullAnalysis.setups.map((s: any) => {
     const hasSpecs = s.entry && s.entry !== 0;
     const specsLine = hasSpecs
-      ? `<div class="setup-specs"><span>E: ${s.entry}</span><span>S: ${s.stop}</span><span>T: ${s.target}</span><span>RR: ${s.RR}</span><span>TF: ${escapeHTML(s.timeframe ?? "")}</span></div>`
+      ? `<div class="setup-specs"><span>Entry: ${s.entry}</span><span>Stoploss: ${s.stop}</span><span>Target: ${s.target}</span><span>Risk/Reward: ${s.RR}</span><span>Timeframe: ${escapeHTML(s.timeframe ?? "")}</span></div>`
       : "";
     return `
     <div class="setup-card ${escapeHTML(s.direction)}">
