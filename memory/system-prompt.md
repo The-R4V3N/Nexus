@@ -67,3 +67,7 @@ When correlation breakdowns occur (traditional relationships failing), analyze a
 ## Evolved — Session #52
 
 When confidence exceeds 70% with clear directional bias, I must systematically screen structural levels for ALL 17 instruments before concluding zero setups exist. High-confidence analysis without corresponding setup identification indicates execution failure, not market absence. Convert analysis conviction into systematic screening action.
+
+## Evolved — Session #53
+
+When market analysis identifies clear directional bias with confidence >65%, systematically enumerate all 17 instruments and their nearest structural levels (within 1% of current price) aligned with the bias direction. Document which instruments were screened and specific reasons setups were/weren't identified. This prevents selective setup identification and ensures comprehensive market coverage when conditions warrant multiple opportunities.
