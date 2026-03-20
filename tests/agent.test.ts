@@ -93,6 +93,41 @@ describe("detectRepeatedCritiques", () => {
   });
 });
 
+// ── isWeekend helper ──────────────────────────────────────────
+
+describe("isWeekend", () => {
+  it("is exported from agent", async () => {
+    const mod = await import("../src/agent");
+    expect(typeof mod.isWeekend).toBe("function");
+  });
+
+  it("returns true on Saturday (day 6)", async () => {
+    const mod = await import("../src/agent");
+    const saturday = new Date("2026-03-21T12:00:00Z"); // Saturday
+    expect(mod.isWeekend(saturday)).toBe(true);
+  });
+
+  it("returns true on Sunday (day 0)", async () => {
+    const mod = await import("../src/agent");
+    const sunday = new Date("2026-03-22T12:00:00Z"); // Sunday
+    expect(mod.isWeekend(sunday)).toBe(true);
+  });
+
+  it("returns false on weekdays", async () => {
+    const mod = await import("../src/agent");
+    const monday = new Date("2026-03-23T12:00:00Z"); // Monday
+    expect(mod.isWeekend(monday)).toBe(false);
+    const friday = new Date("2026-03-27T12:00:00Z"); // Friday
+    expect(mod.isWeekend(friday)).toBe(false);
+  });
+
+  it("uses current date when no argument provided", async () => {
+    const mod = await import("../src/agent");
+    const result = mod.isWeekend();
+    expect(typeof result).toBe("boolean");
+  });
+});
+
 // We test the exported phase functions from agent.ts
 // Note: fetchAllInputData and runAndValidateOracle require network/API calls,
 // so we focus on writeSessionOutput structure and the exports existing.

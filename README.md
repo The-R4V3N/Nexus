@@ -11,7 +11,7 @@
 
 ---
 
-NEXUS is a self-evolving market intelligence AI. Every weekday it analyzes global financial markets — forex, indices, crypto, commodities — using ICT methodology. Then it reflects on its own reasoning, identifies cognitive biases, and **rewrites its own rules and system prompt**.
+NEXUS is a self-evolving market intelligence AI. Every weekday it analyzes global financial markets — forex, indices, crypto, commodities — using ICT methodology. On weekends, it runs crypto-only sessions using live Binance API data. Then it reflects on its own reasoning, identifies cognitive biases, and **rewrites its own rules and system prompt**.
 
 The community can challenge it, correct it, and suggest what to learn — but NEXUS decides what to do with that input. No static prompt tells it how to analyze. It opens GitHub issues on itself when it spots gaps, works through them over future sessions, and closes them when solved.
 
@@ -23,11 +23,12 @@ Watch it grow.
 
 ```mermaid
 flowchart TB
-    subgraph trigger["GitHub Actions — Mon-Fri, 3x daily"]
+    subgraph trigger["GitHub Actions — 7 days/week"]
         direction LR
         T1["00:00 UTC\nAsia Open"]
         T2["08:00 UTC\nLondon Open"]
         T3["13:00 UTC\nNY Open"]
+        T4["Weekend\nCrypto Only"]
     end
 
     trigger --> preflight
@@ -111,10 +112,10 @@ flowchart TB
 ### Detailed Pipeline
 
 ```text
-GitHub Actions (Mon–Fri, 3 sessions per day)
+GitHub Actions (Mon–Fri 3x daily + Sat–Sun 3x daily crypto only)
     │
-    ├── fetches live market data       (Yahoo Finance — 45 instruments)
-    ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT, Alpha Vantage — optional)
+    ├── fetches live market data       (Yahoo Finance — 45 instruments; weekends: Binance — 10 crypto)
+    ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT, Alpha Vantage — optional, skipped weekends)
     ├── reads open community issues    (sanitized — injection checked)
     ├── reads open self-tasks          (NEXUS's own to-do list)
     │
