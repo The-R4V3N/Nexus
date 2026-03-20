@@ -425,6 +425,16 @@ System prompt additions about this same topic do NOT count as action.`;
     const setupOutcomes  = buildSetupOutcomes(snapshots);
     axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, selfTaskNumbers, noChangeStreak, setupOutcomes);
     reflection = axiomResult.reflection;
+
+    // Block system prompt additions when AXIOM is ruminating without real action
+    if (repeatedCritique && repeatCount >= 3) {
+      const hasRealAction = reflection.ruleUpdates.length > 0 || axiomResult.forgeRequests.length > 0;
+      if (!hasRealAction && reflection.newSystemPromptSections) {
+        console.warn(`  ⚠ AXIOM rumination block: system prompt addition stripped (${repeatCount} sessions of same critique without rule/code action)`);
+        reflection.newSystemPromptSections = "";
+      }
+    }
+
     axiomSpinner.succeed(
       chalk.green(`Reflection complete — ${reflection.ruleUpdates.length} rule updates, mind evolved`)
     );
