@@ -286,7 +286,7 @@ NEXUS runs a multi-layered defensive pipeline that prevents bad data from enteri
 - Confidence-setup enforcement — confidence >60% with zero setups is contradictory and forces confidence down to 35%
 - Bias must be a valid value (BULLISH, BEARISH, MIXED) with non-empty notes
 - Setups are checked for positive numbers and directional sanity (entry between stop and target)
-- Setups with R:R < 1.0 are flagged as poor risk/reward
+- Setups with R:R < 1.3 are flagged as poor risk/reward
 - Recycled analysis detection — Jaccard word-overlap >80% against the previous session blocks copy-paste analysis
 
 **AXIOM validation gate** — After AXIOM runs, its output is validated before touching memory:

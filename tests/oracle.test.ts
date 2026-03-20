@@ -354,24 +354,24 @@ describe("warnPoorRiskReward", () => {
     warnSpy.mockRestore();
   });
 
-  it("logs warning for setup with RR < 1.0", async () => {
+  it("logs warning for setup with RR < 1.3", async () => {
     const { warnPoorRiskReward } = await import("../src/oracle");
     const setups = [
-      { instrument: "EUR/USD", RR: 0.5, entry: 1.08, stop: 1.07, target: 1.085, timeframe: "4H" },
+      { instrument: "EUR/USD", RR: 1.0, entry: 1.08, stop: 1.07, target: 1.09, timeframe: "4H" },
     ];
     warnPoorRiskReward(setups);
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining("poor risk/reward")
     );
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("RR=0.50")
+      expect.stringContaining("RR=1.00")
     );
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining("EUR/USD")
     );
   });
 
-  it("does not log warning for setup with RR >= 1.0", async () => {
+  it("does not log warning for setup with RR >= 1.3", async () => {
     const { warnPoorRiskReward } = await import("../src/oracle");
     const setups = [
       { instrument: "EUR/USD", RR: 1.5, entry: 1.08, stop: 1.07, target: 1.095, timeframe: "4H" },
@@ -380,10 +380,10 @@ describe("warnPoorRiskReward", () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  it("does not log warning when RR is exactly 1.0", async () => {
+  it("does not log warning when RR is exactly 1.3", async () => {
     const { warnPoorRiskReward } = await import("../src/oracle");
     const setups = [
-      { instrument: "GBP/USD", RR: 1.0, entry: 1.25, stop: 1.24, target: 1.26, timeframe: "1H" },
+      { instrument: "GBP/USD", RR: 1.3, entry: 1.25, stop: 1.24, target: 1.263, timeframe: "1H" },
     ];
     warnPoorRiskReward(setups);
     expect(warnSpy).not.toHaveBeenCalled();

@@ -240,7 +240,7 @@ RULES:
 - ENTRY: nearest support/resistance, session high/low, or key level
 - STOP: beyond the next structural level, or 1x ATR from entry
 - TARGET: next liquidity level, psychological number, or swing point
-- RR must be > 1.0 \u2014 do not include setups with risk exceeding reward
+- RR must be > 1.3 \u2014 do not include setups with risk exceeding reward
 - If confidence > 60%, you MUST identify at least 2 setups
 - Include instrument, type, direction, description, and invalidation
 
@@ -313,7 +313,7 @@ Only respond with the JSON array, no other text.`;
     const hasEntry  = typeof s.entry  === "number" && s.entry  !== 0;
     const hasStop   = typeof s.stop   === "number" && s.stop   !== 0;
     const hasTarget = typeof s.target === "number" && s.target !== 0;
-    const hasRR     = typeof s.RR     === "number" && s.RR     > 0;
+    const hasRR     = typeof s.RR     === "number" && s.RR     >= 1.3;
     const hasTF     = typeof s.timeframe === "string" && s.timeframe.length > 0;
     if (!hasEntry || !hasStop || !hasTarget || !hasRR || !hasTF) {
       console.warn(`  \u26a0 Dropped incomplete setup: ${s.instrument ?? "unknown"} (entry=${s.entry}, stop=${s.stop}, target=${s.target}, RR=${s.RR}, TF=${s.timeframe})`);
@@ -358,8 +358,8 @@ Only respond with the JSON array, no other text.`;
 
 export function warnPoorRiskReward(setups: any[]): void {
   for (const s of setups) {
-    if (typeof s.RR === "number" && s.RR < 1.0) {
-      console.warn(`  \u26a0 Setup ${s.instrument ?? "unknown"} has poor risk/reward (RR=${s.RR.toFixed(2)}) \u2014 risk exceeds reward`);
+    if (typeof s.RR === "number" && s.RR < 1.3) {
+      console.warn(`  ⚠ Setup ${s.instrument ?? "unknown"} has poor risk/reward (RR=${s.RR.toFixed(2)}) — minimum 1.3 required`);
     }
   }
 }
