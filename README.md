@@ -300,6 +300,8 @@ NEXUS runs a multi-layered defensive pipeline that prevents bad data from enteri
 
 **Stagnation breaker** — Agent tracks consecutive sessions with zero rule changes. After 3+ sessions of no evolution, AXIOM receives a mandatory alert demanding at least one concrete change with specific evidence.
 
+**Anti-rumination enforcement** — Repeated critiques are detected across sessions via word-overlap analysis. After 3+ sessions of the same critique without a rule change, self-task, or code change, AXIOM's system prompt additions are blocked. This prevents AXIOM from using prompt evolution as a loophole to avoid taking concrete action on identified gaps.
+
 **Setup outcome tracking** — Previous session setups are compared against current market prices to determine if they were STOPPED OUT, hit TARGET, or remain OPEN. These outcomes are fed to AXIOM to ground its reflection in real results.
 
 **Failure feedback loop** — Crashes and validation failures are logged to `memory/failures.json` (capped at 20 entries). The last 5 failures are fed into AXIOM's context so NEXUS learns from its own errors.

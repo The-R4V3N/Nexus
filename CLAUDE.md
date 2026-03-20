@@ -74,6 +74,7 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 - **Session-level rollback** — unhandled crashes revert all uncommitted changes via `git checkout -- .`
 - **Failure feedback loop** — `memory/failures.json` stores recent failures (capped at 20) and feeds them back into AXIOM context so NEXUS learns from its own crashes
 - **Stagnation detection** — consecutive no-change streaks are counted from session history; 3+ triggers a mandatory evolution alert in AXIOM's prompt
+- **Anti-rumination enforcement** — repeated critiques detected via word-overlap; after 3+ sessions of the same critique without rule/self-task/code action, system prompt additions are blocked to force concrete action
 - **Setup outcome tracking** — previous session setups are compared against current market prices to report STOPPED OUT / TARGET HIT / OPEN outcomes
 - **Conditional version bumps** — `analysis-rules.json` version and lastUpdated only change when rules actually change, preventing false evolution signals
 - **GitHub Actions retry** — session step retries once with a 2-minute backoff on failure
