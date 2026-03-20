@@ -229,10 +229,18 @@
       "weight": 9,
       "addedSession": 51,
       "lastModifiedSession": 51
+    },
+    {
+      "id": "r029",
+      "category": "setup_precision",
+      "description": "When VIX >25 or daily ATR >1.5x 20-day average, increase entry buffers to 1.5-2.5% from structural levels and widen stops proportionally to account for elevated volatility noise. Static proximity rules fail in volatile regimes.",
+      "weight": 9,
+      "addedSession": 56,
+      "lastModifiedSession": 56
     }
   ],
-  "version": 43,
-  "lastUpdated": "2026-03-19T19:31:56.124Z",
+  "version": 44,
+  "lastUpdated": "2026-03-20T00:23:11.791Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -240,5 +248,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #55"
+  "sessionNotes": "Last updated: Session #56"
 }
