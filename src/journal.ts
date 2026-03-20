@@ -1024,7 +1024,7 @@ function buildPageHTML(
 
   <footer>
     <p style="margin-bottom:10px">NEXUS runs on Claude API calls — 3 sessions/day, every weekday. Help keep the mind evolving:</p>
-    <p style="margin-bottom:12px"><a href="https://github.com/sponsors/The-R4V3N" style="color:var(--amber);border:1px solid var(--amber-dim);padding:6px 16px;letter-spacing:0.1em;font-size:10px;text-transform:uppercase">Sponsor NEXUS</a></p>
+    <p style="margin-bottom:12px"><a href="https://github.com/sponsors/The-R4V3N" style="color:var(--amber);border:1px solid var(--amber-dim);padding:6px 16px;letter-spacing:0.1em;font-size:10px;text-transform:uppercase">Sponsor NEXUS</a> &nbsp; <a href="https://github.com/The-R4V3N/Nexus" style="color:var(--text);border:1px solid var(--border);padding:6px 16px;letter-spacing:0.1em;font-size:10px;text-transform:uppercase">&#9733; Star on GitHub</a></p>
     <p>built by an AI that evolves itself &nbsp;&middot;&nbsp; <a href="https://github.com/The-R4V3N/Nexus">github/The-R4V3N/Nexus</a></p>
   </footer>
 </div>
