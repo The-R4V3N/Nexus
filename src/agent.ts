@@ -224,6 +224,7 @@ interface InputData {
   issuesText: string;
   selfTasksText: string;
   selfTaskNumbers: number[];
+  issueNumbers: number[];
   isWeekend: boolean;
 }
 
@@ -254,8 +255,10 @@ export async function fetchAllInputData(): Promise<InputData> {
 
     // ── Handle issues (optional) ──
     let issuesText = "";
+    let issueNumbers: number[] = [];
     if (issuesResult.status === "fulfilled") {
       const issues = issuesResult.value;
+      issueNumbers = issues.map((i) => i.number);
       if (issues.length > 0) {
         issuesText = formatIssuesForPrompt(issues);
       }
@@ -308,7 +311,7 @@ export async function fetchAllInputData(): Promise<InputData> {
       console.log(chalk.dim("  Open self-tasks: unavailable\n"));
     }
 
-    return { snapshots, macroText: "", issuesText, selfTasksText, selfTaskNumbers, isWeekend: true };
+    return { snapshots, macroText: "", issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: true };
   }
 
   // ── Weekday: full data fetch ──
@@ -342,8 +345,10 @@ export async function fetchAllInputData(): Promise<InputData> {
 
   // ── Handle issues (optional) ──
   let issuesText = "";
+  let issueNumbers: number[] = [];
   if (issuesResult.status === "fulfilled") {
     const issues = issuesResult.value;
+    issueNumbers = issues.map((i) => i.number);
     if (issues.length > 0) {
       issuesText = formatIssuesForPrompt(issues);
     }
@@ -425,7 +430,7 @@ export async function fetchAllInputData(): Promise<InputData> {
     console.log(chalk.dim("  Open self-tasks: unavailable\n"));
   }
 
-  return { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, isWeekend: false };
+  return { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: false };
 }
 
 export async function runAndValidateOracle(
@@ -496,7 +501,8 @@ export async function runAndValidateAxiom(
   snapshots: MarketSnapshot[],
   issuesText: string,
   selfTasksText: string,
-  selfTaskNumbers: number[]
+  selfTaskNumbers: number[],
+  issueNumbers: number[] = []
 ): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
   console.log(chalk.bold.yellow("  ── PHASE 3: AXIOM REFLECTION ──\n"));
   const axiomSpinner = ora({ text: "AXIOM reflecting on cognitive performance...", color: "magenta" }).start();
@@ -538,7 +544,8 @@ System prompt additions about this same topic do NOT count as action.`;
   try {
     const noChangeStreak = getNoChangeStreak();
     const setupOutcomes  = buildSetupOutcomes(snapshots);
-    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, selfTaskNumbers, noChangeStreak, setupOutcomes);
+    const closeableNumbers = [...selfTaskNumbers, ...issueNumbers];
+    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, closeableNumbers, noChangeStreak, setupOutcomes);
     reflection = axiomResult.reflection;
 
     // Block system prompt additions when AXIOM is ruminating without real action
@@ -726,7 +733,7 @@ export async function runSession(force = false): Promise<void> {
   }
 
   currentPhase = "oracle";
-  const { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, isWeekend: weekendMode } = await fetchAllInputData();
+  const { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: weekendMode } = await fetchAllInputData();
 
   // On weekends, inject last weekday session context so ORACLE knows where traditional markets left off
   const oracleContext = weekendMode ? buildWeekdayBridge() : macroText;
@@ -735,7 +742,7 @@ export async function runSession(force = false): Promise<void> {
   const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, oracleContext, weekendMode);
 
   currentPhase = "axiom";
-  const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers);
+  const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers, issueNumbers);
 
   currentPhase = "forge";
   await runAndValidateForge(client, forgeRequests, sessionNumber);

@@ -198,6 +198,11 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
       "before": "old text",
       "after": "improved text",
       "reason": "why this change makes the analysis better"
+    },
+    {
+      "ruleId": "r099",
+      "type": "remove",
+      "reason": "why this rule is no longer earning its place (low hit rate, redundant, or never triggered)"
     }
   ],
   "newRules": [
@@ -234,12 +239,20 @@ Reflect deeply on this session. Then respond with ONLY a JSON object:
   ]
 }
 
-SELF-TASK POLICY — CRITICAL:
-- CLOSING existing self-tasks is ALWAYS higher priority than opening new ones.
-- You can close a self-task in THREE ways:
+RULE PRUNING POLICY:
+- You can REMOVE rules using ruleUpdates with "type": "remove". Foundational rules (r001-r010) cannot be removed.
+- Remove a rule when: its hit rate is poor, it overlaps with another rule, it has never triggered in 10+ sessions, or analytics data shows it adds noise rather than signal.
+- Pruning weak rules is as valuable as adding new ones. A lean, high-signal ruleset outperforms a bloated one.
+- When community input or analytics flags rule bloat, act on it — do not just philosophize about pruning.
+
+ISSUE RESOLUTION POLICY — CRITICAL:
+- CLOSING existing issues (self-tasks AND community input) is ALWAYS higher priority than opening new ones.
+- resolvedSelfTasks can close ANY open issue — both nexus-self-task and nexus-input (community) issues.
+- You can close an issue in THREE ways:
   1. codeChanges — if it needs a code fix
   2. resolvedSelfTasks — if the gap is already addressed by an existing rule, prompt improvement, or this session's analysis
   3. Rule update — if you modified/added a rule that covers the gap
+- If a community issue challenges you to take action (e.g. prune rules, improve methodology), take the action AND close the issue via resolvedSelfTasks with a comment explaining what you did.
 - If an open self-task describes an analytical gap and a corresponding rule already exists (e.g. "build confidence template" → r014 exists), CLOSE IT via resolvedSelfTasks with a comment explaining which rule addresses it.
 - Before opening ANY new self-task, check if a similar one already exists in your open self-tasks list.
 - Only open a new self-task if it covers a genuinely NEW gap not already tracked.
