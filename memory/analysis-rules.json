@@ -237,26 +237,10 @@
       "weight": 9,
       "addedSession": 56,
       "lastModifiedSession": 56
-    },
-    {
-      "id": "r030",
-      "category": "weekend_crypto",
-      "description": "During weekend crypto sessions, quantify intra-crypto divergence: if BTC/ETH combined decline <1% while 3+ smaller caps decline >2%, classify as crypto flight-to-quality. Document divergence magnitude and compare to previous weekend sessions for trend analysis.",
-      "weight": 7,
-      "addedSession": 60,
-      "lastModifiedSession": 60
-    },
-    {
-      "id": "r031",
-      "category": "weekend_analysis",
-      "description": "Weekend crypto defensive positioning (flight-to-quality from altcoins to BTC/ETH exceeding 100bp differential) often signals broader risk management ahead of traditional market opens. Document weekend positioning themes and flag potential Monday implications for forex majors, indices correlation with crypto majors.",
-      "weight": 7,
-      "addedSession": 62,
-      "lastModifiedSession": 62
     }
   ],
-  "version": 47,
-  "lastUpdated": "2026-03-21T08:46:18.690Z",
+  "version": 48,
+  "lastUpdated": "2026-03-21T21:14:51.421Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -264,5 +248,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #62"
+  "sessionNotes": "Last updated: Session #66"
 }
