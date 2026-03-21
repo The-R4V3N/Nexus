@@ -118,7 +118,8 @@ export async function runOracleAnalysis(
   sessionId: string,
   sessionNumber: number,
   communityIssues: string = "",
-  macroContext: string = ""
+  macroContext: string = "",
+  isWeekend: boolean = false
 ): Promise<OracleAnalysis> {
   const systemPrompt  = loadSystemPrompt();
   const rules         = loadAnalysisRules();
@@ -129,8 +130,15 @@ export async function runOracleAnalysis(
   // ── CALL 1: ORACLE-ANALYSIS ──────────────────────────────
   // Focuses purely on market analysis — no setup construction
 
+  const weekendContext = isWeekend ? `WEEKEND SESSION — CRYPTO ONLY
+Traditional markets (forex, indices, commodities) are closed. Only crypto data is live.
+Focus your analysis exclusively on crypto instruments. Do not reference forex, indices,
+or commodities as they show Friday's closing prices, not current market conditions.
+
+` : "";
+
   const analysisUserMessage = `
-${marketData}
+${weekendContext}${marketData}
 
 ${macroContext ? macroContext + "\n\n" : ""}${rulesText}
 
@@ -218,7 +226,10 @@ Only respond with the JSON, no other text.`;
     .map((kl: any) => `${kl.instrument}: ${kl.level} (${kl.type}) \u2014 ${kl.notes}`)
     .join("\n");
 
+  const weekendSetupNote = isWeekend ? `\nThis is a WEEKEND session — only construct setups for crypto instruments.\n` : "";
+
   const setupsUserMessage = `You are NEXUS ORACLE's setup construction engine. You have just completed market analysis.
+${weekendSetupNote}
 
 YOUR ANALYSIS:
 ${parsed.analysis ?? ""}
@@ -243,6 +254,7 @@ RULES:
 - RR must be > 1.3 \u2014 do not include setups with risk exceeding reward
 - If confidence > 60%, you MUST identify at least 2 setups
 - Include instrument, type, direction, description, and invalidation
+- TYPE must be a specific ICT pattern: FVG, OB, Liquidity Sweep, MSS, CISD, or PDH/PDL. These apply to ALL markets including crypto. "Other" is only acceptable if the setup genuinely does not fit any ICT pattern — do not use "Other" as a default.
 
 Respond with ONLY a JSON array:
 [

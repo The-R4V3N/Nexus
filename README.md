@@ -11,7 +11,7 @@
 
 ---
 
-NEXUS is a self-evolving market intelligence AI. Every weekday it analyzes global financial markets — forex, indices, crypto, commodities — using ICT methodology. Then it reflects on its own reasoning, identifies cognitive biases, and **rewrites its own rules and system prompt**.
+NEXUS is a self-evolving market intelligence AI. Every weekday it analyzes global financial markets — forex, indices, crypto, commodities — using ICT methodology. On weekends, it runs crypto-only sessions using live Binance API data. Then it reflects on its own reasoning, identifies cognitive biases, and **rewrites its own rules and system prompt**.
 
 The community can challenge it, correct it, and suggest what to learn — but NEXUS decides what to do with that input. No static prompt tells it how to analyze. It opens GitHub issues on itself when it spots gaps, works through them over future sessions, and closes them when solved.
 
@@ -23,11 +23,12 @@ Watch it grow.
 
 ```mermaid
 flowchart TB
-    subgraph trigger["GitHub Actions — Mon-Fri, 3x daily"]
+    subgraph trigger["GitHub Actions — 7 days/week"]
         direction LR
         T1["00:00 UTC\nAsia Open"]
         T2["08:00 UTC\nLondon Open"]
         T3["13:00 UTC\nNY Open"]
+        T4["Weekend\nCrypto Only"]
     end
 
     trigger --> preflight
@@ -111,10 +112,10 @@ flowchart TB
 ### Detailed Pipeline
 
 ```text
-GitHub Actions (Mon–Fri, 3 sessions per day)
+GitHub Actions (Mon–Fri 3x daily + Sat–Sun 3x daily crypto only)
     │
-    ├── fetches live market data       (Yahoo Finance — 45 instruments)
-    ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT, Alpha Vantage — optional)
+    ├── fetches live market data       (Yahoo Finance — 45 instruments; weekends: Binance — 10 crypto)
+    ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT, Alpha Vantage — optional, skipped weekends)
     ├── reads open community issues    (sanitized — injection checked)
     ├── reads open self-tasks          (NEXUS's own to-do list)
     │
@@ -374,6 +375,9 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 
 | # | Date | Bias | Setups | Confidence | Rule Δ |
 | - | ---- | ---- | ------ | ---------- | ------ |
+| 62 | 2026-03-21 | mixed | 4 | 61% | 31 rules |
+| 61 | 2026-03-21 | bearish | 3 | 58% | 30 rules |
+| 60 | 2026-03-21 | neutral | 2 | 66% | 30 rules |
 | 59 | 2026-03-20 | mixed | 4 | 45% | 29 rules |
 | 58 | 2026-03-20 | mixed | 5 | 51% | 29 rules |
 | 57 | 2026-03-20 | mixed | 6 | 62% | 29 rules |
@@ -381,9 +385,6 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 | 55 | 2026-03-19 | bearish | 6 | 61% | 28 rules |
 | 54 | 2026-03-19 | bearish | 3 | 72% | 28 rules |
 | 53 | 2026-03-19 | bearish | 3 | 68% | 28 rules |
-| 52 | 2026-03-19 | bearish | 0 | 50% | 28 rules |
-| 51 | 2026-03-19 | bearish | 0 | 50% | 28 rules |
-| 50 | 2026-03-18 | bearish | 3 | 71% | 27 rules |
 
 *This table will be updated automatically each session.*
 

@@ -11,6 +11,7 @@ import * as path  from "path";
 import { execSync } from "child_process";
 import { format } from "date-fns";
 import { fetchAllMarkets, printMarketsTable }                     from "./markets";
+import { fetchCryptoMarkets }                                     from "./crypto-markets";
 import { fetchMacroSnapshot, formatMacroForPrompt, printMacroSummary } from "./macro";
 import { fetchCommunityIssues, formatIssuesForPrompt }             from "./issues";
 import { fetchOpenSelfTasks, formatSelfTasksForPrompt, setCachedOpenTasks } from "./self-tasks";
@@ -184,12 +185,11 @@ export function detectRepeatedCritiques(entries: import("./types").JournalEntry[
   return { critique: repeated[0], count };
 }
 
-// ── Weekday guard ─────────────────────────────────────────
+// ── Weekend detection ─────────────────────────────────────
 
-function isTradingDay(force = false): boolean {
-  if (force) return true;
-  const day = new Date().getDay(); // 0 = Sunday, 6 = Saturday
-  return day >= 1 && day <= 5;
+export function isWeekend(date: Date = new Date()): boolean {
+  const day = date.getDay();
+  return day === 0 || day === 6;
 }
 
 // ── Phase functions ───────────────────────────────────────
@@ -200,10 +200,94 @@ interface InputData {
   issuesText: string;
   selfTasksText: string;
   selfTaskNumbers: number[];
+  isWeekend: boolean;
 }
 
 export async function fetchAllInputData(): Promise<InputData> {
+  const weekend = isWeekend();
+
   console.log(chalk.bold.yellow("  ── PHASE 1: DATA FETCH ──\n"));
+
+  if (weekend) {
+    // Weekend: crypto only from Binance, skip macro
+    const phase1Spinner = ora({ text: "Fetching weekend crypto data from Binance...", color: "yellow" }).start();
+
+    const [cryptoResult, issuesResult, selfTasksResult] = await Promise.allSettled([
+      fetchCryptoMarkets(),
+      fetchCommunityIssues(),
+      fetchOpenSelfTasks(),
+    ]);
+
+    // ── Handle crypto (required) ──
+    let snapshots: MarketSnapshot[];
+    if (cryptoResult.status === "fulfilled") {
+      snapshots = cryptoResult.value;
+      phase1Spinner.succeed(chalk.green(`Weekend: Fetched ${snapshots.length} crypto instruments from Binance`));
+    } else {
+      phase1Spinner.fail("Failed to fetch crypto data");
+      throw cryptoResult.reason;
+    }
+
+    // ── Handle issues (optional) ──
+    let issuesText = "";
+    if (issuesResult.status === "fulfilled") {
+      const issues = issuesResult.value;
+      if (issues.length > 0) {
+        issuesText = formatIssuesForPrompt(issues);
+      }
+    }
+
+    // ── Handle self-tasks (optional) ──
+    let selfTasksText    = "";
+    let selfTaskNumbers: number[] = [];
+    if (selfTasksResult.status === "fulfilled") {
+      const selfTasks = selfTasksResult.value;
+      setCachedOpenTasks(selfTasks);
+      selfTaskNumbers = selfTasks.map((t) => t.number);
+      if (selfTasks.length > 0) {
+        selfTasksText = formatSelfTasksForPrompt(selfTasks);
+      }
+    }
+
+    printMarketsTable(snapshots);
+
+    // Print issues details
+    if (issuesResult.status === "fulfilled") {
+      const issues = issuesResult.value;
+      if (issues.length > 0) {
+        console.log(chalk.dim(`  Community issues: `) + chalk.cyan(`${issues.length} open`));
+        for (const issue of issues) {
+          const emoji = issue.label === "feedback" ? "🔴" : issue.label === "challenge" ? "🟡" : "🟢";
+          console.log(chalk.dim(`    ${emoji} #${issue.number} ${issue.title}`));
+        }
+        console.log("");
+      } else {
+        console.log(chalk.dim("  Community issues: none open\n"));
+      }
+    } else {
+      console.log(chalk.dim("  Community issues: unavailable\n"));
+    }
+
+    // Print self-tasks details
+    if (selfTasksResult.status === "fulfilled") {
+      const selfTasks = selfTasksResult.value;
+      if (selfTasks.length > 0) {
+        console.log(chalk.dim(`  Open self-tasks: `) + chalk.yellow(`${selfTasks.length} pending`));
+        for (const t of selfTasks) {
+          console.log(chalk.dim(`    ✦ #${t.number} [${t.category}] ${t.title}`));
+        }
+        console.log("");
+      } else {
+        console.log(chalk.dim("  Open self-tasks: none\n"));
+      }
+    } else {
+      console.log(chalk.dim("  Open self-tasks: unavailable\n"));
+    }
+
+    return { snapshots, macroText: "", issuesText, selfTasksText, selfTaskNumbers, isWeekend: true };
+  }
+
+  // ── Weekday: full data fetch ──
   const phase1Spinner = ora({ text: "Fetching market data, macro context, issues...", color: "yellow" }).start();
 
   const [marketsResult, macroResult, issuesResult, selfTasksResult] = await Promise.allSettled([
@@ -317,7 +401,7 @@ export async function fetchAllInputData(): Promise<InputData> {
     console.log(chalk.dim("  Open self-tasks: unavailable\n"));
   }
 
-  return { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers };
+  return { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, isWeekend: false };
 }
 
 export async function runAndValidateOracle(
@@ -326,14 +410,15 @@ export async function runAndValidateOracle(
   sessionId: string,
   sessionNumber: number,
   issuesText: string,
-  macroText: string
+  macroText: string,
+  weekendMode: boolean = false
 ): Promise<OracleAnalysis> {
   console.log(chalk.bold.yellow("  ── PHASE 2: ORACLE ANALYSIS ──\n"));
   const oracleSpinner = ora({ text: "ORACLE analyzing (2 calls: analysis + setups)...", color: "yellow" }).start();
 
   let oracle;
   try {
-    oracle = await runOracleAnalysis(client, snapshots, sessionId, sessionNumber, issuesText, macroText);
+    oracle = await runOracleAnalysis(client, snapshots, sessionId, sessionNumber, issuesText, macroText, weekendMode);
     oracleSpinner.succeed(
       chalk.green(`Analysis complete — ${oracle.bias.overall.toUpperCase()} bias, ${oracle.setups.length} setups, ${oracle.confidence}% confidence`)
     );
@@ -532,13 +617,14 @@ export function writeSessionOutput(
   sessionNumber: number,
   oracle: OracleAnalysis,
   reflection: AxiomReflection,
-  snapshots: MarketSnapshot[]
+  snapshots: MarketSnapshot[],
+  weekendMode: boolean = false
 ): void {
   console.log(chalk.bold.yellow("  ── PHASE 4: JOURNAL ──\n"));
   const journalSpinner = ora({ text: "Writing journal entry...", color: "cyan" }).start();
 
   const rules   = loadRules();
-  const entry   = buildJournalEntry(sessionNumber, oracle, reflection, rules);
+  const entry   = buildJournalEntry(sessionNumber, oracle, reflection, rules, weekendMode);
   const mdPath  = writeJournalMarkdown(entry);
   saveJournalEntry(entry);
 
@@ -555,18 +641,14 @@ export function writeSessionOutput(
 
 export async function runSession(force = false): Promise<void> {
   // Header
+  const weekend = isWeekend();
   console.log(chalk.bold.white("\n╔══════════════════════════════════════════╗"));
-  console.log(chalk.bold.white("║  ") + chalk.bold.yellow("NEXUS") + chalk.dim("  —  The Market Mind That Rewrites Itself") + chalk.bold.white("  ║"));
-  console.log(chalk.bold.white("╚══════════════════════════════════════════╝\n"));
-
-  // Weekend guard
-  if (!isTradingDay(force)) {
-    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    console.log(chalk.yellow(`  ⚠  Today is ${days[new Date().getDay()]} — markets are closed.`));
-    console.log(chalk.dim("  NEXUS only runs Monday–Friday."));
-    console.log(chalk.dim("  To run anyway: npm run run:session -- --force\n"));
-    return;
+  if (weekend) {
+    console.log(chalk.bold.white("║  ") + chalk.bold.yellow("NEXUS") + chalk.dim("  —  WEEKEND SESSION — Crypto Only") + chalk.bold.white("      ║"));
+  } else {
+    console.log(chalk.bold.white("║  ") + chalk.bold.yellow("NEXUS") + chalk.dim("  —  The Market Mind That Rewrites Itself") + chalk.bold.white("  ║"));
   }
+  console.log(chalk.bold.white("╚══════════════════════════════════════════╝\n"));
 
   const startTime     = new Date();
   const sessionId     = generateSessionId();
@@ -614,10 +696,10 @@ export async function runSession(force = false): Promise<void> {
   }
 
   currentPhase = "oracle";
-  const { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers } = await fetchAllInputData();
+  const { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, isWeekend: weekendMode } = await fetchAllInputData();
 
   currentPhase = "oracle";
-  const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, macroText);
+  const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, macroText, weekendMode);
 
   currentPhase = "axiom";
   const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers);
@@ -626,7 +708,7 @@ export async function runSession(force = false): Promise<void> {
   await runAndValidateForge(client, forgeRequests, sessionNumber);
 
   currentPhase = "journal";
-  writeSessionOutput(sessionNumber, oracle, reflection, snapshots);
+  writeSessionOutput(sessionNumber, oracle, reflection, snapshots, weekendMode);
 
   // ── Summary ──
   const rules = loadRules();

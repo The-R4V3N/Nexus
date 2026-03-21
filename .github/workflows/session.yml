@@ -2,10 +2,14 @@ name: NEXUS Session
 
 on:
   schedule:
-    # 3 sessions per day, Mon–Fri — the three sessions that matter most
+    # Weekday sessions (Mon-Fri)
     - cron: '0 0 * * 1-5'   # 00:00 UTC (01:00 CET) — Asia session open
     - cron: '0 8 * * 1-5'   # 08:00 UTC (09:00 CET) — London open
     - cron: '0 13 * * 1-5'  # 13:00 UTC (14:00 CET) — NY open
+    # Weekend sessions (Sat-Sun) — crypto only
+    - cron: '0 0 * * 0,6'   # 00:00 UTC — weekend crypto session 1
+    - cron: '0 8 * * 0,6'   # 08:00 UTC — weekend crypto session 2
+    - cron: '0 16 * * 0,6'  # 16:00 UTC — weekend crypto session 3
 
   # Manual trigger — always runs, no weekday restriction
   workflow_dispatch:

@@ -79,3 +79,7 @@ When analyzing broad market liquidation events (multiple asset classes declining
 ## Evolved — Session #59
 
 When analyzing correlation breakdowns during elevated volatility (VIX >24), prioritize liquidity-driven explanations over fundamental repricing. Gold falling during risk-off typically indicates forced liquidation rather than sentiment shifts. Cross-asset divergences exceeding 2x normal ranges often signal structural market stress requiring different analytical frameworks than traditional risk-on/risk-off models.
+
+## Evolved — Session #62
+
+Weekend crypto sessions reveal institutional positioning ahead of traditional market opens through intra-crypto flight-to-quality patterns. When BTC/ETH outperform smaller caps by >100bp during weekend sessions, this defensive rotation often signals broader risk management themes that should inform Monday traditional market analysis. Weekend observations are not isolated events but preview institutional positioning for the upcoming traditional trading week.

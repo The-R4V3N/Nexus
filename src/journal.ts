@@ -24,13 +24,14 @@ export function buildJournalEntry(
   sessionNumber: number,
   oracle: OracleAnalysis,
   reflection: AxiomReflection,
-  rules: AnalysisRules
+  rules: AnalysisRules,
+  isWeekend: boolean = false
 ): JournalEntry {
   const setupSummary = oracle.setups.length > 0
     ? oracle.setups.map((s) => `${s.instrument} ${s.type} (${s.direction})`).join(", ")
     : "No high-probability setups identified";
 
-  const title = generateSessionTitle(oracle, reflection);
+  const title = generateSessionTitle(oracle, reflection, isWeekend);
 
   return {
     sessionNumber,
@@ -45,14 +46,15 @@ export function buildJournalEntry(
   };
 }
 
-function generateSessionTitle(oracle: OracleAnalysis, reflection: AxiomReflection): string {
+function generateSessionTitle(oracle: OracleAnalysis, reflection: AxiomReflection, isWeekend: boolean = false): string {
   const biasEmoji = { bullish: "↑", bearish: "↓", neutral: "—", mixed: "↕" };
   const emoji = biasEmoji[oracle.bias.overall] ?? "—";
+  const prefix = isWeekend ? "WEEKEND " : "";
   const topSetup = oracle.setups[0];
   if (topSetup) {
-    return `${emoji} ${topSetup.instrument} ${topSetup.type} + ${reflection.ruleUpdates.length > 0 ? "rule evolution" : "no rule changes"}`;
+    return `${prefix}${emoji} ${topSetup.instrument} ${topSetup.type} + ${reflection.ruleUpdates.length > 0 ? "rule evolution" : "no rule changes"}`;
   }
-  return `${emoji} No clear setups — ${(reflection.whatFailed ?? "").split(".")[0]}`;
+  return `${prefix}${emoji} No clear setups — ${(reflection.whatFailed ?? "").split(".")[0]}`;
 }
 
 // ── Write Markdown Journal ─────────────────────────────────
@@ -65,8 +67,12 @@ export function writeJournalMarkdown(entry: JournalEntry): string {
 
   const biasIcon = { bullish: "🟢", bearish: "🔴", neutral: "⚪", mixed: "🟡" };
 
-  const content = `# Session #${entry.sessionNumber} — ${entry.title}
+  const weekendNote = entry.title.startsWith("WEEKEND")
+    ? `\n> Weekend Session — Crypto markets only. Forex, indices, and commodities are closed.\n`
+    : "";
 
+  const content = `# Session #${entry.sessionNumber} — ${entry.title}
+${weekendNote}
 **Date:** ${entry.date}
 **Bias:** ${biasIcon[entry.fullAnalysis.bias.overall] ?? "⚪"} ${entry.fullAnalysis.bias.overall.toUpperCase()}
 **Confidence:** ${entry.fullAnalysis.confidence}/100
@@ -277,6 +283,7 @@ function buildEntryHTML(entry: JournalEntry, index: number): string {
         <span class="session-date">${dateStr}</span>
         ${timeStr ? `<span class="session-time">${timeStr} UTC</span>` : ""}
         <span class="confidence-badge">CONF:${entry.fullAnalysis.confidence}%</span>
+        ${entry.title.startsWith("WEEKEND") ? '<span class="weekend-badge">CRYPTO ONLY</span>' : ""}
         <span class="expand-icon"></span>
       </div>
       <h2 class="entry-title">${escapeHTML(entry.title)}</h2>
@@ -776,6 +783,16 @@ function buildPageHTML(
     border: 1px solid var(--border);
     padding: 1px 6px;
     color: var(--text-dim);
+  }
+
+  .weekend-badge {
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    background: rgba(188,140,255,0.15);
+    border: 1px solid rgba(188,140,255,0.4);
+    color: var(--purple);
+    padding: 1px 6px;
+    text-transform: uppercase;
   }
 
   .entry-title {
