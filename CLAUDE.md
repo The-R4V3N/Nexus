@@ -14,12 +14,13 @@ src/
   axiom.ts        Self-reflection engine — rewrites rules + system prompt
   forge.ts        Code evolution engine (self-modifying source via Claude API)
   validate.ts     Quality gates — ORACLE + AXIOM output validation, recycled content detection
+  analytics.ts    Performance analytics engine — hit rates, calibration, trends, evolution metrics
   markets.ts      Live data via Yahoo Finance v8 API (no package, raw HTTP)
   macro.ts        Macro & geopolitical data (FRED, US Treasury, GDELT, Alpha Vantage — all raw HTTP)
   issues.ts       Community GitHub issues reader (nexus-input label)
   self-tasks.ts   Autonomous issue creation + resolution (nexus-self-task label, with dedup)
   security.ts     Prompt injection detection, cost guards, output sanitization, meta-rule blocking
-  journal.ts      Markdown journal + GitHub Pages HTML + README table auto-update
+  journal.ts      Markdown journal + GitHub Pages HTML + analytics dashboard + README table auto-update
   types.ts        All TypeScript interfaces
   utils.ts        Shared utilities (salvageJSON, stripSurrogates, extractJSON, path constants, groupBy)
 
@@ -83,6 +84,7 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 - **Externalized instruments** — `config/instruments.json` defines the 17 tracked instruments; `markets.ts` falls back to hardcoded defaults if the file is missing
 - **Fetch timeouts on all external calls** — 10s for market data, 15s for macro data, 20s for GitHub API; prevents session hangs when APIs are unresponsive
 - **Phase 1 data fetches parallelized** — market data, macro data, community issues, and self-tasks are fetched simultaneously via `Promise.allSettled()`
+- **Analytics dashboard** — `npm run analytics` aggregates all session history into improvement metrics: setup hit rate (win/loss), confidence calibration (predicted vs actual), bias accuracy, evolution velocity, stagnation detection, and trend analysis (first half vs second half). The dashboard is also rendered as an HTML section on the GitHub Pages journal site, auto-updated each session
 
 ## Security Model
 
@@ -110,6 +112,8 @@ npm run run:session -- --force  # Run even on weekends
 npm run status               # Current memory state
 npm run journal              # List past sessions
 npm run mind                 # Show current analysis rules
+npm run analytics            # Performance dashboard (hit rate, calibration, trends)
+npm run analytics -- -w 10   # Also show stats for last 10 sessions
 npm run rebuild-site         # Regenerate GitHub Pages
 ```
 

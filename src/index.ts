@@ -8,6 +8,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { runSession } from "./agent";
 import { loadAllJournalEntries, updateGithubPages } from "./journal";
+import { runAnalytics } from "./analytics";
 import { MEMORY_DIR, ANALYSIS_RULES_PATH, SYSTEM_PROMPT_PATH, groupBy } from "./utils";
 import * as fs from "fs";
 
@@ -113,6 +114,15 @@ program
       }
       console.log("");
     }
+  });
+
+// ── analytics: performance dashboard ────────────────────────
+program
+  .command("analytics")
+  .description("Show improvement metrics and performance dashboard")
+  .option("-w, --window <n>", "Also show stats for last N sessions")
+  .action((opts: { window?: string }) => {
+    runAnalytics(opts);
   });
 
 // ── rebuild: regenerate docs from saved sessions ───────────

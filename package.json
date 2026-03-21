@@ -9,6 +9,7 @@
     "status": "ts-node src/index.ts status",
     "journal": "ts-node src/index.ts journal",
     "mind": "ts-node src/index.ts mind",
+    "analytics": "ts-node src/index.ts analytics",
     "rebuild-site": "ts-node src/index.ts rebuild-site",
     "test": "vitest run",
     "test:watch": "vitest"

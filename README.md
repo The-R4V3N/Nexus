@@ -7,7 +7,7 @@
 [![license CC BY-NC-SA 4.0](https://img.shields.io/badge/license-CC%20BY--NC--SA%204.0-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/built%20with-TypeScript-3178c6)](https://www.typescriptlang.org/)
 
-[Live Journal →](https://the-r4v3n.github.io/Nexus/) · [Sessions](#sessions) · [How It Works](#how-it-works) · [Run It](#run-it-yourself)
+[Live Journal →](https://the-r4v3n.github.io/Nexus/) · [Analytics](#analytics-dashboard) · [Sessions](#sessions) · [How It Works](#how-it-works) · [Run It](#run-it-yourself)
 
 ---
 
@@ -159,7 +159,7 @@ GitHub Actions (Mon–Fri, 3 sessions per day)
     │       post-FORGE git diff enforces protected file integrity
     │
     ├── 📓 JOURNAL — writes session markdown
-    │       regenerates GitHub Pages site
+    │       regenerates GitHub Pages site (includes analytics dashboard)
     │       updates README sessions table
     │       commits everything and pushes
     │
@@ -207,12 +207,13 @@ src/
 ├── axiom.ts        Self-reflection + memory evolution (with stagnation detection)
 ├── forge.ts        Code evolution engine (self-modifying source)
 ├── validate.ts     Quality gates — output validation + recycled content detection
+├── analytics.ts    Performance analytics — hit rates, calibration, trends, evolution metrics
 ├── markets.ts      Live data via Yahoo Finance API
 ├── macro.ts        Macro & geopolitical data (FRED, Treasury, GDELT)
 ├── issues.ts       Community GitHub issues reader
 ├── self-tasks.ts   Autonomous issue creation + resolution (with dedup)
 ├── security.ts     Prompt injection + cost abuse protection
-├── journal.ts      Markdown + GitHub Pages + README table generator
+├── journal.ts      Markdown + GitHub Pages + analytics dashboard + README table generator
 ├── types.ts        TypeScript interfaces
 └── utils.ts        Shared utilities (salvageJSON, stripSurrogates, path constants)
 
@@ -304,6 +305,17 @@ NEXUS runs a multi-layered defensive pipeline that prevents bad data from enteri
 
 **Setup outcome tracking** — Previous session setups are compared against current market prices to determine if they were STOPPED OUT, hit TARGET, or remain OPEN. These outcomes are fed to AXIOM to ground its reflection in real results.
 
+### Analytics Dashboard
+
+The [live journal](https://the-r4v3n.github.io/Nexus/) includes a performance dashboard (also available via `npm run analytics`) that answers: *is NEXUS actually getting better?* It tracks:
+
+- **Setup hit rate** — what % of setups hit their target vs got stopped out
+- **Confidence calibration** — when NEXUS says 70% confidence, how often do setups actually hit?
+- **Bias accuracy** — which bias calls (bullish/bearish/mixed) produce the best setups
+- **Improvement trend** — first half vs second half of session history, with directional verdict
+- **Confidence over time** — sparkline showing confidence trajectory across all sessions
+- **Evolution velocity** — rule changes per session, longest stagnation streak, top cognitive biases detected
+
 **Failure feedback loop** — Crashes and validation failures are logged to `memory/failures.json` (capped at 20 entries). The last 5 failures are fed into AXIOM's context so NEXUS learns from its own errors.
 
 **Session-level rollback** — If an unhandled exception occurs, all uncommitted changes are reverted via `git checkout -- .` and the failure is logged. The next session starts from a clean state.
@@ -344,6 +356,7 @@ Other commands:
 npm run status        # Current state of NEXUS's mind
 npm run journal       # List past sessions
 npm run mind          # See all current analysis rules
+npm run analytics     # Performance dashboard (hit rate, calibration, trends)
 npm run rebuild-site  # Regenerate GitHub Pages locally
 ```
 
