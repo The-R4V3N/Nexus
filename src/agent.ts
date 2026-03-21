@@ -27,6 +27,7 @@ import {
   saveJournalEntry,
 } from "./journal";
 import { validateOracleOutput, logFailure, loadRecentFailures }    from "./validate";
+import { buildAnalyticsSummary }                                    from "./analytics";
 import { MEMORY_DIR, ANALYSIS_RULES_PATH } from "./utils";
 import type { AnalysisRules, MarketSnapshot, OracleAnalysis, AxiomReflection, ForgeRequest, ForgeResult } from "./types";
 
@@ -133,6 +134,29 @@ function buildSetupOutcomes(snapshots: MarketSnapshot[]): string {
   }
 
   return lines.length > 0 ? lines.join("\n") : "";
+}
+
+function buildWeekdayBridge(): string {
+  const allEntries = loadAllJournalEntries();
+  // Find the most recent weekday session
+  for (let i = allEntries.length - 1; i >= 0; i--) {
+    const e = allEntries[i];
+    const d = new Date(e.date.replace(" ", "T") + ":00Z");
+    const day = d.getUTCDay();
+    if (day !== 0 && day !== 6) {
+      const setups = e.fullAnalysis?.setups ?? [];
+      const setupLines = setups.length > 0
+        ? setups.map(s => `  ${s.instrument} ${s.direction} (${s.type})`).join("\n")
+        : "  No setups";
+      return `### Where traditional markets left off (Session #${e.sessionNumber}, ${e.date}):
+Bias: ${e.fullAnalysis?.bias?.overall?.toUpperCase() ?? "unknown"} — ${e.fullAnalysis?.bias?.notes ?? ""}
+Confidence: ${e.fullAnalysis?.confidence ?? "?"}%
+Setups:
+${setupLines}
+Use this context to assess whether weekend crypto behavior is following or diverging from the broader market trend.`;
+    }
+  }
+  return "";
 }
 
 function loadRules(): AnalysisRules {
@@ -491,8 +515,14 @@ export async function runAndValidateAxiom(
     prevContext += `\n\n### Recent session failures:\n${failureLines}\nConsider these when proposing code changes.`;
   }
 
-  // Detect repeated critiques across recent sessions
+  // Inject analytics summary so AXIOM knows its own performance patterns
   const allEntries = loadAllJournalEntries();
+  const analyticsSummary = buildAnalyticsSummary(allEntries);
+  if (analyticsSummary) {
+    prevContext += "\n\n" + analyticsSummary;
+  }
+
+  // Detect repeated critiques across recent sessions
   const { critique: repeatedCritique, count: repeatCount } = detectRepeatedCritiques(allEntries);
   if (repeatedCritique && repeatCount >= 3) {
     prevContext += `\n\n### REPETITION ALERT (${repeatCount} consecutive sessions)
@@ -698,8 +728,11 @@ export async function runSession(force = false): Promise<void> {
   currentPhase = "oracle";
   const { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, isWeekend: weekendMode } = await fetchAllInputData();
 
+  // On weekends, inject last weekday session context so ORACLE knows where traditional markets left off
+  const oracleContext = weekendMode ? buildWeekdayBridge() : macroText;
+
   currentPhase = "oracle";
-  const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, macroText, weekendMode);
+  const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, oracleContext, weekendMode);
 
   currentPhase = "axiom";
   const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers);

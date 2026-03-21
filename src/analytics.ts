@@ -371,6 +371,65 @@ function renderSparkline(values: number[], width: number = 30): string {
   }).join("");
 }
 
+// ── Analytics Summary for AXIOM ──────────────────────────────
+
+export function buildAnalyticsSummary(entries: JournalEntry[]): string {
+  if (entries.length < 5) return "";
+
+  const allSetups = resolveAllSetups(entries);
+  const overall = computeWindowStats(entries, allSetups, "all");
+  const calibration = computeCalibration(entries, allSetups).filter(b => b.sessions > 0);
+  const biasStats = computeBiasAccuracy(entries, allSetups);
+  const evo = computeEvolution(entries);
+
+  const lines: string[] = ["### Your performance analytics (from analytics dashboard):"];
+
+  // Hit rate
+  if (overall.hitRate !== null) {
+    lines.push(`- Overall setup hit rate: ${(overall.hitRate * 100).toFixed(1)}% (${overall.targetHit} hits, ${overall.stoppedOut} stops, ${overall.open} still open)`);
+  }
+
+  // Improvement trend
+  if (entries.length >= 10) {
+    const mid = Math.floor(entries.length / 2);
+    const first = computeWindowStats(entries.slice(0, mid), allSetups, "first");
+    const second = computeWindowStats(entries.slice(mid), allSetups, "second");
+    if (first.hitRate !== null && second.hitRate !== null) {
+      const delta = second.hitRate - first.hitRate;
+      const dir = delta > 0.05 ? "IMPROVING" : delta < -0.05 ? "DECLINING" : "STABLE";
+      lines.push(`- Trend: ${dir} — first half ${(first.hitRate * 100).toFixed(0)}% → second half ${(second.hitRate * 100).toFixed(0)}%`);
+    }
+  }
+
+  // Calibration
+  const calLines = calibration
+    .filter(b => b.hitRate !== null)
+    .map(b => `  ${b.range}: you say ${b.avgConfidence.toFixed(0)}% confident → actual hit rate ${(b.hitRate! * 100).toFixed(0)}%`);
+  if (calLines.length > 0) {
+    lines.push("- Confidence calibration (are you overconfident or underconfident?):");
+    lines.push(...calLines);
+  }
+
+  // Bias accuracy
+  const biasLines = biasStats
+    .filter(b => b.count >= 3)
+    .map(b => `  ${b.bias}: ${b.count} sessions, setup hit rate ${b.hitRate !== null ? (b.hitRate * 100).toFixed(0) + "%" : "n/a"}`);
+  if (biasLines.length > 0) {
+    lines.push("- Bias accuracy (which bias calls produce the best setups?):");
+    lines.push(...biasLines);
+  }
+
+  // Evolution
+  lines.push(`- Evolution: ${evo.totalRuleChanges} total rule changes (${evo.totalNewRules} added, ${evo.totalModified} modified, ${evo.totalRemoved} removed)`);
+  if (evo.totalRemoved === 0 && evo.totalRuleChanges > 0) {
+    lines.push("- WARNING: You have NEVER removed a rule. Consider whether all rules are still earning their place.");
+  }
+
+  lines.push("Use these metrics to ground your reflection in real outcomes, not assumptions.");
+
+  return lines.join("\n");
+}
+
 // ── Main Command ────────────────────────────────────────────
 
 export function runAnalytics(options: { window?: string }): void {

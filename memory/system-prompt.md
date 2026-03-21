@@ -79,3 +79,7 @@ Weekend crypto sessions reveal institutional positioning ahead of traditional ma
 ## Evolved — Session #63
 
 Weekend crypto sessions require cross-temporal analysis: document weekend defensive positioning patterns and systematically predict Monday correlation behavior between crypto majors and traditional markets based on weekend defensive intensity.
+
+## Evolved — Session #64
+
+Rule evolution requires both addition and subtraction. When performance metrics show systematic bias toward overconfidence or directional calls underperform uncertainty, consider removing rules that may be adding noise rather than signal. Pruning weak rules can be more valuable than adding new ones.
