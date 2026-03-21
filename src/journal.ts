@@ -7,6 +7,13 @@ import * as fs from "fs";
 import * as path from "path";
 import { format } from "date-fns";
 import type { JournalEntry, OracleAnalysis, AxiomReflection, AnalysisRules } from "./types";
+import {
+  resolveAllSetups,
+  computeWindowStats,
+  computeCalibration,
+  computeBiasAccuracy,
+  computeEvolution,
+} from "./analytics";
 
 const JOURNAL_DIR = path.join(process.cwd(), "journal");
 const DOCS_DIR = path.join(process.cwd(), "docs");
@@ -137,8 +144,9 @@ export function updateGithubPages(entries: JournalEntry[]): void {
   const totalRules = latest?.ruleCount ?? 0;
 
   const journalHTML = sorted.map((e, i) => buildEntryHTML(e, i)).join("\n");
+  const analyticsHTML = buildAnalyticsHTML(entries);
 
-  const html = buildPageHTML(journalHTML, sorted.length, totalRules, latest);
+  const html = buildPageHTML(journalHTML, sorted.length, totalRules, latest, analyticsHTML);
   fs.writeFileSync(path.join(DOCS_DIR, "index.html"), html);
 }
 
@@ -305,11 +313,154 @@ function buildEntryHTML(entry: JournalEntry, index: number): string {
   </article>`;
 }
 
+function buildAnalyticsHTML(entries: JournalEntry[]): string {
+  if (entries.length < 3) return "";
+
+  const allSetups = resolveAllSetups(entries);
+  const overall = computeWindowStats(entries, allSetups, "ALL TIME");
+  const evo = computeEvolution(entries);
+  const calibration = computeCalibration(entries, allSetups).filter(b => b.sessions > 0);
+  const biasStats = computeBiasAccuracy(entries, allSetups);
+
+  // Improvement trend (first half vs second half)
+  let trendHTML = "";
+  if (entries.length >= 10) {
+    const mid = Math.floor(entries.length / 2);
+    const firstStats = computeWindowStats(entries.slice(0, mid), allSetups, "first");
+    const secondStats = computeWindowStats(entries.slice(mid), allSetups, "second");
+
+    if (firstStats.hitRate !== null && secondStats.hitRate !== null) {
+      const delta = secondStats.hitRate - firstStats.hitRate;
+      const trendClass = delta > 0.05 ? "trend-up" : delta < -0.05 ? "trend-down" : "trend-flat";
+      const trendLabel = delta > 0.05 ? "IMPROVING" : delta < -0.05 ? "DECLINING" : "STABLE";
+      const arrow = delta > 0.05 ? "&#x2191;" : delta < -0.05 ? "&#x2193;" : "&#x2192;";
+      trendHTML = `
+        <div class="analytics-card">
+          <div class="analytics-card-label">accuracy trend</div>
+          <div class="analytics-card-val ${trendClass}">${arrow} ${trendLabel}</div>
+          <div class="analytics-card-detail">
+            First half: ${fmtPct(firstStats.hitRate)} &#x2192; Second half: ${fmtPct(secondStats.hitRate)}
+            (${delta > 0 ? "+" : ""}${(delta * 100).toFixed(1)}pp)
+          </div>
+        </div>`;
+    }
+  }
+
+  // Confidence sparkline as SVG
+  const confidences = entries
+    .map(e => e.fullAnalysis?.confidence)
+    .filter((c): c is number => typeof c === "number");
+
+  let sparkSVG = "";
+  if (confidences.length >= 5) {
+    const w = 240, h = 40;
+    const min = Math.min(...confidences);
+    const max = Math.max(...confidences);
+    const range = max - min || 1;
+    const points = confidences.map((v, i) => {
+      const x = (i / (confidences.length - 1)) * w;
+      const y = h - ((v - min) / range) * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    sparkSVG = `
+      <div class="analytics-card analytics-card-wide">
+        <div class="analytics-card-label">confidence over time</div>
+        <svg class="spark-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+          <polyline points="${points}" fill="none" stroke="var(--amber)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <div class="analytics-card-detail">${confidences[0]}% &#x2192; ${confidences[confidences.length - 1]}% across ${confidences.length} sessions</div>
+      </div>`;
+  }
+
+  // Calibration table
+  let calibrationHTML = "";
+  if (calibration.some(b => b.hitRate !== null)) {
+    const rows = calibration.map(b => {
+      const hitStr = b.hitRate !== null ? fmtPct(b.hitRate) : "&mdash;";
+      const deltaStr = b.delta !== null
+        ? `<span class="${b.delta > 0.1 ? "cal-over" : b.delta < -0.1 ? "cal-under" : "cal-ok"}">${(b.delta * 100).toFixed(0)}pp</span>`
+        : "&mdash;";
+      return `<tr><td>${escapeHTML(b.range)}</td><td>${b.sessions}</td><td>${b.avgConfidence.toFixed(0)}%</td><td>${hitStr}</td><td>${deltaStr}</td></tr>`;
+    }).join("");
+
+    calibrationHTML = `
+      <div class="analytics-card analytics-card-wide">
+        <div class="analytics-card-label">confidence calibration</div>
+        <div class="analytics-card-detail" style="margin-bottom:6px">When NEXUS says X% confidence, how often do setups actually hit?</div>
+        <table class="cal-table">
+          <thead><tr><th>Range</th><th>Sessions</th><th>Avg Conf</th><th>Hit Rate</th><th>Delta</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // Bias accuracy
+  const biasHTML = biasStats.map(b => {
+    const hitStr = b.hitRate !== null ? fmtPct(b.hitRate) : "&mdash;";
+    const biasClass = b.bias === "bullish" ? "bias-bullish" : b.bias === "bearish" ? "bias-bearish" : b.bias === "mixed" ? "bias-mixed" : "bias-neutral";
+    return `<div class="bias-stat"><span class="bias-stat-label ${biasClass}">${escapeHTML(b.bias.toUpperCase())}</span><span class="bias-stat-count">${b.count} sessions</span><span class="bias-stat-hit">${hitStr}</span></div>`;
+  }).join("");
+
+  // Top cognitive biases
+  const cogHTML = evo.cognitivePatterns.length > 0
+    ? evo.cognitivePatterns.map(p => `<span class="cog-tag">${p.count}x ${escapeHTML(p.bias)}</span>`).join("")
+    : "";
+
+  return `
+  <section class="analytics-section" id="analytics">
+    <div class="section-title">// analytics &mdash; is NEXUS improving?</div>
+    <div class="analytics-grid">
+      <div class="analytics-card">
+        <div class="analytics-card-label">setup hit rate</div>
+        <div class="analytics-card-val ${overall.hitRate !== null && overall.hitRate >= 0.5 ? "val-good" : "val-warn"}">${overall.hitRate !== null ? fmtPct(overall.hitRate) : "&mdash;"}</div>
+        <div class="analytics-card-detail">${overall.targetHit} hits / ${overall.stoppedOut} stops / ${overall.open} open</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">avg confidence</div>
+        <div class="analytics-card-val">${overall.avgConfidence.toFixed(0)}%</div>
+        <div class="analytics-card-detail">${overall.sessions} sessions analyzed</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">avg R:R</div>
+        <div class="analytics-card-val">${overall.avgRR !== null ? overall.avgRR.toFixed(2) : "&mdash;"}</div>
+        <div class="analytics-card-detail">${overall.totalSetups} total setups</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-label">evolution</div>
+        <div class="analytics-card-val">${evo.totalRuleChanges} changes</div>
+        <div class="analytics-card-detail">${evo.totalNewRules} added / ${evo.totalModified} modified / ${evo.totalRemoved} removed</div>
+      </div>
+      ${trendHTML}
+      <div class="analytics-card">
+        <div class="analytics-card-label">longest stagnation</div>
+        <div class="analytics-card-val ${evo.longestStagnation > 3 ? "val-warn" : "val-good"}">${evo.longestStagnation} sessions</div>
+        <div class="analytics-card-detail">${evo.avgChangesPerSession.toFixed(2)} changes/session avg</div>
+      </div>
+      ${sparkSVG}
+      ${calibrationHTML}
+      <div class="analytics-card">
+        <div class="analytics-card-label">bias accuracy</div>
+        <div class="bias-stats">${biasHTML}</div>
+      </div>
+      ${cogHTML ? `
+      <div class="analytics-card">
+        <div class="analytics-card-label">top cognitive biases</div>
+        <div class="cog-tags">${cogHTML}</div>
+      </div>` : ""}
+    </div>
+  </section>`;
+}
+
+function fmtPct(n: number): string {
+  return `${(n * 100).toFixed(1)}%`;
+}
+
 function buildPageHTML(
   journalHTML: string,
   totalSessions: number,
   totalRules: number,
-  latest?: JournalEntry
+  latest?: JournalEntry,
+  analyticsHTML: string = ""
 ): string {
   const latestBias = latest?.fullAnalysis.bias.overall ?? "neutral";
   const latestConf = latest?.fullAnalysis.confidence ?? 0;
@@ -917,6 +1068,140 @@ function buildPageHTML(
     .nav-links a { font-size: 10px; padding: 5px 12px; }
   }
 
+  /* ── Analytics Dashboard ── */
+  .analytics-section {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+  }
+
+  .analytics-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 12px 10px;
+  }
+
+  .analytics-card-wide {
+    grid-column: 1 / -1;
+  }
+
+  .analytics-card-label {
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .analytics-card-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1.2;
+  }
+
+  .analytics-card-detail {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .val-good { color: var(--green); }
+  .val-warn { color: var(--red); }
+  .trend-up { color: var(--green); }
+  .trend-down { color: var(--red); }
+  .trend-flat { color: var(--cyan); }
+
+  .spark-svg {
+    width: 100%;
+    height: 40px;
+    margin: 6px 0 2px;
+  }
+
+  .cal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9px;
+  }
+
+  .cal-table th {
+    text-align: left;
+    color: var(--text-dim);
+    font-weight: 400;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cal-table td {
+    padding: 3px 6px;
+    color: var(--text);
+  }
+
+  .cal-over { color: var(--green); }
+  .cal-under { color: var(--red); }
+  .cal-ok { color: var(--text-dim); }
+
+  .bias-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .bias-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+  }
+
+  .bias-stat-label {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    min-width: 60px;
+  }
+
+  .bias-stat-count { color: var(--text-dim); font-size: 9px; }
+  .bias-stat-hit { color: var(--amber); font-size: 9px; margin-left: auto; }
+
+  .cog-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .cog-tag {
+    font-size: 9px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    color: var(--text-dim);
+  }
+
+  @media (min-width: 769px) {
+    .analytics-section { padding: 40px 0; }
+    .analytics-grid { grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .analytics-card { padding: 16px; }
+    .analytics-card-label { font-size: 9px; letter-spacing: 0.2em; }
+    .analytics-card-val { font-size: 24px; }
+    .analytics-card-detail { font-size: 10px; }
+    .cal-table { font-size: 10px; }
+    .cal-table th { font-size: 9px; }
+    .bias-stat { font-size: 11px; }
+    .cog-tag { font-size: 10px; }
+  }
+
   /* Footer */
   footer {
     border-top: 1px solid var(--border);
@@ -958,6 +1243,7 @@ function buildPageHTML(
   <nav class="site-nav">
     <a href="#" class="nav-logo"><svg class="nav-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="6" fill="#070a0e"/><rect width="32" height="32" rx="6" fill="none" stroke="#f5a623" stroke-width="1.5"/><text x="16" y="23" font-family="monospace" font-size="18" font-weight="bold" fill="#f5a623" text-anchor="middle">N</text></svg>NEX<span>US</span></a>
     <div class="nav-links">
+      <a href="#analytics">analytics</a>
       <a href="#journal">journal</a>
       <a href="#identity">identity</a>
       <span class="nav-sep">&middot;</span>
@@ -1011,6 +1297,8 @@ function buildPageHTML(
   <div class="disclaimer">
     <span class="disclaimer-icon">&#9888;</span> NEXUS is an experimental AI research project. Market data comes from live APIs (Yahoo Finance, FRED, US Treasury, GDELT, Alpha Vantage). The trade setups, bias calls, and confidence scores are generated by a self-evolving algorithm that is still learning. <strong>This is not financial advice.</strong> Do not trade based on NEXUS output without your own independent analysis.
   </div>
+
+  ${analyticsHTML}
 
   <main class="journal-section" id="journal">
     <div class="section-title">// journal — all sessions (newest first)</div>
