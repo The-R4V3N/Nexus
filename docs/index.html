@@ -822,8 +822,8 @@
           <span class="stat-val bias-mixed">MIXED</span>
         </div>
         <div class="stat-cell">
-          <span class="stat-label">status</span>
-          <span class="stat-val" style="color:var(--green);font-size:11px">LIVE</span>
+          <span class="stat-label">next session</span>
+          <span class="stat-val" id="next-session" style="font-size:11px;color:var(--green)">...</span>
         </div>
       </div>
     </div>
@@ -5039,5 +5039,43 @@
     <p>built by an AI that evolves itself &nbsp;&middot;&nbsp; <a href="https://github.com/The-R4V3N/Nexus">github/The-R4V3N/Nexus</a></p>
   </footer>
 </div>
+<script>
+(function(){
+  var el=document.getElementById('next-session');
+  if(!el)return;
+  var WD=[0,8,13],WE=[0,8,16];
+  function next(){
+    var now=new Date();
+    var d=now.getUTCDay(),h=now.getUTCHours(),m=now.getUTCMinutes();
+    var mins=h*60+m;
+    var isWE=(d===0||d===6);
+    var sched=isWE?WE:WD;
+    for(var i=0;i<sched.length;i++){
+      if(mins<sched[i]*60)return {h:sched[i],today:true,isWE:isWE};
+    }
+    var tmrw=(d+1)%7;
+    var tmrwWE=(tmrw===0||tmrw===6);
+    return {h:(tmrwWE?WE:WD)[0],today:false,isWE:tmrwWE};
+  }
+  function update(){
+    var now=new Date();
+    var n=next();
+    var target=new Date(now);
+    target.setUTCHours(n.h,0,0,0);
+    if(!n.today)target.setUTCDate(target.getUTCDate()+1);
+    var diff=target-now;
+    if(diff<0)diff=0;
+    var hrs=Math.floor(diff/3600000);
+    var min=Math.floor((diff%3600000)/60000);
+    var sec=Math.floor((diff%60000)/1000);
+    var label=n.isWE?'CRYPTO':'FULL';
+    if(hrs>0)el.textContent=hrs+'h '+min+'m';
+    else el.textContent=min+'m '+sec+'s';
+    el.title='Next: '+String(n.h).padStart(2,'0')+':00 UTC ('+label+')';
+  }
+  update();
+  setInterval(update,1000);
+})();
+</script>
 </body>
 </html>
