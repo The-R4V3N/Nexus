@@ -254,6 +254,7 @@ RULES:
 - RR must be > 1.3 \u2014 do not include setups with risk exceeding reward
 - If confidence > 60%, you MUST identify at least 2 setups
 - Include instrument, type, direction, description, and invalidation
+- TYPE must be a specific ICT pattern: FVG, OB, Liquidity Sweep, MSS, CISD, or PDH/PDL. These apply to ALL markets including crypto. "Other" is only acceptable if the setup genuinely does not fit any ICT pattern — do not use "Other" as a default.
 
 Respond with ONLY a JSON array:
 [

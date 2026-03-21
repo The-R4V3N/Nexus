@@ -181,6 +181,16 @@ export function validateOracleOutput(
     }
   }
 
+  // "Other" type overuse — ICT types should be preferred
+  if (oracle.setups && oracle.setups.length > 0) {
+    const otherCount = oracle.setups.filter(s => s.type === "Other").length;
+    if (otherCount > 0 && otherCount >= oracle.setups.length * 0.5) {
+      warnings.push(
+        `${otherCount}/${oracle.setups.length} setups use type "Other" — ICT patterns (FVG, OB, Liquidity Sweep, MSS, CISD, PDH/PDL) should be preferred`
+      );
+    }
+  }
+
   // Confidence mismatch check — compare analysis text vs JSON field
   if (oracle.analysis && typeof oracle.confidence === "number") {
     const textConfidence = extractConfidenceFromText(oracle.analysis);
