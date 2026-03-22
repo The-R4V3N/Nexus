@@ -94,11 +94,13 @@ flowchart TB
     subgraph output["Phase 3 — Output"]
         direction TB
         journal["Journal\nMarkdown + GitHub Pages"]
+        telegram["Telegram\nSession notification"]
         commit["Git Commit\nMemory and journal to main\nFORGE changes to PR"]
     end
 
     forge --> journal
-    journal --> commit
+    journal --> telegram
+    telegram --> commit
 
     subgraph memory["Evolving Memory — Git-versioned"]
         direction LR
@@ -267,6 +269,7 @@ src/
 ├── crypto-markets.ts  Weekend crypto data via Binance API
 ├── macro.ts        Macro & geopolitical data (FRED, Treasury, GDELT)
 ├── rss.ts          RSS news feed aggregator (8 configurable feeds)
+├── notifications.ts Telegram session notifications (optional)
 ├── issues.ts       Community GitHub issues reader
 ├── self-tasks.ts   Autonomous issue creation + resolution (with dedup)
 ├── security.ts     Prompt injection + cost abuse protection
