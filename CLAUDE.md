@@ -18,6 +18,7 @@ src/
   markets.ts      Live data via Yahoo Finance v8 API (no package, raw HTTP)
   crypto-markets.ts  Weekend crypto data via Binance public API (10 instruments, no auth)
   macro.ts        Macro & geopolitical data (FRED, US Treasury, GDELT, Alpha Vantage — all raw HTTP)
+  rss.ts          RSS news feed aggregator (8 configurable feeds, sanitized, deduplicated)
   issues.ts       Community GitHub issues reader (nexus-input label)
   self-tasks.ts   Autonomous issue creation + resolution (nexus-self-task label, with dedup)
   security.ts     Prompt injection detection, cost guards, output sanitization, meta-rule blocking
@@ -30,6 +31,7 @@ config/
   indices.json        5 major indices
   crypto.json         10 cryptocurrencies
   commodities.json    6 commodities (metals, energy)
+  rss-feeds.json      8 RSS news feed URLs (Reuters, BBC, CNBC, MarketWatch, CoinDesk, etc.)
 
 memory/           NEXUS's evolving mind (committed to git)
   system-prompt.md    Base + evolved system prompt (grows each session, capped at 8000 chars)
@@ -46,7 +48,7 @@ NEXUS_IDENTITY.md Constitutional identity document (immutable, loaded into AXIOM
 
 1. **Pre-flight Check** — `tsc --noEmit` validates the codebase compiles before anything runs
 2. **Git Snapshot** — captures `HEAD` SHA for session-level rollback on unhandled crashes
-3. **Data Fetch (parallel)** — `fetchAllInputData()` detects weekend vs weekday. Weekdays: pulls market data (45 instruments from Yahoo Finance), macro data (FRED, Treasury, GDELT, Alpha Vantage), community issues, and self-tasks via `Promise.allSettled()`. Weekends: pulls 10 crypto instruments from Binance API (live 24/7), skips macro data, fetches issues and self-tasks. Market/crypto data failure halts the session; other sources degrade gracefully.
+3. **Data Fetch (parallel)** — `fetchAllInputData()` detects weekend vs weekday. Weekdays: pulls market data (45 instruments from Yahoo Finance), macro data (FRED, Treasury, GDELT, Alpha Vantage), RSS news (8 feeds: Reuters, BBC, CNBC, MarketWatch, NYT, CoinDesk, Google Finance), community issues, and self-tasks via `Promise.allSettled()`. Weekends: pulls 10 crypto instruments from Binance API (live 24/7), skips macro data, fetches RSS news, issues, and self-tasks. Market/crypto data failure halts the session; other sources degrade gracefully.
 4. **ORACLE** — Two sequential Claude API calls: (1) ORACLE-ANALYSIS produces market narrative, bias, confidence, and key levels; (2) ORACLE-SETUPS receives the analysis + all instrument prices and constructs precise entry/stop/target setups. Max 8192 output tokens per call. Truncated responses are salvaged via field-boundary cut points.
 5. **ORACLE Validation Gate** — `validateOracleOutput()` checks analysis length, confidence range, bias validity, setup sanity, and recycled content detection (>80% Jaccard similarity blocks). Confidence consistency enforced: narrative calculation overrides JSON when divergence >10 points. Confidence >60% with zero setups forces confidence to 35%. Bias notes enforced as non-empty. R:R < 1.0 flagged. Session halts on validation failure.
 6. **AXIOM** — Claude API call reflecting on ORACLE's output → rule updates, new rules, system prompt additions, self-tasks, FORGE change requests. Receives failure history (last 5 failures from `memory/failures.json`), setup outcome tracking (previous setups vs current prices), stagnation alerts (when 3+ consecutive sessions have zero rule changes), and NEXUS_IDENTITY.md as constitutional context.

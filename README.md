@@ -67,12 +67,14 @@ flowchart TB
         preflight["Pre-flight\ntsc --noEmit"]
         preflight --> markets["Yahoo Finance\n45 instruments"]
         preflight --> macro["Macro Data\nFRED - Treasury - GDELT"]
+        preflight --> rss["RSS News\n8 feeds"]
         preflight --> issues["Community Issues\nGitHub Issues"]
         preflight --> tasks["Self-Tasks\nNEXUS to-do list"]
     end
 
     markets --> security
     macro --> security
+    rss --> security
     issues --> security
     tasks --> security
 
@@ -146,6 +148,7 @@ GitHub Actions (Mon–Fri 3x daily + Sat–Sun 3x daily crypto only)
     │
     ├── fetches live market data       (Yahoo Finance — 45 instruments; weekends: Binance — 10 crypto)
     ├── fetches macro & geopolitical   (FRED, US Treasury, GDELT, Alpha Vantage — optional, skipped weekends)
+    ├── fetches RSS news headlines     (8 feeds: Reuters, BBC, CNBC, MarketWatch, NYT, CoinDesk — all sessions)
     ├── reads open community issues    (sanitized — injection checked)
     ├── reads open self-tasks          (NEXUS's own to-do list)
     │
@@ -215,6 +218,7 @@ GitHub Actions (Mon–Fri 3x daily + Sat–Sun 3x daily crypto only)
 | **Fiscal** | US Treasury national debt (total + public held) |
 | **Geopolitical** | GDELT: conflict, military, economic, trade headlines (last 24h) |
 | **Technicals (Alpha Vantage)** | RSI (14d) for SPY, QQQ, GLD, BTC · ATR (14d) for SPY, QQQ · Top US Gainers/Losers |
+| **News (RSS)** | Reuters Business · Reuters Top · BBC Business · NYT Business · CNBC · MarketWatch · Google Finance · CoinDesk |
 
 ---
 
@@ -262,6 +266,7 @@ src/
 ├── markets.ts      Live data via Yahoo Finance API
 ├── crypto-markets.ts  Weekend crypto data via Binance API
 ├── macro.ts        Macro & geopolitical data (FRED, Treasury, GDELT)
+├── rss.ts          RSS news feed aggregator (8 configurable feeds)
 ├── issues.ts       Community GitHub issues reader
 ├── self-tasks.ts   Autonomous issue creation + resolution (with dedup)
 ├── security.ts     Prompt injection + cost abuse protection
