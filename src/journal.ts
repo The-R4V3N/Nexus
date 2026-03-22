@@ -217,6 +217,20 @@ export function updateReadmeSessionsTable(entries: JournalEntry[]): void {
   const after  = readme.slice(endIdx);
 
   readme = before + newTable + "\n" + after;
+
+  // Update dynamic badges (sessions count, rules count)
+  const latestSession = recent[0];
+  if (latestSession) {
+    readme = readme.replace(
+      /sessions-\d+%2B-/,
+      `sessions-${latestSession.sessionNumber}%2B-`
+    );
+    readme = readme.replace(
+      /evolving%20rules-\d+-/,
+      `evolving%20rules-${latestSession.ruleCount}-`
+    );
+  }
+
   fs.writeFileSync(readmePath, readme);
 }
 
