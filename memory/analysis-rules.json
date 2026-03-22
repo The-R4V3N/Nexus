@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms (gold falling during risk-off, USD weakening while risk assets decline, metals/energy divergence >10%). Document correlation coefficient changes and flag potential regime shifts requiring framework adaptation rather than treating as temporary anomalies.",
+      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms with documented coefficients/divergence magnitude, or (3) weekend sessions with insufficient cross-asset data must state 'mixed due to limited weekend data preventing directional assessment' rather than using vague language like 'no clear conviction'.",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 59
+      "lastModifiedSession": 69
     },
     {
       "id": "r016",
@@ -239,8 +239,8 @@
       "lastModifiedSession": 56
     }
   ],
-  "version": 49,
-  "lastUpdated": "2026-03-22T00:04:14.402Z",
+  "version": 50,
+  "lastUpdated": "2026-03-22T08:49:51.709Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -248,5 +248,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #67"
+  "sessionNotes": "Last updated: Session #69"
 }
