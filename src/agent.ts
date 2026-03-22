@@ -29,6 +29,7 @@ import {
 import { validateOracleOutput, logFailure, loadRecentFailures }    from "./validate";
 import { buildAnalyticsSummary }                                    from "./analytics";
 import { fetchRSSNews, formatRSSForPrompt }                          from "./rss";
+import { notifySessionComplete }                                     from "./notifications";
 import { MEMORY_DIR, ANALYSIS_RULES_PATH } from "./utils";
 import type { AnalysisRules, MarketSnapshot, OracleAnalysis, AxiomReflection, ForgeRequest, ForgeResult } from "./types";
 
@@ -690,13 +691,13 @@ export async function runAndValidateForge(
   return forgeResults;
 }
 
-export function writeSessionOutput(
+export async function writeSessionOutput(
   sessionNumber: number,
   oracle: OracleAnalysis,
   reflection: AxiomReflection,
   snapshots: MarketSnapshot[],
   weekendMode: boolean = false
-): void {
+): Promise<void> {
   console.log(chalk.bold.yellow("  ── PHASE 4: JOURNAL ──\n"));
   const journalSpinner = ora({ text: "Writing journal entry...", color: "cyan" }).start();
 
@@ -712,6 +713,9 @@ export function writeSessionOutput(
   journalSpinner.succeed(chalk.green("Journal written, GitHub Pages updated, README updated"));
   console.log(chalk.dim(`  Markdown: ${mdPath}`));
   console.log(chalk.dim(`  Site:     ${path.join(process.cwd(), "docs", "index.html")}\n`));
+
+  // Send Telegram notification (optional, skips silently if not configured)
+  await notifySessionComplete(entry);
 }
 
 // ── Main run ───────────────────────────────────────────────
@@ -792,7 +796,7 @@ export async function runSession(force = false): Promise<void> {
   await runAndValidateForge(client, forgeRequests, sessionNumber);
 
   currentPhase = "journal";
-  writeSessionOutput(sessionNumber, oracle, reflection, snapshots, weekendMode);
+  await writeSessionOutput(sessionNumber, oracle, reflection, snapshots, weekendMode);
 
   // ── Summary ──
   const rules = loadRules();
