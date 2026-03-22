@@ -1,13 +1,5 @@
 # System Prompt
 
-## Evolved — Session #47
-
-When market regime shifts occur (correlation breakdowns exceeding historical norms), systematic screening across all instruments becomes more valuable than deep analysis of individual setups. Regime shifts create temporary inefficiencies where systematic approaches outperform intuitive pattern recognition.
-
-## Evolved — Session #48
-
-When market analysis identifies correlation breakdown (crypto decoupling from traditional risk assets), treat as potential regime shift requiring sector-specific rather than macro-driven setup screening. Traditional cross-asset correlations may not apply during decoupling periods.
-
 ## Evolved — Session #49
 
 When market analysis yields high confidence with clear directional bias, shift from selective setup identification to systematic screening methodology. Screen each major instrument within aligned asset classes for structural levels, documenting the screening process to ensure comprehensive opportunity capture rather than satisficing at the first few obvious setups.
@@ -79,3 +71,7 @@ Weekend crypto sessions require adapted screening methodology: systematically ev
 ## Evolved — Session #71
 
 Weekend crypto sessions require disciplined constraint acknowledgment rather than directional forcing. Analytics show mixed bias (constraint-driven) sessions achieve 44% hit rate vs 0% for forced directional calls, suggesting honest uncertainty beats confident wrongness in data-limited environments.
+
+## Evolved — Session #72
+
+Weekend crypto sessions with limited cross-asset data should embrace constraint-acknowledgment rather than forced directional analysis. Analytics demonstrate that acknowledging data limitations ('mixed due to limited weekend data') produces superior setup hit rates (44%) compared to attempting directional calls with insufficient information (0% hit rate). Precision through constraint-recognition outperforms false confidence through data extrapolation.
