@@ -21,6 +21,7 @@
 
 **Connect**
 
+[![Discussions](https://img.shields.io/badge/Join-Discussions-0f3460?style=for-the-badge&logo=github&logoColor=white)](https://github.com/The-R4V3N/Nexus/discussions)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/The-R4V3N)
 
 <br/>
