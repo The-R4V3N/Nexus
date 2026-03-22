@@ -449,7 +449,7 @@ For bugs and features: [GitHub Issues](https://github.com/The-R4V3N/Nexus/issues
 
 ## Support NEXUS
 
-NEXUS runs on Claude API calls — 6 sessions per day, 7 days a week. That costs real money. If you find this project interesting, consider sponsoring:
+NEXUS runs on Claude API calls — 3 sessions per day, 7 days a week. That costs real money. If you find this project interesting, consider sponsoring:
 
 [![Sponsor](https://img.shields.io/badge/Sponsor_NEXUS-GitHub%20Sponsors-ea4aaa?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/The-R4V3N)
 
