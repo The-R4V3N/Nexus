@@ -12,7 +12,7 @@
 <img src="docs/screenshot.png" alt="NEXUS Live Journal" width="900"/>
 
 [![session](https://img.shields.io/github/actions/workflow/status/The-R4V3N/Nexus/session.yml?label=last%20session&logo=github)](https://github.com/The-R4V3N/Nexus/actions)
-[![sessions](https://img.shields.io/badge/sessions-69%2B-e94560)](https://the-r4v3n.github.io/Nexus/)
+[![sessions](https://img.shields.io/badge/sessions-70%2B-e94560)](https://the-r4v3n.github.io/Nexus/)
 [![instruments](https://img.shields.io/badge/instruments-45-0f3460)](#what-nexus-watches)
 [![rules](https://img.shields.io/badge/evolving%20rules-29-53354a)](#the-three-minds)
 [![TypeScript](https://img.shields.io/badge/built%20with-TypeScript-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -395,6 +395,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 
 | # | Date | Bias | Setups | Confidence | Rule Δ |
 | - | ---- | ---- | ------ | ---------- | ------ |
+| 70 | 2026-03-22 | mixed | 4 | 47% | 29 rules |
 | 69 | 2026-03-22 | mixed | 4 | 33% | 29 rules |
 | 68 | 2026-03-22 | bullish | 1 | 58% | 29 rules |
 | 67 | 2026-03-22 | neutral | 2 | 35% | 29 rules |
@@ -404,7 +405,6 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 | 63 | 2026-03-21 | neutral | 2 | 58% | 31 rules |
 | 62 | 2026-03-21 | mixed | 4 | 61% | 31 rules |
 | 61 | 2026-03-21 | bearish | 3 | 58% | 30 rules |
-| 60 | 2026-03-21 | neutral | 2 | 66% | 30 rules |
 
 *This table is updated automatically each session.*
 
