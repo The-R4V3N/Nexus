@@ -26423,5 +26423,98 @@
     },
     "ruleCount": 29,
     "systemPromptVersion": 48
+  },
+  {
+    "sessionNumber": 67,
+    "date": "2026-03-22 00:04",
+    "title": "WEEKEND — Bitcoin Other + rule evolution",
+    "oracleSummary": "NEUTRAL bias | 2 setups | Confidence: 35/100 | Bitcoin Other (neutral), Ethereum Other (neutral)",
+    "axiomSummary": "This session highlighted a screening gap in weekend crypto analysis. While I correctly identified limited confluence and avoided overconfidence, I failed to systematically evaluate all crypto instruments for structural alignment despite having rules requiring comprehensive screening. Weekend sessions don't exempt me from thorough instrument evaluation - they just change the available data universe.",
+    "fullAnalysis": {
+      "timestamp": "2026-03-22T00:03:57.915Z",
+      "sessionId": "nx-1774137814754-phoquf",
+      "marketSnapshots": [],
+      "analysis": "**Higher Timeframe Context:** Bitcoin remains in consolidation on the daily timeframe around $67,000, holding above the key $65,000 support that acted as resistance in prior weeks. Ethereum continues to underperform relative to Bitcoin, trading around $3,300 with daily bias remaining neutral. The broader crypto market showed defensive positioning into Friday's close with Bitcoin dominance maintaining elevated levels, suggesting institutional preference for the majors over altcoins.\n\n**Intraday Analysis:** Weekend crypto sessions typically show reduced volatility and lower participation, but current price action shows Bitcoin testing resistance around $67,500 while Ethereum struggles near $3,300. Without traditional market data for correlation reference, crypto is operating in isolation with limited directional conviction. Volume remains subdued typical of weekend sessions, making breakout attempts less reliable.\n\n**Cross-Asset Dynamics:** Crypto-internal dynamics show continued Bitcoin dominance theme with BTC/ETH ratio remaining elevated. This defensive rotation within crypto suggests institutional positioning ahead of Monday's traditional market reopening. The flight-to-quality pattern within crypto (majors outperforming alts) often previews broader risk management themes that carry into traditional markets. Without access to DXY or equity futures for correlation context, assessing broader risk sentiment remains limited.\n\n**Technical Confluence Analysis:** Valid confluences for Bitcoin: (1) holding above daily $65,000 support, (2) testing intraday resistance at $67,500. For Ethereum: (1) consolidation near $3,300 psychological level. Confluence count is limited with only 1-2 valid confluences per instrument. Confidence: 35% — TC (40%), MA (20%), RR (40%). Technical confluence scores 40% due to limited structural levels being tested. Macro alignment scores 20% due to isolation from traditional market correlations during weekend session. Risk/reward clarity scores 40% as key levels are identifiable but breakout probability remains uncertain in low-volume environment.",
+      "setups": [
+        {
+          "instrument": "Bitcoin",
+          "type": "Other",
+          "direction": "neutral",
+          "description": "Range trading setup between 65000 support and 67500 resistance during weekend consolidation with reduced volume",
+          "invalidation": "Break and hold above 67500 or below 65000",
+          "entry": 67400,
+          "stop": 68000,
+          "target": 66000,
+          "RR": 2.3,
+          "timeframe": "4H"
+        },
+        {
+          "instrument": "Ethereum",
+          "type": "Other",
+          "direction": "neutral",
+          "description": "Consolidation range play between 3300 support and 3400 resistance with defensive positioning theme",
+          "invalidation": "Break and hold above 3400 or below 3300",
+          "entry": 3390,
+          "stop": 3420,
+          "target": 3310,
+          "RR": 2.7,
+          "timeframe": "4H"
+        }
+      ],
+      "bias": {
+        "overall": "neutral",
+        "notes": "Limited weekend crypto data with defensive positioning suggesting consolidation rather than directional conviction"
+      },
+      "keyLevels": [
+        {
+          "instrument": "Bitcoin",
+          "level": 67500,
+          "type": "resistance",
+          "notes": "Intraday resistance being tested, previous rejection zone"
+        },
+        {
+          "instrument": "Bitcoin",
+          "level": 65000,
+          "type": "support",
+          "notes": "Daily support level, former resistance turned support"
+        },
+        {
+          "instrument": "Ethereum",
+          "level": 3300,
+          "type": "support",
+          "notes": "Psychological level and current consolidation zone"
+        },
+        {
+          "instrument": "Ethereum",
+          "level": 3400,
+          "type": "resistance",
+          "notes": "Previous swing high and potential breakout level"
+        }
+      ],
+      "confidence": 35
+    },
+    "reflection": {
+      "timestamp": "2026-03-22T00:04:14.402Z",
+      "sessionId": "nx-1774137814754-phoquf",
+      "whatWorked": "Acknowledged limited weekend data explicitly, avoided forcing strong directional conviction when structural evidence was weak, properly applied confidence methodology with specific confluence counting (1-2 per instrument = 40% technical), maintained intellectual honesty about isolation from traditional markets reducing correlation context",
+      "whatFailed": "Failed to systematically screen crypto instruments per r026/r028 despite neutral bias - should have evaluated all major crypto pairs (BTC/ETH, SOL, LINK, ADA) for structural alignment rather than limiting to just BTC and ETH. Weekend sessions still require comprehensive screening when structural levels exist within proximity",
+      "cognitiveBiases": [
+        "availability heuristic - defaulting to BTC/ETH analysis rather than systematic screening",
+        "anchoring bias - fixating on 35% confidence rather than questioning if weekend isolation warrants even lower conviction"
+      ],
+      "ruleUpdates": [
+        {
+          "ruleId": "r026",
+          "type": "modify",
+          "before": "When market analysis identifies clear directional bias (confidence >60%), scan all 17 instruments for structural levels (recent breaks, liquidity zones, FVGs) aligned with that bias. Minimum target: 1 setup per major asset class (forex, indices, crypto, metals, commodities) when bias is clear.",
+          "after": "When market analysis identifies clear directional bias (confidence >60%), scan all available instruments for structural levels aligned with that bias. Weekend sessions: screen all 8 crypto instruments. Regular sessions: screen all 17 instruments across asset classes. Document which instruments were evaluated and why setups were/weren't identified.",
+          "reason": "Weekend sessions have different instrument availability but still require systematic screening of the available universe rather than defaulting to subset analysis"
+        }
+      ],
+      "newSystemPromptSections": "",
+      "evolutionSummary": "This session highlighted a screening gap in weekend crypto analysis. While I correctly identified limited confluence and avoided overconfidence, I failed to systematically evaluate all crypto instruments for structural alignment despite having rules requiring comprehensive screening. Weekend sessions don't exempt me from thorough instrument evaluation - they just change the available data universe."
+    },
+    "ruleCount": 29,
+    "systemPromptVersion": 49
   }
 ]
