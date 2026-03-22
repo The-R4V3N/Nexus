@@ -28,6 +28,7 @@ import {
 } from "./journal";
 import { validateOracleOutput, logFailure, loadRecentFailures }    from "./validate";
 import { buildAnalyticsSummary }                                    from "./analytics";
+import { fetchRSSNews, formatRSSForPrompt }                          from "./rss";
 import { MEMORY_DIR, ANALYSIS_RULES_PATH } from "./utils";
 import type { AnalysisRules, MarketSnapshot, OracleAnalysis, AxiomReflection, ForgeRequest, ForgeResult } from "./types";
 
@@ -221,6 +222,7 @@ export function isWeekend(date: Date = new Date()): boolean {
 interface InputData {
   snapshots: MarketSnapshot[];
   macroText: string;
+  rssText: string;
   issuesText: string;
   selfTasksText: string;
   selfTaskNumbers: number[];
@@ -237,10 +239,11 @@ export async function fetchAllInputData(): Promise<InputData> {
     // Weekend: crypto only from Binance, skip macro
     const phase1Spinner = ora({ text: "Fetching weekend crypto data from Binance...", color: "yellow" }).start();
 
-    const [cryptoResult, issuesResult, selfTasksResult] = await Promise.allSettled([
+    const [cryptoResult, issuesResult, selfTasksResult, rssResult] = await Promise.allSettled([
       fetchCryptoMarkets(),
       fetchCommunityIssues(),
       fetchOpenSelfTasks(),
+      fetchRSSNews(),
     ]);
 
     // ── Handle crypto (required) ──
@@ -311,17 +314,35 @@ export async function fetchAllInputData(): Promise<InputData> {
       console.log(chalk.dim("  Open self-tasks: unavailable\n"));
     }
 
-    return { snapshots, macroText: "", issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: true };
+    // ── Handle RSS news (optional) ──
+    let rssText = "";
+    if (rssResult.status === "fulfilled") {
+      const rssSnapshot = rssResult.value;
+      if (rssSnapshot.articles.length > 0) {
+        rssText = formatRSSForPrompt(rssSnapshot);
+        console.log(chalk.dim(`  RSS news: `) + chalk.cyan(`${rssSnapshot.articles.length} headlines from ${rssSnapshot.articles.length > 0 ? new Set(rssSnapshot.articles.map(a => a.source)).size : 0} feeds`));
+        if (rssSnapshot.errors.length > 0) {
+          for (const e of rssSnapshot.errors) console.log(chalk.dim(`    ⚠ ${e}`));
+        }
+      } else {
+        console.log(chalk.dim("  RSS news: no headlines\n"));
+      }
+    } else {
+      console.log(chalk.dim("  RSS news: unavailable\n"));
+    }
+
+    return { snapshots, macroText: "", rssText, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: true };
   }
 
   // ── Weekday: full data fetch ──
-  const phase1Spinner = ora({ text: "Fetching market data, macro context, issues...", color: "yellow" }).start();
+  const phase1Spinner = ora({ text: "Fetching market data, macro context, issues, RSS news...", color: "yellow" }).start();
 
-  const [marketsResult, macroResult, issuesResult, selfTasksResult] = await Promise.allSettled([
+  const [marketsResult, macroResult, issuesResult, selfTasksResult, rssResult] = await Promise.allSettled([
     fetchAllMarkets(),
     fetchMacroSnapshot(),
     fetchCommunityIssues(),
     fetchOpenSelfTasks(),
+    fetchRSSNews(),
   ]);
 
   // ── Handle markets (required) ──
@@ -371,11 +392,12 @@ export async function fetchAllInputData(): Promise<InputData> {
   if (macroResult.status === "rejected") failedSources.push("macro");
   if (issuesResult.status === "rejected") failedSources.push("issues");
   if (selfTasksResult.status === "rejected") failedSources.push("self-tasks");
+  if (rssResult.status === "rejected") failedSources.push("rss");
 
   if (failedSources.length > 0) {
     phase1Spinner.warn(chalk.yellow(`Fetched ${snapshots.length} instruments (${failedSources.join(", ")} unavailable)`));
   } else {
-    phase1Spinner.succeed(chalk.green(`Fetched ${snapshots.length} instruments + macro, issues, self-tasks`));
+    phase1Spinner.succeed(chalk.green(`Fetched ${snapshots.length} instruments + macro, issues, self-tasks, RSS news`));
   }
 
   printMarketsTable(snapshots);
@@ -430,7 +452,25 @@ export async function fetchAllInputData(): Promise<InputData> {
     console.log(chalk.dim("  Open self-tasks: unavailable\n"));
   }
 
-  return { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: false };
+  // ── Handle RSS news (optional) ──
+  let rssText = "";
+  if (rssResult.status === "fulfilled") {
+    const rssSnapshot = rssResult.value;
+    if (rssSnapshot.articles.length > 0) {
+      rssText = formatRSSForPrompt(rssSnapshot);
+      const feedCount = new Set(rssSnapshot.articles.map(a => a.source)).size;
+      console.log(chalk.dim(`  RSS news: `) + chalk.cyan(`${rssSnapshot.articles.length} headlines from ${feedCount} feeds`));
+      if (rssSnapshot.errors.length > 0) {
+        for (const e of rssSnapshot.errors) console.log(chalk.dim(`    ⚠ ${e}`));
+      }
+    } else {
+      console.log(chalk.dim("  RSS news: no headlines\n"));
+    }
+  } else {
+    console.log(chalk.dim("  RSS news: unavailable\n"));
+  }
+
+  return { snapshots, macroText, rssText, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: false };
 }
 
 export async function runAndValidateOracle(
@@ -733,10 +773,14 @@ export async function runSession(force = false): Promise<void> {
   }
 
   currentPhase = "oracle";
-  const { snapshots, macroText, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: weekendMode } = await fetchAllInputData();
+  const { snapshots, macroText, rssText, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, isWeekend: weekendMode } = await fetchAllInputData();
 
   // On weekends, inject last weekday session context so ORACLE knows where traditional markets left off
-  const oracleContext = weekendMode ? buildWeekdayBridge() : macroText;
+  // RSS news is always appended regardless of weekend/weekday
+  let oracleContext = weekendMode ? buildWeekdayBridge() : macroText;
+  if (rssText) {
+    oracleContext += (oracleContext ? "\n\n" : "") + rssText;
+  }
 
   currentPhase = "oracle";
   const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, oracleContext, weekendMode);

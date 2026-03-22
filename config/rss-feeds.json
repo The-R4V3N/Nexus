@@ -1,0 +1,10 @@
+[
+  { "url": "https://feeds.reuters.com/reuters/businessNews", "name": "Reuters Business", "category": "markets" },
+  { "url": "https://feeds.reuters.com/reuters/topNews", "name": "Reuters Top", "category": "general" },
+  { "url": "https://feeds.bbci.co.uk/news/business/rss.xml", "name": "BBC Business", "category": "markets" },
+  { "url": "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml", "name": "NYT Business", "category": "markets" },
+  { "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html", "name": "CNBC", "category": "markets" },
+  { "url": "https://feeds.marketwatch.com/marketwatch/topstories/", "name": "MarketWatch", "category": "markets" },
+  { "url": "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en", "name": "Google Finance", "category": "markets" },
+  { "url": "https://www.coindesk.com/arc/outboundfeeds/rss/", "name": "CoinDesk", "category": "crypto" }
+]
