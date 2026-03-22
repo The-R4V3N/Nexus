@@ -51,7 +51,7 @@ export function formatSessionMessage(entry: JournalEntry): string {
   }
 
   if (entry.reflection.evolutionSummary) {
-    lines.push("", `🧠 *Evolution:* ${entry.reflection.evolutionSummary.slice(0, 200)}`);
+    lines.push("", `🧠 *Evolution:* ${entry.reflection.evolutionSummary}`);
   }
 
   lines.push("", `📖 [Live Journal](${JOURNAL_URL})`);

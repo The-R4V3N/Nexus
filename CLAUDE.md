@@ -19,6 +19,7 @@ src/
   crypto-markets.ts  Weekend crypto data via Binance public API (10 instruments, no auth)
   macro.ts        Macro & geopolitical data (FRED, US Treasury, GDELT, Alpha Vantage — all raw HTTP)
   rss.ts          RSS news feed aggregator (8 configurable feeds, sanitized, deduplicated)
+  notifications.ts Telegram session notifications (optional, raw fetch, no packages)
   issues.ts       Community GitHub issues reader (nexus-input label)
   self-tasks.ts   Autonomous issue creation + resolution (nexus-self-task label, with dedup)
   security.ts     Prompt injection detection, cost guards, output sanitization, meta-rule blocking
@@ -128,6 +129,8 @@ npm run rebuild-site         # Regenerate GitHub Pages
 - Optional `ALPHA_VANTAGE_API_KEY` for technical indicators and market movers (free at <https://www.alphavantage.co/support/#api-key>)
 - Optional `GITHUB_TOKEN` for issue reading/writing
 - Optional `GITHUB_REPOSITORY` (defaults to `The-R4V3N/Nexus`)
+- Optional `TELEGRAM_BOT_TOKEN` for session notifications via Telegram (create via @BotFather)
+- Optional `TELEGRAM_CHAT_ID` for Telegram notifications (get via @userinfobot)
 
 ### TypeScript
 

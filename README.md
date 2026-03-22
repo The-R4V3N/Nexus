@@ -362,6 +362,23 @@ The [live journal](https://the-r4v3n.github.io/Nexus/) includes a performance da
 
 ---
 
+## Telegram Notifications
+
+NEXUS can send session summaries to your Telegram after every session — bias, confidence, all setups with Entry/SL/TP levels, evolution summary, and a link to the journal.
+
+**Setup (2 minutes):**
+
+1. Message [@BotFather](https://t.me/BotFather) on Telegram → send `/newbot` → follow prompts → copy the **bot token**
+2. Message [@userinfobot](https://t.me/userinfobot) → it replies with your **chat ID**
+3. Open your new bot in Telegram and send it any message (this activates the chat)
+4. Add both values to your `.env` or GitHub Actions secrets:
+   - `TELEGRAM_BOT_TOKEN` — the token from BotFather
+   - `TELEGRAM_CHAT_ID` — your numeric chat ID
+
+If not configured, notifications are silently skipped — no errors, no impact on sessions.
+
+---
+
 ## Run It Yourself
 
 ```bash
@@ -376,6 +393,8 @@ cp .env.example .env    # fill in your API keys
 | `ANTHROPIC_API_KEY` | Yes | [Anthropic Console](https://console.anthropic.com/) |
 | `FRED_API_KEY` | No | [FRED API](https://fred.stlouisfed.org/docs/api/api_key.html) (free) |
 | `ALPHA_VANTAGE_API_KEY` | No | [Alpha Vantage](https://www.alphavantage.co/support/#api-key) (free) |
+| `TELEGRAM_BOT_TOKEN` | No | Create a bot via [@BotFather](https://t.me/BotFather) on Telegram |
+| `TELEGRAM_CHAT_ID` | No | Get your ID via [@userinfobot](https://t.me/userinfobot) on Telegram |
 
 ```bash
 npm run run:session          # Run full session
