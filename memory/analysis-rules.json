@@ -225,10 +225,10 @@
     {
       "id": "r028",
       "category": "setup_generation",
-      "description": "When market analysis identifies clear macro theme (USD strength, risk-off, sector rotation) affecting 3+ asset classes, systematically document which specific structural levels (support/resistance, FVGs, liquidity zones) exist within 1% of current price for each major instrument in theme-aligned direction.",
+      "description": "When market analysis identifies clear macro theme (USD strength, risk-off, forced liquidation, sector rotation) affecting 3+ asset classes, systematically scan each major instrument for structural levels aligned with the theme direction. Document which instruments were screened, which had valid setups, and which lacked clear structural levels. Theme-aligned setups take priority over counter-theme reversals.",
       "weight": 9,
       "addedSession": 51,
-      "lastModifiedSession": 51
+      "lastModifiedSession": 74
     },
     {
       "id": "r029",
@@ -239,8 +239,8 @@
       "lastModifiedSession": 56
     }
   ],
-  "version": 51,
-  "lastUpdated": "2026-03-22T16:12:48.034Z",
+  "version": 52,
+  "lastUpdated": "2026-03-23T08:18:35.516Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -248,5 +248,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #72"
+  "sessionNotes": "Last updated: Session #74"
 }
