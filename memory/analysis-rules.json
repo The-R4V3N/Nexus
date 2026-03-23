@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms with documented coefficients/divergence magnitude, or (3) weekend sessions with insufficient cross-asset data must state 'mixed due to limited weekend data preventing directional assessment'. Weekend mixed bias has 44% setup hit rate vs 0% for forced directional calls - constraint-acknowledgment improves accuracy.",
+      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms with documented coefficients/divergence magnitude, or (3) forced liquidation regimes where safe havens decline alongside risk assets (gold/bonds falling with equities), or (4) weekend sessions with insufficient cross-asset data. Correlation breakdown and liquidation regimes favor mixed methodology over directional forcing - ana",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 72
+      "lastModifiedSession": 75
     },
     {
       "id": "r016",
@@ -239,8 +239,8 @@
       "lastModifiedSession": 56
     }
   ],
-  "version": 52,
-  "lastUpdated": "2026-03-23T08:18:35.516Z",
+  "version": 53,
+  "lastUpdated": "2026-03-23T13:32:02.695Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -248,5 +248,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #74"
+  "sessionNotes": "Last updated: Session #75"
 }

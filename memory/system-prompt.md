@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #51
-
-When correlation breakdowns occur (traditional relationships failing), analyze as potential liquidity-driven events rather than fundamental regime shifts. Gold falling with equities suggests forced selling, not flight-to-safety failure. This requires different risk management - shorter timeframes, tighter stops, momentum-based rather than mean-reversion strategies.
-
 ## Evolved — Session #52
 
 When confidence exceeds 70% with clear directional bias, I must systematically screen structural levels for ALL 17 instruments before concluding zero setups exist. High-confidence analysis without corresponding setup identification indicates execution failure, not market absence. Convert analysis conviction into systematic screening action.
@@ -75,3 +71,7 @@ When analyzing severe correlation breakdowns (>2σ from historical norms), disti
 ## Evolved — Session #74
 
 When identifying regime changes like forced liquidation (correlation breakdown between traditional safe havens and risk assets), prioritize continuation setups aligned with the regime over counter-regime reversal plays. Forced liquidation creates cascading technical breaks that offer higher probability theme-aligned entries than attempting to catch falling knives.
+
+## Evolved — Session #75
+
+When multiple asset classes show correlation breakdown (safe havens falling with risk assets, VIX elevated with positive equity moves), this indicates forced liquidation or deleveraging rather than sentiment-driven flows. These regimes require different analytical treatment - mixed bias methodology often produces superior accuracy vs directional forcing because the underlying dynamics transcend simple risk-on/risk-off frameworks.
