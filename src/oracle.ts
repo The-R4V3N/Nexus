@@ -249,14 +249,16 @@ ${marketData}
 YOUR TASK: Construct trade setups aligned with your ${biasOverall} bias.
 
 RULES:
-- Scan ALL instruments for setups aligned with your bias direction
+- You MUST systematically evaluate EVERY instrument in the price data for potential setups
+- For each instrument, either include a setup OR briefly note why none exists (no structural level nearby, no alignment with theme)
+- When a clear macro theme is present (USD strength, risk-off, forced liquidation, correlation breakdown), you MUST screen all asset classes: forex majors, indices, crypto, metals, energy
+- Minimum setups: at least 3 when confidence > 50%, at least 4 when confidence > 60%
+- Weekend crypto sessions: at least 2 setups from available crypto instruments regardless of confidence
 - Every setup MUST have: entry, stop, target, RR, timeframe
 - ENTRY: nearest support/resistance, session high/low, or key level
 - STOP: beyond the next structural level, or 1x ATR from entry
 - TARGET: next liquidity level, psychological number, or swing point
 - RR must be > 1.3 \u2014 do not include setups with risk exceeding reward
-- If confidence > 60%, you MUST identify at least 2 setups
-- Weekend crypto sessions: you MUST identify at least 2 setups from the available crypto instruments regardless of confidence level
 - Include instrument, type, direction, description, and invalidation
 - TYPE must be a specific ICT pattern: FVG, OB, Liquidity Sweep, MSS, CISD, or PDH/PDL. These apply to ALL markets including crypto. "Other" is only acceptable if the setup genuinely does not fit any ICT pattern — do not use "Other" as a default.
 
