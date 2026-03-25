@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #57
-
-When analyzing broad market liquidation events (multiple asset classes declining >5% simultaneously with correlation breakdown), prioritize liquidity-driven explanations over fundamental narratives. Gold falling while VIX rises indicates forced selling rather than risk-off rotation, requiring different analytical framework focusing on margin calls and position unwinding rather than traditional safe-haven flows.
-
 ## Evolved — Session #59
 
 When analyzing correlation breakdowns during elevated volatility (VIX >24), prioritize liquidity-driven explanations over fundamental repricing. Gold falling during risk-off typically indicates forced liquidation rather than sentiment shifts. Cross-asset divergences exceeding 2x normal ranges often signal structural market stress requiring different analytical frameworks than traditional risk-on/risk-off models.
@@ -71,3 +67,7 @@ During forced liquidation regimes where safe havens decline alongside risk asset
 ## Evolved — Session #80
 
 When identifying clear cross-asset themes (forced liquidation, USD strength, risk rotation) affecting 3+ asset classes, systematically evaluate each instrument class even if confidence falls slightly below rigid thresholds. Macro theme clarity matters more than precise confidence percentiles for screening discipline.
+
+## Evolved — Session #81
+
+When correlation breakdown regimes are evident (VIX >25 with conflicting asset class performance), my mixed bias framework consistently outperforms directional bias calls. The key insight is that forced positioning and regional flow dynamics create temporary price action that doesn't reflect underlying sentiment, making confluence-based setups more reliable than macro-driven directional calls during these periods.
