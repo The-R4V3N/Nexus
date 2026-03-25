@@ -569,6 +569,23 @@ export async function runAndValidateAxiom(
     prevContext += "\n\n" + analyticsSummary;
   }
 
+  // Inject screening compliance so AXIOM knows if screening was adequate
+  const setupCategories = new Set(oracle.setups.map((s: any) => {
+    const name = (s.instrument ?? "").toLowerCase();
+    if (name.includes("eur") || name.includes("gbp") || name.includes("usd") || name.includes("jpy") || name.includes("aud") || name.includes("cad") || name.includes("nzd") || name.includes("chf")) return "forex";
+    if (name.includes("nas") || name.includes("s&p") || name.includes("spx") || name.includes("dow") || name.includes("dax") || name.includes("ftse")) return "indices";
+    if (name.includes("bitcoin") || name.includes("btc") || name.includes("ethereum") || name.includes("eth") || name.includes("solana") || name.includes("xrp") || name.includes("bnb") || name.includes("cardano") || name.includes("doge") || name.includes("avax") || name.includes("polkadot") || name.includes("chainlink")) return "crypto";
+    if (name.includes("gold") || name.includes("silver") || name.includes("plat") || name.includes("copper")) return "metals";
+    if (name.includes("oil") || name.includes("crude") || name.includes("gas")) return "energy";
+    return "other";
+  }));
+  const screeningNote = `\n\n### Screening compliance this session:
+- Setups produced: ${oracle.setups.length}
+- Asset classes covered: ${[...setupCategories].join(", ")} (${setupCategories.size} of 5)
+- Screening is ADEQUATE if setups span 3+ asset classes. You do NOT need to produce setups for all 17 instruments — only instruments with valid structural levels aligned with your bias deserve a setup.
+- If you covered 3+ asset classes, do NOT critique screening as a failure. Focus your reflection on analysis quality instead.`;
+  prevContext += screeningNote;
+
   // Detect repeated critiques across recent sessions
   const { critique: repeatedCritique, count: repeatCount } = detectRepeatedCritiques(allEntries);
   if (repeatedCritique && repeatCount >= 3) {
