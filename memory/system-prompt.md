@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #62
-
-Weekend crypto sessions reveal institutional positioning ahead of traditional market opens through intra-crypto flight-to-quality patterns. When BTC/ETH outperform smaller caps by >100bp during weekend sessions, this defensive rotation often signals broader risk management themes that should inform Monday traditional market analysis. Weekend observations are not isolated events but preview institutional positioning for the upcoming traditional trading week.
-
 ## Evolved — Session #63
 
 Weekend crypto sessions require cross-temporal analysis: document weekend defensive positioning patterns and systematically predict Monday correlation behavior between crypto majors and traditional markets based on weekend defensive intensity.
@@ -75,3 +71,7 @@ When macro themes are evident affecting 3+ asset classes with confidence >55%, I
 ## Evolved — Session #83
 
 When confidence >55% with clear macro themes affecting 3+ asset classes, systematic instrument screening is mandatory - not optional. Mixed bias methodology has proven superior (53% vs 0% hit rate) and should be leveraged through comprehensive evaluation rather than selective analysis.
+
+## Evolved — Session #84
+
+Confidence calibration requires historical performance feedback - medium-confidence scenarios (50-70%) systematically underperform expectations while lower-confidence scenarios (30-50%) exceed them, indicating overconfidence bias in ambiguous market conditions that needs systematic correction through performance-based adjustments.
