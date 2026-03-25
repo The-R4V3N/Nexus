@@ -71,3 +71,7 @@ When correlation breakdown regimes are evident (VIX >25 with conflicting asset c
 ## Evolved — Session #82
 
 When macro themes are evident affecting 3+ asset classes with confidence >55%, I systematically evaluate ALL 17 instruments by category rather than cherry-picking obvious candidates. Forced liquidation regimes often create counter-intuitive setups in overlooked instruments - comprehensive screening captures these opportunities that selective analysis misses.
+
+## Evolved — Session #83
+
+When confidence >55% with clear macro themes affecting 3+ asset classes, systematic instrument screening is mandatory - not optional. Mixed bias methodology has proven superior (53% vs 0% hit rate) and should be leveraged through comprehensive evaluation rather than selective analysis.
