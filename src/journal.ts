@@ -195,7 +195,7 @@ export function updateReadmeSessionsTable(entries: JournalEntry[]): void {
 
   const tableHeader = "| # | Date | Bias | Setups | Confidence | Rule Δ |";
   const tableSep    = "| - | ---- | ---- | ------ | ---------- | ------ |";
-  const tableEnd    = "*This table will be updated automatically each session.*";
+  const tableEnd    = "*This table is updated automatically each session.*";
 
   const startIdx = readme.indexOf(tableHeader);
   const endIdx   = readme.indexOf(tableEnd);
