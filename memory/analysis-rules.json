@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms with documented coefficients/divergence magnitude, or (3) forced liquidation regimes where safe havens decline alongside risk assets (gold/bonds falling with equities), or (4) weekend sessions with insufficient cross-asset data. Correlation breakdown and liquidation regimes favor mixed methodology over directional forcing - ana",
+      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms, or (3) forced liquidation regimes, or (4) weekend sessions with insufficient data. During mixed bias, screen each asset class independently for theme-aligned setups rather than requiring cross-asset coherence - correlation breakdown creates opportunities, not paralysis.",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 75
+      "lastModifiedSession": 86
     },
     {
       "id": "r016",
@@ -239,8 +239,8 @@
       "lastModifiedSession": 56
     }
   ],
-  "version": 55,
-  "lastUpdated": "2026-03-25T20:26:09.865Z",
+  "version": 56,
+  "lastUpdated": "2026-03-26T08:17:07.750Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -248,5 +248,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #84"
+  "sessionNotes": "Last updated: Session #86"
 }
