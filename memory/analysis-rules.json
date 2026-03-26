@@ -225,10 +225,10 @@
     {
       "id": "r028",
       "category": "setup_generation",
-      "description": "When market analysis identifies clear macro theme (USD strength, risk-off, forced liquidation, sector rotation) affecting 3+ asset classes AND confidence >55%, systematically evaluate ALL 17 instruments for theme-aligned setups by asset class: (1) Forex: EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CHF, USD/CAD, NZD/USD (2) Indices: S&P500, NASDAQ, DAX, FTSE (3) Crypto: BTC, ETH (4) Metals: Gold, Silver (5) Commodities: Crude Oil, Natural Gas. Document instrument-by-instrument evaluation results and ",
+      "description": "When confidence >55% with clear macro theme affecting 3+ asset classes, systematically evaluate each asset class for theme-aligned setups: (1) Forex majors (7 pairs), (2) Indices (4 instruments), (3) Crypto (2 instruments), (4) Metals (2 instruments), (5) Commodities (2 instruments). Document which asset classes were screened and reasoning for included/excluded setups. Mixed bias creates opportunities across asset classes independently - correlation breakdown means screening each class separatel",
       "weight": 9,
       "addedSession": 51,
-      "lastModifiedSession": 78
+      "lastModifiedSession": 87
     },
     {
       "id": "r029",
@@ -239,8 +239,8 @@
       "lastModifiedSession": 56
     }
   ],
-  "version": 56,
-  "lastUpdated": "2026-03-26T08:17:07.750Z",
+  "version": 57,
+  "lastUpdated": "2026-03-26T13:32:31.191Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -248,5 +248,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #86"
+  "sessionNotes": "Last updated: Session #87"
 }
