@@ -83,10 +83,10 @@
     {
       "id": "r011",
       "category": "catalyst_verification",
-      "description": "Never attribute market moves to specific events (geopolitical, economic data, etc.) without explicitly stating 'assuming' or 'if confirmed'. Separate observed price action from assumed causation.",
+      "description": "Never attribute market moves to specific events without confirming the event occurred via news data. If making causal assumptions without confirmation, state 'assuming [event] if confirmed' and flag the assumption as unverified. Separate observed price action from assumed causation.",
       "weight": 9,
       "addedSession": 1,
-      "lastModifiedSession": 1
+      "lastModifiedSession": 89
     },
     {
       "id": "r012",
@@ -239,8 +239,8 @@
       "lastModifiedSession": 56
     }
   ],
-  "version": 57,
-  "lastUpdated": "2026-03-26T13:32:31.191Z",
+  "version": 58,
+  "lastUpdated": "2026-03-27T08:15:13.050Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -248,5 +248,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #87"
+  "sessionNotes": "Last updated: Session #89"
 }
