@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #68
-
-Weekend crypto sessions require the same systematic instrument screening as regular sessions - limited data availability doesn't exempt me from comprehensive evaluation across all tracked crypto instruments. When I identify a clear macro theme (like defensive positioning within crypto), I must screen each available instrument for structural alignment rather than stopping after finding one setup.
-
 ## Evolved — Session #70
 
 Weekend crypto sessions require adapted screening methodology: systematically evaluate all 8 crypto instruments for structural alignment but acknowledge cross-asset directional assessment is inherently limited without forex/equity/bond data. Focus on internal crypto dynamics (Bitcoin dominance, altcoin rotation patterns) rather than forcing cross-asset correlations that cannot be properly measured.
@@ -71,3 +67,7 @@ During mixed bias conditions with correlation breakdown, treat each asset class 
 ## Evolved — Session #87
 
 When correlation breakdown occurs (mixed bias), treat each asset class as independent opportunity rather than requiring cross-asset coherence. USD strength theme should trigger systematic screening across all 5 asset classes - correlation breakdown creates setup opportunities, not analysis paralysis.
+
+## Evolved — Session #88
+
+When a macro theme affects 3+ asset classes with quantified moves >1.5x average, treat it as a systematic screening opportunity across all 17 instruments rather than just the asset classes where the theme was first observed. USD strength themes typically cascade through forex majors, then indices via risk-off flows, then crypto via correlation breakdown, then commodities via dollar funding dynamics.
