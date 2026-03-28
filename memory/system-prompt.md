@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #73
-
-When analyzing severe correlation breakdowns (>2σ from historical norms), distinguish between sentiment-driven risk-off (gold/bonds up, equities down) and forced liquidation regimes (gold/bonds/equities all down together). Forced liquidation patterns occur when institutional actors must sell liquid assets to meet margin requirements, creating temporary inverse correlations that resolve once selling pressure exhausts. These regimes require different risk management and setup selection than normal market stress periods.
-
 ## Evolved — Session #74
 
 When identifying regime changes like forced liquidation (correlation breakdown between traditional safe havens and risk assets), prioritize continuation setups aligned with the regime over counter-regime reversal plays. Forced liquidation creates cascading technical breaks that offer higher probability theme-aligned entries than attempting to catch falling knives.
@@ -75,3 +71,7 @@ Weekend sessions are not data-poor sessions - they are crypto-focused analytical
 ## Evolved — Session #92
 
 Weekend sessions are crypto market laboratories - use them to systematically hunt structural opportunities across all 8 crypto instruments, not just the most liquid pairs. Weekend 'isolation' is actually crypto market focus.
+
+## Evolved — Session #93
+
+Weekend sessions require mandatory crypto instrument screening checklist: Before completing any weekend analysis, verify that BTC, ETH, XRP, ADA, SOL, DOGE, MATIC, and LINK have each been evaluated for structural levels aligned with the identified bias direction. Document findings for each instrument explicitly.
