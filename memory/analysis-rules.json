@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms, or (3) forced liquidation regimes, or (4) weekend sessions with insufficient data. During mixed bias, screen each asset class independently for theme-aligned setups rather than requiring cross-asset coherence - correlation breakdown creates opportunities, not paralysis.",
+      "description": "Mixed bias requires specific quantified justification: (1) equal-weighted conflicting signals across 3+ asset classes with magnitude differences <0.5%, or (2) correlation breakdown exceeding 2 standard deviations from 30-day average, or (3) VIX >30 with equity/bond correlation <0.3, or (4) weekend sessions where crypto shows <1% directional bias variance across major pairs.",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 86
+      "lastModifiedSession": 91
     },
     {
       "id": "r016",
@@ -237,10 +237,18 @@
       "weight": 9,
       "addedSession": 56,
       "lastModifiedSession": 56
+    },
+    {
+      "id": "r030",
+      "category": "weekend",
+      "description": "Weekend sessions: systematically screen all 8 crypto instruments (BTC, ETH, XRP, ADA, SOL, DOGE, MATIC, LINK) for structural levels aligned with identified bias. Weekend sessions are crypto-focused opportunities, not limited-data environments.",
+      "weight": 9,
+      "addedSession": 91,
+      "lastModifiedSession": 91
     }
   ],
-  "version": 59,
-  "lastUpdated": "2026-03-27T13:30:26.882Z",
+  "version": 60,
+  "lastUpdated": "2026-03-28T00:06:05.696Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -248,5 +256,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #90"
+  "sessionNotes": "Last updated: Session #91"
 }

@@ -19,9 +19,9 @@
 <img src="docs/screenshot.png" alt="NEXUS Live Journal" width="900"/>
 
 [![session](https://img.shields.io/github/actions/workflow/status/The-R4V3N/Nexus/session.yml?label=last%20session&logo=github)](https://github.com/The-R4V3N/Nexus/actions)
-[![sessions](https://img.shields.io/badge/sessions-90%2B-e94560)](https://the-r4v3n.github.io/Nexus/)
+[![sessions](https://img.shields.io/badge/sessions-91%2B-e94560)](https://the-r4v3n.github.io/Nexus/)
 [![instruments](https://img.shields.io/badge/instruments-45-0f3460)](#what-nexus-watches)
-[![rules](https://img.shields.io/badge/evolving%20rules-29-53354a)](#the-three-minds)
+[![rules](https://img.shields.io/badge/evolving%20rules-30-53354a)](#the-three-minds)
 [![TypeScript](https://img.shields.io/badge/built%20with-TypeScript-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![license CC BY-NC-SA 4.0](https://img.shields.io/badge/license-CC%20BY--NC--SA%204.0-blue)](LICENSE)
 [![last commit](https://img.shields.io/github/last-commit/The-R4V3N/Nexus)](https://github.com/The-R4V3N/Nexus/commits/main)
@@ -424,6 +424,7 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 
 | # | Date | Bias | Setups | Confidence | Rule Δ |
 | - | ---- | ---- | ------ | ---------- | ------ |
+| 91 | 2026-03-28 | mixed | 2 | 35% | 30 rules |
 | 90 | 2026-03-27 | mixed | 4 | 67% | 29 rules |
 | 89 | 2026-03-27 | mixed | 4 | 71% | 29 rules |
 | 88 | 2026-03-27 | mixed | 5 | 47% | 29 rules |
@@ -433,7 +434,6 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 | 84 | 2026-03-25 | mixed | 6 | 61% | 29 rules |
 | 83 | 2026-03-25 | mixed | 5 | 61% | 29 rules |
 | 82 | 2026-03-25 | mixed | 2 | 59% | 29 rules |
-| 81 | 2026-03-25 | mixed | 3 | 61% | 29 rules |
 
 *This table is updated automatically each session.*
 

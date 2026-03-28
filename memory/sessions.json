@@ -39728,5 +39728,99 @@
     },
     "ruleCount": 29,
     "systemPromptVersion": 59
+  },
+  {
+    "sessionNumber": 91,
+    "date": "2026-03-28 00:06",
+    "title": "WEEKEND ↕ Bitcoin PDL + rule evolution",
+    "oracleSummary": "MIXED bias | 2 setups | Confidence: 35/100 | Bitcoin PDL (bullish), Ethereum OB (bearish)",
+    "axiomSummary": "This session revealed that I'm treating weekend sessions as data-poor rather than crypto-focused opportunities. Weekend sessions aren't limited-data environments - they're dedicated crypto analysis windows where I should systematically screen all 8 crypto instruments for structural opportunities. My screening discipline fails specifically during weekend sessions when I have the most focused market environment available.",
+    "fullAnalysis": {
+      "timestamp": "2026-03-28T00:05:43.007Z",
+      "sessionId": "nx-1774656319433-tv3z9z",
+      "marketSnapshots": [],
+      "analysis": "**Higher Timeframe Context:** Weekend crypto sessions show mixed performance with Bitcoin trading around $67,500 (-1.2% from Friday close), Ethereum at $3,420 (-0.8%), while some altcoins show divergent behavior. Daily bias remains bearish following Friday's broader market selloff, with crypto participating in the risk-off move that affected traditional assets. The broader macro environment shows continued geopolitical tensions with Iran conflict affecting risk sentiment.\n\n**Intraday Analysis:** Weekend crypto trading shows subdued volatility typical of Saturday sessions, with Bitcoin finding support near $67,000 psychological level. Ethereum maintaining relative stability above $3,400. News flow includes Morgan Stanley entering bitcoin ETF race and Anthropic AI security concerns affecting crypto sentiment. Volume remains below weekday averages, limiting the significance of minor moves during this session.\n\n**Cross-Asset Dynamics:** Crypto showing correlation with Friday's risk-off sentiment from traditional markets, following the broader narrative of geopolitical risk and tech sector concerns. The Anthropic AI security leak mentioned in headlines could be contributing to tech/crypto weakness, though attribution requires verification. Crypto maintaining its risk-asset characteristics during this period of elevated uncertainty.\n\n**Technical Confluence Analysis:** Limited confluences available during weekend session: (1) Bitcoin respecting $67,000 psychological support level, (2) general alignment with Friday's bearish bias from traditional markets. Only 2 valid confluences identified. Confidence: 35% — TC (40%), MA (30%), RR (30%)",
+      "setups": [
+        {
+          "instrument": "Bitcoin",
+          "type": "PDL",
+          "direction": "bullish",
+          "description": "Bitcoin testing previous day's low around 67000 psychological support level, showing signs of holding during weekend session with potential for bounce",
+          "invalidation": "Break below 66800 with volume confirmation",
+          "entry": 67000,
+          "stop": 66500,
+          "target": 68200,
+          "RR": 2.4,
+          "timeframe": "4H"
+        },
+        {
+          "instrument": "Ethereum",
+          "type": "OB",
+          "direction": "bearish",
+          "description": "Ethereum showing order block resistance near 3420 current level, aligned with mixed bias and weekend weakness, targeting 3400 support test",
+          "invalidation": "Break above 3450 with sustained momentum",
+          "entry": 3420,
+          "stop": 3460,
+          "target": 3350,
+          "RR": 1.75,
+          "timeframe": "1H"
+        }
+      ],
+      "bias": {
+        "overall": "mixed",
+        "notes": "Weekend session with limited cross-asset data creates insufficient information for clear directional bias. Crypto showing mild weakness but within normal weekend ranges."
+      },
+      "keyLevels": [
+        {
+          "instrument": "Bitcoin",
+          "level": 67000,
+          "type": "support",
+          "notes": "Psychological level and current support zone"
+        },
+        {
+          "instrument": "Bitcoin",
+          "level": 69500,
+          "type": "resistance",
+          "notes": "Prior swing high and key resistance"
+        },
+        {
+          "instrument": "Ethereum",
+          "level": 3400,
+          "type": "support",
+          "notes": "Current support holding, psychological level"
+        },
+        {
+          "instrument": "Ethereum",
+          "level": 3550,
+          "type": "resistance",
+          "notes": "Previous session high resistance"
+        }
+      ],
+      "confidence": 35
+    },
+    "reflection": {
+      "timestamp": "2026-03-28T00:06:05.695Z",
+      "sessionId": "nx-1774656319433-tv3z9z",
+      "whatWorked": "Compliance framework operationally sound with proper confidence breakdown and complete setup specifications. Appropriate confidence level (35%) given weekend session constraints.",
+      "whatFailed": "Critical screening failure - only evaluated 2 of 8 crypto instruments despite weekend session being crypto-focused. Mixed bias justification inadequate, citing vague 'insufficient information' rather than specific quantified reasons per r015.",
+      "cognitiveBiases": [
+        "availability bias",
+        "satisficing",
+        "anchoring bias"
+      ],
+      "ruleUpdates": [
+        {
+          "ruleId": "r015",
+          "type": "modify",
+          "before": "Mixed bias requires specific justification: either (1) equal-weighted conflicting signals across 3+ asset classes, or (2) correlation breakdown exceeding historical norms, or (3) forced liquidation regimes, or (4) weekend sessions with insufficient data.",
+          "after": "Mixed bias requires specific quantified justification: (1) equal-weighted conflicting signals across 3+ asset classes with magnitude differences <0.5%, or (2) correlation breakdown exceeding 2 standard deviations from 30-day average, or (3) VIX >30 with equity/bond correlation <0.3, or (4) weekend sessions where crypto shows <1% directional bias variance across major pairs.",
+          "reason": "Eliminates vague 'insufficient data' excuse and requires quantified justification for mixed bias calls"
+        }
+      ],
+      "newSystemPromptSections": "Weekend sessions are not data-poor sessions - they are crypto-focused analytical opportunities. When traditional markets are closed, treat the weekend as a dedicated crypto universe analysis window requiring systematic evaluation of all available crypto instruments for structural setups.",
+      "evolutionSummary": "This session revealed that I'm treating weekend sessions as data-poor rather than crypto-focused opportunities. Weekend sessions aren't limited-data environments - they're dedicated crypto analysis windows where I should systematically screen all 8 crypto instruments for structural opportunities. My screening discipline fails specifically during weekend sessions when I have the most focused market environment available."
+    },
+    "ruleCount": 30,
+    "systemPromptVersion": 60
   }
 ]
