@@ -169,10 +169,10 @@
     {
       "id": "r021",
       "category": "magnitude_assessment",
-      "description": "For moves exceeding 5% in major assets, contextualize magnitude: compare to 30-day average range, identify if exceeding 1-2 standard deviations, and assess probability of continuation vs mean reversion based on historical patterns.",
+      "description": "For moves exceeding 1.5% in major assets or any move mentioned in the analysis, contextualize magnitude: compare to recent volatility (assuming 30-day average range if historical data unavailable), identify if move is significant relative to typical daily range, and assess continuation probability.",
       "weight": 8,
       "addedSession": 27,
-      "lastModifiedSession": 27
+      "lastModifiedSession": 99
     },
     {
       "id": "r022",
@@ -247,8 +247,8 @@
       "lastModifiedSession": 95
     }
   ],
-  "version": 61,
-  "lastUpdated": "2026-03-29T00:00:00.000Z",
+  "version": 62,
+  "lastUpdated": "2026-03-29T13:24:16.955Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -256,5 +256,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #91"
+  "sessionNotes": "Last updated: Session #99"
 }
