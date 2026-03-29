@@ -241,14 +241,14 @@
     {
       "id": "r030",
       "category": "weekend",
-      "description": "Weekend sessions: systematically screen all 8 crypto instruments (BTC, ETH, XRP, ADA, SOL, DOGE, MATIC, LINK) for structural levels aligned with identified bias. Weekend sessions are crypto-focused opportunities, not limited-data environments.",
+      "description": "Weekend sessions: systematically screen all 10 crypto instruments (BTC, ETH, SOL, XRP, BNB, ADA, DOGE, AVAX, DOT, LINK) for structural levels aligned with identified bias. Weekend sessions are crypto-focused opportunities, not limited-data environments.",
       "weight": 9,
       "addedSession": 91,
-      "lastModifiedSession": 91
+      "lastModifiedSession": 95
     }
   ],
-  "version": 60,
-  "lastUpdated": "2026-03-28T00:06:05.696Z",
+  "version": 61,
+  "lastUpdated": "2026-03-29T00:00:00.000Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",

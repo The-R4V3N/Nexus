@@ -14,7 +14,9 @@ import {
   salvageJSON, stripSurrogates, extractJSONFromResponse, groupBy,
   MEMORY_DIR, SYSTEM_PROMPT_PATH, ANALYSIS_RULES_PATH,
 } from "./utils";
-import { resolveConfidence } from "./validate";
+import { resolveConfidence, applyCalibrationAdjustment } from "./validate";
+import { loadAllJournalEntries } from "./journal";
+import { buildCalibrationContext } from "./analytics";
 import type {
   MarketSnapshot,
   OracleAnalysis,
@@ -137,12 +139,16 @@ or commodities as they show Friday's closing prices, not current market conditio
 
 ` : "";
 
+  // Build calibration context from historical data
+  const allEntries = loadAllJournalEntries();
+  const calibrationContext = buildCalibrationContext(allEntries);
+
   const analysisUserMessage = `
 ${weekendContext}${marketData}
 
 ${macroContext ? macroContext + "\n\n" : ""}${rulesText}
 
-${communityIssues ? communityIssues + "\n\n" : ""}SESSION: #${sessionNumber}
+${communityIssues ? communityIssues + "\n\n" : ""}${calibrationContext ? calibrationContext + "\n\n" : ""}SESSION: #${sessionNumber}
 TIMESTAMP: ${new Date().toISOString()}
 
 Analyze the current market conditions. Focus ONLY on market analysis \u2014 do NOT identify trade setups.
@@ -353,8 +359,17 @@ Only respond with the JSON array, no other text.`;
     }
   }
 
-  // Enforce: high confidence with zero setups is contradictory
+  // Resolve text vs JSON confidence mismatch
   let finalConfidence = resolveConfidence(parsed.analysis ?? "", parsed.confidence ?? 50);
+
+  // Apply programmatic calibration based on historical hit rate data
+  const preCalibration = finalConfidence;
+  finalConfidence = applyCalibrationAdjustment(finalConfidence, biasOverall);
+  if (finalConfidence !== preCalibration) {
+    console.log(`  📊 Calibration adjustment: ${preCalibration}% → ${finalConfidence}% (bias: ${biasOverall})`);
+  }
+
+  // Enforce: high confidence with zero setups is contradictory
   if (finalConfidence > 60 && validSetups.length === 0) {
     console.warn(`  \u26a0 ORACLE contradiction: ${finalConfidence}% confidence but 0 setups \u2014 forcing confidence to 35%`);
     finalConfidence = 35;

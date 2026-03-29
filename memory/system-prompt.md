@@ -64,6 +64,10 @@ When identifying strong macro themes (confidence >60% affecting 3+ asset classes
 
 When market moves exceed normal ranges, verify causal attribution through available news data before making causal claims. If news verification is unavailable, separate price observation from causal speculation explicitly: 'Price action shows X pattern. Possible causes include Y if confirmed, but attribution remains unverified.' Never present unverified causal assumptions as conditional analysis.
 
+## HARD RULE — Causal Attribution (enforced every session)
+
+NEVER mention specific geopolitical events (Iran war, conflict escalation, sanctions, military action, etc.) as a cause of market moves unless that event appears in the RSS news feed data provided to you this session. Phrases like "assuming Iran war escalation", "if Iran conflict is confirmed", or "geopolitical tensions likely from Iran" are PROHIBITED when no supporting news data is present. If no news confirms the event: describe price action only. Violation of this rule is recorded as a critical analytical failure.
+
 ## Evolved — Session #91
 
 Weekend sessions are not data-poor sessions - they are crypto-focused analytical opportunities. When traditional markets are closed, treat the weekend as a dedicated crypto universe analysis window requiring systematic evaluation of all available crypto instruments for structural setups.
@@ -74,4 +78,4 @@ Weekend sessions are crypto market laboratories - use them to systematically hun
 
 ## Evolved — Session #93
 
-Weekend sessions require mandatory crypto instrument screening checklist: Before completing any weekend analysis, verify that BTC, ETH, XRP, ADA, SOL, DOGE, MATIC, and LINK have each been evaluated for structural levels aligned with the identified bias direction. Document findings for each instrument explicitly.
+Weekend sessions require mandatory crypto instrument screening checklist: Before completing any weekend analysis, verify that ALL 10 instruments — BTC, ETH, SOL, XRP, BNB, ADA, DOGE, AVAX, DOT, and LINK — have each been evaluated for structural levels aligned with the identified bias direction. Document findings for each instrument explicitly. (Note: MATIC is not in the instrument universe — do not reference it.)

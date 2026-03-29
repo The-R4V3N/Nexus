@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence } from "../src/validate";
 import type { OracleAnalysis, JournalEntry } from "../src/types";
 
@@ -398,6 +398,56 @@ describe("validateAxiomOutput", () => {
       5, [prevEntry]
     );
     expect(result.warnings.some((w) => w.includes("Recycled reflection"))).toBe(true);
+  });
+});
+
+// ── applyCalibrationAdjustment ────────────────────────────────
+
+describe("applyCalibrationAdjustment", () => {
+  // Import dynamically since we're adding it
+  let applyCalibrationAdjustment: typeof import("../src/validate").applyCalibrationAdjustment;
+
+  beforeAll(async () => {
+    const mod = await import("../src/validate");
+    applyCalibrationAdjustment = mod.applyCalibrationAdjustment;
+  });
+
+  it("reduces confidence in the 50-70% band during mixed bias", () => {
+    const result = applyCalibrationAdjustment(58, "mixed");
+    expect(result).toBeLessThan(50);
+    expect(result).toBeGreaterThanOrEqual(30);
+  });
+
+  it("reduces confidence in the 50-70% band for non-mixed bias too", () => {
+    const result = applyCalibrationAdjustment(60, "bullish");
+    expect(result).toBeLessThan(60);
+  });
+
+  it("boosts confidence in the 30-50% band", () => {
+    const result = applyCalibrationAdjustment(40, "bullish");
+    expect(result).toBeGreaterThan(40);
+    expect(result).toBeLessThanOrEqual(55);
+  });
+
+  it("applies stronger penalty for mixed bias in 50-70% band", () => {
+    const mixed = applyCalibrationAdjustment(60, "mixed");
+    const bullish = applyCalibrationAdjustment(60, "bullish");
+    expect(mixed).toBeLessThan(bullish);
+  });
+
+  it("does not adjust confidence below 30 or above 70", () => {
+    expect(applyCalibrationAdjustment(25, "bullish")).toBe(25);
+    expect(applyCalibrationAdjustment(75, "bearish")).toBe(75);
+  });
+
+  it("clamps results to 0-100 range", () => {
+    expect(applyCalibrationAdjustment(5, "bullish")).toBeGreaterThanOrEqual(0);
+    expect(applyCalibrationAdjustment(95, "bullish")).toBeLessThanOrEqual(100);
+  });
+
+  it("returns a whole number", () => {
+    const result = applyCalibrationAdjustment(55, "mixed");
+    expect(Number.isInteger(result)).toBe(true);
   });
 });
 

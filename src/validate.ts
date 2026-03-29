@@ -95,6 +95,42 @@ export function resolveConfidence(analysis: string, jsonConfidence: number): num
   return jsonConfidence;
 }
 
+// ── Programmatic Confidence Calibration ──────────────────────
+// Historical data shows confidence bands are miscalibrated:
+//   30-50% band: NEXUS claims ~40% → actual hit rate 57% (underconfident)
+//   50-70% band: NEXUS claims ~58% → actual hit rate 17% (severely overconfident)
+//   70-85% band: NEXUS claims ~75% → actual hit rate 40% (overconfident)
+// This function applies mathematical corrections post-ORACLE.
+
+export function applyCalibrationAdjustment(
+  rawConfidence: number,
+  biasOverall: string
+): number {
+  // Only adjust the miscalibrated bands (30-70)
+  // Outside these bands, not enough data to calibrate
+  if (rawConfidence < 30 || rawConfidence >= 70) {
+    return rawConfidence;
+  }
+
+  let adjusted = rawConfidence;
+
+  if (rawConfidence >= 50 && rawConfidence < 70) {
+    // 50-70% band: severely overconfident (claims 58%, actual 17%)
+    // Base penalty: reduce by 15 points
+    // Mixed bias gets extra penalty (correlation breakdown = even worse hit rate)
+    const basePenalty = 15;
+    const mixedExtra = biasOverall === "mixed" ? 5 : 0;
+    adjusted = rawConfidence - basePenalty - mixedExtra;
+  } else if (rawConfidence >= 30 && rawConfidence < 50) {
+    // 30-50% band: underconfident (claims 40%, actual 57%)
+    // Boost by 8 points to better reflect actual performance
+    adjusted = rawConfidence + 8;
+  }
+
+  // Clamp to valid range
+  return Math.round(Math.max(0, Math.min(100, adjusted)));
+}
+
 // ── ORACLE Validator ──────────────────────────────────────
 
 export function validateOracleOutput(

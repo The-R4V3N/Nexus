@@ -430,6 +430,44 @@ export function buildAnalyticsSummary(entries: JournalEntry[]): string {
   return lines.join("\n");
 }
 
+// ── Calibration Context for ORACLE ──────────────────────────
+
+/**
+ * Builds a concise calibration warning that gets injected into ORACLE's prompt
+ * so it can self-correct at generation time (not just in AXIOM post-hoc).
+ */
+export function buildCalibrationContext(entries: JournalEntry[]): string {
+  if (entries.length < 10) return "";
+
+  const allSetups = resolveAllSetups(entries);
+  const calibration = computeCalibration(entries, allSetups).filter(b => b.sessions > 0 && b.hitRate !== null);
+
+  if (calibration.length === 0) return "";
+
+  const lines: string[] = [
+    "=== YOUR HISTORICAL CONFIDENCE CALIBRATION (real outcomes) ===",
+    "When you score confidence in a given band, here is your actual setup hit rate:",
+  ];
+
+  for (const b of calibration) {
+    if (b.hitRate === null) continue;
+    const actualPct = (b.hitRate * 100).toFixed(0);
+    const claimedPct = b.avgConfidence.toFixed(0);
+    const gap = b.delta !== null ? (b.delta * 100).toFixed(0) : "?";
+    const warning = parseInt(gap) < -15 ? " ⚠ SEVERELY OVERCONFIDENT" :
+                    parseInt(gap) < -5  ? " ⚠ overconfident" :
+                    parseInt(gap) > 10  ? " (underconfident — trust your analysis more)" : "";
+    lines.push(`  ${b.range}: you claim ${claimedPct}% → actual ${actualPct}% hit rate (gap: ${gap}pp)${warning}`);
+  }
+
+  lines.push("");
+  lines.push("CALIBRATION INSTRUCTION: Adjust your confidence score based on the above data.");
+  lines.push("If your natural score falls in an overconfident band, reduce it. If underconfident, raise it.");
+  lines.push("The system will also apply a programmatic correction after your response.");
+
+  return lines.join("\n");
+}
+
 // ── Main Command ────────────────────────────────────────────
 
 export function runAnalytics(options: { window?: string }): void {
