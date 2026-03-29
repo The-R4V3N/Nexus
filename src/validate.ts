@@ -156,19 +156,30 @@ export function validateWeekendCryptoScreening(
     setupTokens.add(raw.replace(/[/-]?usd[t]?$/, "").trim());
   }
 
+  // Also collect instrument names from key levels — having a key level means
+  // ORACLE evaluated the instrument even if no trade setup was produced
+  const keyLevelTokens = new Set<string>();
+  for (const kl of (oracle.keyLevels ?? [])) {
+    const raw = ((kl as any).instrument ?? "").toLowerCase();
+    keyLevelTokens.add(raw);
+    keyLevelTokens.add(raw.replace(/[/-]?usd[t]?$/, "").trim());
+  }
+
   const covered: string[] = [];
   const missing: string[] = [];
 
   for (const snap of availableSnapshots) {
-    const name   = snap.name.toLowerCase();                    // "bitcoin"
-    const symbol = snap.symbol.toLowerCase()                   // "btc-usd" → "btc"
+    const name   = snap.name.toLowerCase();
+    const symbol = snap.symbol.toLowerCase()
       .replace(/-usd[t]?$/, "").replace(/usd[t]?$/, "").trim();
 
-    const inAnalysis = analysisText.includes(name) || analysisText.includes(symbol);
-    const inSetup    = setupTokens.has(name) || setupTokens.has(symbol) ||
+    const inAnalysis  = analysisText.includes(name) || analysisText.includes(symbol);
+    const inSetup     = setupTokens.has(name) || setupTokens.has(symbol) ||
       [...setupTokens].some(t => t.includes(symbol) || t.includes(name));
+    const inKeyLevels = keyLevelTokens.has(name) || keyLevelTokens.has(symbol) ||
+      [...keyLevelTokens].some(t => t.includes(symbol) || t.includes(name));
 
-    if (inAnalysis || inSetup) {
+    if (inAnalysis || inSetup || inKeyLevels) {
       covered.push(snap.name);
     } else {
       missing.push(snap.name);

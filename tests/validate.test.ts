@@ -532,7 +532,7 @@ describe("validateWeekendCryptoScreening", () => {
   });
 
   it("marks instrument as missing when not mentioned anywhere", () => {
-    // Analysis only mentions BTC and ETH — everything else should be missing
+    // Analysis only mentions BTC and ETH, no key levels for others
     const oracle = makeOracle({ analysis: "Bitcoin and Ethereum are the only coins discussed here." });
     const { missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
     expect(missing).toContain("Solana");
@@ -540,6 +540,26 @@ describe("validateWeekendCryptoScreening", () => {
     expect(missing).toContain("Avalanche");
     expect(missing).toContain("Polkadot");
     expect(missing).toContain("Chainlink");
+  });
+
+  it("marks instrument as covered when it appears only in key levels", () => {
+    // ORACLE evaluated DOT and put it in key levels — that counts as covered
+    const oracle = makeOracle({
+      analysis: "Bitcoin showing weakness.",
+      keyLevels: [{ instrument: "Polkadot", level: 7.0, type: "support", notes: "Key support" } as any],
+    });
+    const { covered, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(covered).toContain("Polkadot");
+    expect(missing).not.toContain("Polkadot");
+  });
+
+  it("all 10 instruments covered when all appear in key levels", () => {
+    const keyLevels = cryptoSnapshots.map(s => ({
+      instrument: s.name, level: s.price, type: "support", notes: "test",
+    }));
+    const oracle = makeOracle({ analysis: "Market analysis.", keyLevels: keyLevels as any });
+    const { missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(missing).toHaveLength(0);
   });
 
   it("returns empty missing when all instruments are covered", () => {
