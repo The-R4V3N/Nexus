@@ -132,10 +132,20 @@ export async function runOracleAnalysis(
   // ── CALL 1: ORACLE-ANALYSIS ──────────────────────────────
   // Focuses purely on market analysis — no setup construction
 
+  // Build explicit instrument checklist for weekend sessions
+  const weekendInstrumentList = isWeekend
+    ? snapshots.map(s => `- ${s.name} (${s.symbol})`).join("\n")
+    : "";
+
   const weekendContext = isWeekend ? `WEEKEND SESSION — CRYPTO ONLY
 Traditional markets (forex, indices, commodities) are closed. Only crypto data is live.
 Focus your analysis exclusively on crypto instruments. Do not reference forex, indices,
 or commodities as they show Friday's closing prices, not current market conditions.
+
+MANDATORY WEEKEND CHECKLIST — you must address ALL of these instruments in your analysis:
+${weekendInstrumentList}
+For each instrument: note its price action, trend, and whether it aligns with your bias.
+Skipping any instrument on this list is a rule violation (r030).
 
 ` : "";
 
@@ -233,9 +243,12 @@ Only respond with the JSON, no other text.`;
     .join("\n");
 
   const weekendSetupNote = isWeekend ? `\nThis is a WEEKEND session — only construct setups for crypto instruments.
-You MUST evaluate EVERY crypto instrument in the price data above for potential setups.
-For each instrument, either include a setup or note why no setup exists (no structural level nearby, no alignment with bias, etc.).
-Do NOT stop after finding 1-2 setups — systematically screen all available crypto instruments.\n` : "";
+You MUST evaluate EVERY instrument in this list for potential setups:
+${weekendInstrumentList}
+For EACH instrument above, either:
+  (a) include a setup if a valid structural level exists aligned with your bias, OR
+  (b) explicitly note: "[Name]: no setup — [brief reason]" in the setup description field with direction "neutral"
+Do NOT stop after 1-2 setups. All ${snapshots.length} instruments must be accounted for.\n` : "";
 
   const setupsUserMessage = `You are NEXUS ORACLE's setup construction engine. You have just completed market analysis.
 ${weekendSetupNote}
