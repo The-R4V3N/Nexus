@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #77
-
-During forced liquidation regimes (safe havens falling alongside risk assets), systematically evaluate each major instrument for theme-aligned continuation opportunities rather than defaulting to reversal setups. Liquidation creates multi-asset momentum that should generate numerous aligned opportunities across the 17-instrument universe.
-
 ## Evolved — Session #78
 
 During forced liquidation regimes where safe havens decline alongside risk assets, correlation breakdown creates opportunities that directional bias frameworks cannot capture effectively. Mixed bias methodology with systematic theme-aligned screening across all asset classes becomes superior to forced directional calls. When institutional deleveraging dominates sentiment-based flows, embrace mixed framework as the methodologically appropriate response rather than forcing directional conviction.
@@ -79,3 +75,7 @@ Weekend sessions require systematic screening discipline that cannot rely on vol
 ## Evolved — Session #99
 
 Weekend crypto sessions require validation that setup count matches screened instrument count - if 9 setups are identified from crypto instruments, validation should confirm 9+ instruments were screened, not report 0. This prevents validation blindness where compliance reports contradict actual analytical output.
+
+## Evolved — Session #100
+
+During weekend sessions with crypto market isolation, focus on internal crypto rotation patterns rather than traditional cross-asset correlation. Mixed performance across crypto instruments (BTC weakness, ETH strength, varied altcoins) often signals selective opportunity rather than directional confusion. Weekend correlation breakdown creates distinct alpha opportunities within crypto ecosystem that regular session correlation-dependent analysis would miss.
