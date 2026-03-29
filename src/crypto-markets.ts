@@ -71,7 +71,7 @@ async function fetchCoinGeckoMarkets(configs: MarketConfig[]): Promise<MarketSna
   });
   if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
 
-  const data: any[] = await res.json();
+  const data = (await res.json()) as any[];
 
   const reverseMap: Record<string, string> = {};
   for (const [sym, id] of Object.entries(COINGECKO_ID_MAP)) {
