@@ -24,6 +24,21 @@ export const CRYPTO_SYMBOL_MAP: Record<string, string> = {
   "LINK-USD": "LINKUSDT",
 };
 
+// ── CoinGecko ID mapping (fallback when Binance is geo-blocked) ──
+
+const COINGECKO_ID_MAP: Record<string, string> = {
+  "BTC-USD":  "bitcoin",
+  "ETH-USD":  "ethereum",
+  "SOL-USD":  "solana",
+  "XRP-USD":  "ripple",
+  "BNB-USD":  "binancecoin",
+  "ADA-USD":  "cardano",
+  "DOGE-USD": "dogecoin",
+  "AVAX-USD": "avalanche-2",
+  "DOT-USD":  "polkadot",
+  "LINK-USD": "chainlink",
+};
+
 // ── Load crypto configs ───────────────────────────────────
 
 function loadCryptoConfigs(): MarketConfig[] {
@@ -39,6 +54,58 @@ function loadCryptoConfigs(): MarketConfig[] {
     { symbol: "BTC-USD", name: "Bitcoin", category: "crypto" },
     { symbol: "ETH-USD", name: "Ethereum", category: "crypto" },
   ];
+}
+
+// ── CoinGecko fallback fetch ──────────────────────────────
+
+async function fetchCoinGeckoMarkets(configs: MarketConfig[]): Promise<MarketSnapshot[]> {
+  const ids = configs
+    .map(c => COINGECKO_ID_MAP[c.symbol])
+    .filter(Boolean)
+    .join(",");
+
+  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false`;
+  const res = await fetch(url, {
+    headers: { "Accept": "application/json" },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
+
+  const data: any[] = await res.json();
+
+  const reverseMap: Record<string, string> = {};
+  for (const [sym, id] of Object.entries(COINGECKO_ID_MAP)) {
+    reverseMap[id] = sym;
+  }
+  const configBySymbol = new Map(configs.map(c => [c.symbol, c]));
+
+  const snapshots: MarketSnapshot[] = [];
+  for (const coin of data) {
+    const symbol = reverseMap[coin.id];
+    if (!symbol) continue;
+    const config = configBySymbol.get(symbol);
+    if (!config) continue;
+
+    const price: number = coin.current_price;
+    const change: number = coin.price_change_24h ?? 0;
+    const changePercent: number = coin.price_change_percentage_24h ?? 0;
+    const previousClose = price - change;
+
+    snapshots.push({
+      symbol,
+      name: config.name,
+      category: "crypto",
+      price,
+      previousClose,
+      change,
+      changePercent,
+      high: coin.high_24h,
+      low: coin.low_24h,
+      avgDailyChange: undefined,
+      timestamp: new Date(),
+    });
+  }
+  return snapshots;
 }
 
 // ── Binance API fetch ─────────────────────────────────────
@@ -100,5 +167,19 @@ export async function fetchCryptoMarkets(): Promise<MarketSnapshot[]> {
       snapshots.push(r.value);
     }
   }
+
+  if (snapshots.length === 0) {
+    console.warn(chalk.yellow("  ⚠ All Binance fetches failed — trying CoinGecko fallback..."));
+    try {
+      const cgSnapshots = await fetchCoinGeckoMarkets(configs);
+      if (cgSnapshots.length > 0) {
+        console.log(chalk.cyan(`  ↩ CoinGecko fallback: ${cgSnapshots.length} instruments`));
+        return cgSnapshots;
+      }
+    } catch (err) {
+      console.warn(chalk.yellow(`  ⚠ CoinGecko fallback also failed: ${err}`));
+    }
+  }
+
   return snapshots;
 }
