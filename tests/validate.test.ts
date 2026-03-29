@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence } from "../src/validate";
+import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening } from "../src/validate";
 import type { OracleAnalysis, JournalEntry } from "../src/types";
 
 // ── calculateTextSimilarity ─────────────────────────────────
@@ -480,5 +480,103 @@ describe("resolveConfidence", () => {
   it("returns extracted value when mismatch is 11 points (just over boundary)", () => {
     const analysis = "Confidence: 71%";
     expect(resolveConfidence(analysis, 60)).toBe(71);
+  });
+});
+
+// ── validateWeekendCryptoScreening ───────────────────────────
+
+describe("validateWeekendCryptoScreening", () => {
+  const cryptoSnapshots = [
+    { symbol: "BTC-USD",  name: "Bitcoin",   category: "crypto", price: 96000, previousClose: 97000, change: -1000, changePercent: -1, high: 97000, low: 95000, timestamp: new Date() },
+    { symbol: "ETH-USD",  name: "Ethereum",  category: "crypto", price: 3400,  previousClose: 3450,  change: -50,   changePercent: -1.4, high: 3460, low: 3380, timestamp: new Date() },
+    { symbol: "SOL-USD",  name: "Solana",    category: "crypto", price: 200,   previousClose: 205,   change: -5,    changePercent: -2.4, high: 206, low: 198, timestamp: new Date() },
+    { symbol: "XRP-USD",  name: "Ripple",    category: "crypto", price: 2.5,   previousClose: 2.6,   change: -0.1,  changePercent: -3.8, high: 2.62, low: 2.48, timestamp: new Date() },
+    { symbol: "BNB-USD",  name: "BNB",       category: "crypto", price: 600,   previousClose: 610,   change: -10,   changePercent: -1.6, high: 612, low: 598, timestamp: new Date() },
+    { symbol: "ADA-USD",  name: "Cardano",   category: "crypto", price: 0.5,   previousClose: 0.52,  change: -0.02, changePercent: -3.8, high: 0.53, low: 0.49, timestamp: new Date() },
+    { symbol: "DOGE-USD", name: "Dogecoin",  category: "crypto", price: 0.18,  previousClose: 0.19,  change: -0.01, changePercent: -5.3, high: 0.19, low: 0.17, timestamp: new Date() },
+    { symbol: "AVAX-USD", name: "Avalanche", category: "crypto", price: 25,    previousClose: 26,    change: -1,    changePercent: -3.8, high: 26.5, low: 24.5, timestamp: new Date() },
+    { symbol: "DOT-USD",  name: "Polkadot",  category: "crypto", price: 7,     previousClose: 7.2,   change: -0.2,  changePercent: -2.8, high: 7.3, low: 6.9, timestamp: new Date() },
+    { symbol: "LINK-USD", name: "Chainlink", category: "crypto", price: 15,    previousClose: 15.5,  change: -0.5,  changePercent: -3.2, high: 15.6, low: 14.8, timestamp: new Date() },
+  ];
+
+  function makeOracle(overrides: Partial<import("../src/types").OracleAnalysis> = {}): import("../src/types").OracleAnalysis {
+    return {
+      timestamp: new Date(), sessionId: "test", marketSnapshots: [],
+      analysis: "Bitcoin and Ethereum showing bearish momentum this weekend session.",
+      setups: [], bias: { overall: "bearish", notes: "Crypto weakness" },
+      keyLevels: [], confidence: 45,
+      ...overrides,
+    };
+  }
+
+  it("marks instrument as covered when name appears in analysis text", () => {
+    const oracle = makeOracle({ analysis: "Bitcoin shows bearish structure. Ethereum testing support. Solana weak." });
+    const { covered, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(covered).toContain("Bitcoin");
+    expect(covered).toContain("Ethereum");
+    expect(covered).toContain("Solana");
+  });
+
+  it("marks instrument as covered when it appears in setups array", () => {
+    const oracle = makeOracle({
+      analysis: "Bitcoin bearish.",
+      setups: [{
+        instrument: "XRP", type: "MSS", direction: "bearish",
+        description: "test", invalidation: "test",
+        entry: 2.5, stop: 2.65, target: 2.3, RR: 1.33, timeframe: "1H",
+      }],
+    });
+    const { covered, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(covered).toContain("Ripple");   // XRP → matched via symbol
+    expect(covered).toContain("Bitcoin");  // in analysis text
+  });
+
+  it("marks instrument as missing when not mentioned anywhere", () => {
+    // Analysis only mentions BTC and ETH — everything else should be missing
+    const oracle = makeOracle({ analysis: "Bitcoin and Ethereum are the only coins discussed here." });
+    const { missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(missing).toContain("Solana");
+    expect(missing).toContain("BNB");
+    expect(missing).toContain("Avalanche");
+    expect(missing).toContain("Polkadot");
+    expect(missing).toContain("Chainlink");
+  });
+
+  it("returns empty missing when all instruments are covered", () => {
+    const analysis = "Bitcoin Ethereum Solana Ripple BNB Cardano Dogecoin Avalanche Polkadot Chainlink all analyzed.";
+    const { missing } = validateWeekendCryptoScreening(makeOracle({ analysis }), cryptoSnapshots);
+    expect(missing).toHaveLength(0);
+  });
+
+  it("handles symbol matching — BTC setup covers Bitcoin snapshot", () => {
+    const oracle = makeOracle({
+      analysis: "Market analysis.",
+      setups: [{
+        instrument: "BTC/USD", type: "OB", direction: "bearish",
+        description: "test", invalidation: "test",
+        entry: 96000, stop: 98000, target: 93000, RR: 1.5, timeframe: "4H",
+      }],
+    });
+    const { covered } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(covered).toContain("Bitcoin");
+  });
+
+  it("handles USDT-suffixed setup instruments", () => {
+    const oracle = makeOracle({
+      analysis: "Market analysis.",
+      setups: [{
+        instrument: "ETHUSDT", type: "MSS", direction: "bearish",
+        description: "test", invalidation: "test",
+        entry: 3400, stop: 3500, target: 3200, RR: 2, timeframe: "4H",
+      }],
+    });
+    const { covered } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(covered).toContain("Ethereum");
+  });
+
+  it("returns covered and missing arrays that together equal total snapshots", () => {
+    const oracle = makeOracle({ analysis: "Bitcoin showing weakness." });
+    const { covered, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(covered.length + missing.length).toBe(cryptoSnapshots.length);
   });
 });

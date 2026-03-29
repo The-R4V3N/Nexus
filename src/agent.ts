@@ -26,7 +26,7 @@ import {
   loadAllJournalEntries,
   saveJournalEntry,
 } from "./journal";
-import { validateOracleOutput, logFailure, loadRecentFailures }    from "./validate";
+import { validateOracleOutput, validateWeekendCryptoScreening, logFailure, loadRecentFailures } from "./validate";
 import { buildAnalyticsSummary }                                    from "./analytics";
 import { fetchRSSNews, formatRSSForPrompt }                          from "./rss";
 import { notifySessionComplete }                                     from "./notifications";
@@ -543,7 +543,8 @@ export async function runAndValidateAxiom(
   issuesText: string,
   selfTasksText: string,
   selfTaskNumbers: number[],
-  issueNumbers: number[] = []
+  issueNumbers: number[] = [],
+  weekendMode: boolean = false
 ): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
   console.log(chalk.bold.yellow("  ── PHASE 3: AXIOM REFLECTION ──\n"));
   const axiomSpinner = ora({ text: "AXIOM reflecting on cognitive performance...", color: "magenta" }).start();
@@ -570,20 +571,36 @@ export async function runAndValidateAxiom(
   }
 
   // Inject screening compliance so AXIOM knows if screening was adequate
-  const setupCategories = new Set(oracle.setups.map((s: any) => {
-    const name = (s.instrument ?? "").toLowerCase();
-    if (name.includes("eur") || name.includes("gbp") || name.includes("usd") || name.includes("jpy") || name.includes("aud") || name.includes("cad") || name.includes("nzd") || name.includes("chf")) return "forex";
-    if (name.includes("nas") || name.includes("s&p") || name.includes("spx") || name.includes("dow") || name.includes("dax") || name.includes("ftse")) return "indices";
-    if (name.includes("bitcoin") || name.includes("btc") || name.includes("ethereum") || name.includes("eth") || name.includes("solana") || name.includes("xrp") || name.includes("bnb") || name.includes("cardano") || name.includes("doge") || name.includes("avax") || name.includes("polkadot") || name.includes("chainlink")) return "crypto";
-    if (name.includes("gold") || name.includes("silver") || name.includes("plat") || name.includes("copper")) return "metals";
-    if (name.includes("oil") || name.includes("crude") || name.includes("gas")) return "energy";
-    return "other";
-  }));
-  const screeningNote = `\n\n### Screening compliance this session:
+  let screeningNote: string;
+  if (weekendMode) {
+    // Weekend: check coverage of every available crypto instrument by name
+    const { covered, missing } = validateWeekendCryptoScreening(oracle, snapshots);
+    if (missing.length === 0) {
+      screeningNote = `\n\n### Weekend screening compliance: ✅ COMPLETE
+- All ${covered.length} crypto instruments were covered: ${covered.join(", ")}`;
+    } else {
+      screeningNote = `\n\n### Weekend screening compliance: ❌ INCOMPLETE (${missing.length} instruments ignored)
+- Covered (${covered.length}): ${covered.join(", ")}
+- MISSING (${missing.length}): ${missing.join(", ")}
+- r030 requires ALL ${snapshots.length} available instruments to be evaluated.
+- This is a RULE VIOLATION. You MUST open a self-task or propose a code fix — do NOT just note it again.`;
+    }
+  } else {
+    const setupCategories = new Set(oracle.setups.map((s: any) => {
+      const name = (s.instrument ?? "").toLowerCase();
+      if (name.includes("eur") || name.includes("gbp") || name.includes("usd") || name.includes("jpy") || name.includes("aud") || name.includes("cad") || name.includes("nzd") || name.includes("chf")) return "forex";
+      if (name.includes("nas") || name.includes("s&p") || name.includes("spx") || name.includes("dow") || name.includes("dax") || name.includes("ftse")) return "indices";
+      if (name.includes("bitcoin") || name.includes("btc") || name.includes("ethereum") || name.includes("eth") || name.includes("solana") || name.includes("xrp") || name.includes("bnb") || name.includes("cardano") || name.includes("doge") || name.includes("avax") || name.includes("polkadot") || name.includes("chainlink")) return "crypto";
+      if (name.includes("gold") || name.includes("silver") || name.includes("plat") || name.includes("copper")) return "metals";
+      if (name.includes("oil") || name.includes("crude") || name.includes("gas")) return "energy";
+      return "other";
+    }));
+    screeningNote = `\n\n### Screening compliance this session:
 - Setups produced: ${oracle.setups.length}
 - Asset classes covered: ${[...setupCategories].join(", ")} (${setupCategories.size} of 5)
 - Screening is ADEQUATE if setups span 3+ asset classes. You do NOT need to produce setups for all 17 instruments — only instruments with valid structural levels aligned with your bias deserve a setup.
 - If you covered 3+ asset classes, do NOT critique screening as a failure. Focus your reflection on analysis quality instead.`;
+  }
   prevContext += screeningNote;
 
   // Detect repeated critiques across recent sessions
@@ -807,7 +824,7 @@ export async function runSession(force = false): Promise<void> {
   const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, oracleContext, weekendMode);
 
   currentPhase = "axiom";
-  const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers, issueNumbers);
+  const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, weekendMode);
 
   currentPhase = "forge";
   await runAndValidateForge(client, forgeRequests, sessionNumber);

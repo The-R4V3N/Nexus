@@ -131,6 +131,53 @@ export function applyCalibrationAdjustment(
   return Math.round(Math.max(0, Math.min(100, adjusted)));
 }
 
+// ── Weekend Crypto Screening Validator ───────────────────
+// Checks which available crypto instruments ORACLE actually covered
+// (mentioned in analysis text or produced a setup for). Weekend sessions
+// must evaluate every instrument fetched from Binance.
+
+export interface WeekendScreeningResult {
+  covered: string[];   // instruments mentioned in analysis or setups
+  missing: string[];   // instruments completely ignored
+}
+
+export function validateWeekendCryptoScreening(
+  oracle: OracleAnalysis,
+  availableSnapshots: import("./types").MarketSnapshot[]
+): WeekendScreeningResult {
+  const analysisText = (oracle.analysis ?? "").toLowerCase();
+
+  // Build set of all instrument tokens mentioned in setups
+  const setupTokens = new Set<string>();
+  for (const s of oracle.setups) {
+    const raw = (s.instrument ?? "").toLowerCase();
+    setupTokens.add(raw);
+    // Strip common suffixes so "BTCUSDT" → "btc", "BTC/USD" → "btc"
+    setupTokens.add(raw.replace(/[/-]?usd[t]?$/, "").trim());
+  }
+
+  const covered: string[] = [];
+  const missing: string[] = [];
+
+  for (const snap of availableSnapshots) {
+    const name   = snap.name.toLowerCase();                    // "bitcoin"
+    const symbol = snap.symbol.toLowerCase()                   // "btc-usd" → "btc"
+      .replace(/-usd[t]?$/, "").replace(/usd[t]?$/, "").trim();
+
+    const inAnalysis = analysisText.includes(name) || analysisText.includes(symbol);
+    const inSetup    = setupTokens.has(name) || setupTokens.has(symbol) ||
+      [...setupTokens].some(t => t.includes(symbol) || t.includes(name));
+
+    if (inAnalysis || inSetup) {
+      covered.push(snap.name);
+    } else {
+      missing.push(snap.name);
+    }
+  }
+
+  return { covered, missing };
+}
+
 // ── ORACLE Validator ──────────────────────────────────────
 
 export function validateOracleOutput(
