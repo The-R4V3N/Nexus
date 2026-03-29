@@ -251,6 +251,10 @@ export async function fetchAllInputData(): Promise<InputData> {
     let snapshots: MarketSnapshot[];
     if (cryptoResult.status === "fulfilled") {
       snapshots = cryptoResult.value;
+      if (snapshots.length === 0) {
+        phase1Spinner.fail("Failed to fetch crypto data: all Binance API calls returned null (0 crypto instruments)");
+        throw new Error("Weekend session requires crypto market data — all Binance fetches failed (0 crypto instruments)");
+      }
       phase1Spinner.succeed(chalk.green(`Weekend: Fetched ${snapshots.length} crypto instruments from Binance`));
     } else {
       phase1Spinner.fail("Failed to fetch crypto data");

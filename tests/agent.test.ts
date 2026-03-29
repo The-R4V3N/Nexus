@@ -163,3 +163,39 @@ describe("agent phase function exports", () => {
     expect(typeof mod.runSession).toBe("function");
   });
 });
+
+// ── fetchAllInputData — weekend Binance failure ─────────────
+
+describe("fetchAllInputData — weekend Binance failure", () => {
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  it("throws when fetchCryptoMarkets returns 0 instruments on weekend", async () => {
+    vi.resetModules();
+    vi.doMock("../src/crypto-markets", () => ({
+      fetchCryptoMarkets: async () => [],
+    }));
+    vi.doMock("../src/utils", async () => {
+      const actual = await vi.importActual<any>("../src/utils");
+      return { ...actual, isWeekend: () => true };
+    });
+    vi.doMock("../src/issues", () => ({
+      fetchCommunityIssues: async () => [],
+      formatIssuesForPrompt: () => "",
+      sanitizeAllIssues: (x: any) => x,
+    }));
+    vi.doMock("../src/self-tasks", () => ({
+      fetchOpenSelfTasks: async () => [],
+      formatSelfTasksForPrompt: () => "",
+      setCachedOpenTasks: () => {},
+    }));
+    vi.doMock("../src/rss", () => ({
+      fetchRSSNews: async () => [],
+      formatRSSForPrompt: () => "",
+    }));
+
+    const { fetchAllInputData } = await import("../src/agent");
+    await expect(fetchAllInputData()).rejects.toThrow(/0 crypto instruments/i);
+  });
+});
