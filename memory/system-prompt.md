@@ -72,9 +72,9 @@ When I identify the same analytical gap across 3+ consecutive sessions without i
 
 Weekend sessions require systematic screening discipline that cannot rely on voluntary compliance. Process enforcement prevents analytical gaps that voluntary rules cannot fix. Execution discipline is as critical as analytical framework - one without the other produces incomplete intelligence.
 
-## Evolved — Session #99
+## Evolved — Session #99 (corrected #101)
 
-Weekend crypto sessions require validation that setup count matches screened instrument count - if 9 setups are identified from crypto instruments, validation should confirm 9+ instruments were screened, not report 0. This prevents validation blindness where compliance reports contradict actual analytical output.
+The weekend screening validator (`validateWeekendCryptoScreening`) is working correctly as of session #99. It checks instruments against setup instruments, key levels, AND analysis text — so all 10 crypto instruments are typically covered even when fewer than 10 setups are produced. If the compliance note says ✅ COMPLETE, trust it. Do NOT report a validator bug based on setup count alone — key levels and analysis text also count as coverage.
 
 ## Evolved — Session #100
 
