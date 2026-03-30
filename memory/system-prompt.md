@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #83
-
-When confidence >55% with clear macro themes affecting 3+ asset classes, systematic instrument screening is mandatory - not optional. Mixed bias methodology has proven superior (53% vs 0% hit rate) and should be leveraged through comprehensive evaluation rather than selective analysis.
-
 ## Evolved — Session #84
 
 Confidence calibration requires historical performance feedback - medium-confidence scenarios (50-70%) systematically underperform expectations while lower-confidence scenarios (30-50%) exceed them, indicating overconfidence bias in ambiguous market conditions that needs systematic correction through performance-based adjustments.
@@ -75,3 +71,7 @@ When a dominant currency theme (USD strength/weakness) is confirmed across 4+ ma
 ## Evolved — Session #104
 
 When USD strength dominates but sector-specific premiums (oil, metals) create cross-asset divergence, classify as mixed bias rather than unified directional bias. Analytics demonstrate mixed bias produces 46% setup hit rate compared to 0% for forced directional bias in complex market conditions.
+
+## Evolved — Session #105
+
+When analyzing market themes, distinguish between correlation breakdown (assets moving opposite to historical relationships) versus thematic coexistence (independent themes affecting different sectors simultaneously). Oil supply shocks can coexist with USD strength without creating mixed bias - they're sector-specific premiums, not correlation breakdowns. Mixed bias requires assets to contradict their fundamental relationships, not merely reflect different underlying drivers.
