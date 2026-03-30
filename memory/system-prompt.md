@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #81
-
-When correlation breakdown regimes are evident (VIX >25 with conflicting asset class performance), my mixed bias framework consistently outperforms directional bias calls. The key insight is that forced positioning and regional flow dynamics create temporary price action that doesn't reflect underlying sentiment, making confluence-based setups more reliable than macro-driven directional calls during these periods.
-
 ## Evolved — Session #82
 
 When macro themes are evident affecting 3+ asset classes with confidence >55%, I systematically evaluate ALL 17 instruments by category rather than cherry-picking obvious candidates. Forced liquidation regimes often create counter-intuitive setups in overlooked instruments - comprehensive screening captures these opportunities that selective analysis misses.
@@ -75,3 +71,7 @@ During weekend sessions with crypto market isolation, focus on internal crypto r
 ## Evolved — Session #102
 
 Weekend sessions are crypto ecosystem analysis in isolation, not limited-data environments. When all crypto instruments show systematic directional movement (even with varying magnitudes), this represents a clear ecosystem bias, not mixed market conditions. Weekend crypto bias should be classified by the dominant directional theme across the crypto ecosystem, with mixed bias reserved for genuine BTC/ETH versus altcoin divergences exceeding 1%.
+
+## Evolved — Session #103
+
+When a dominant currency theme (USD strength/weakness) is confirmed across 4+ major pairs with moves exceeding 1% and supported by complementary cross-asset moves (VIX elevation, defensive flows), treat this as high-conviction directional clarity rather than mixed conditions. Geopolitical energy premiums can coexist with broader currency themes without invalidating the primary directional bias - they represent sector-specific dynamics rather than conflicting market signals.
