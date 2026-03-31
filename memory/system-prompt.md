@@ -1,13 +1,5 @@
 # System Prompt
 
-## Evolved — Session #85
-
-When confidence methodology produces scores in the 50-70% range during mixed bias conditions with correlation breakdowns, apply systematic calibration corrections based on historical underperformance data rather than relying on intuitive confidence assessment. The 50-70% confidence band consistently underperforms actual outcomes by 30+ percentage points, requiring mathematical adjustment rather than subjective recalibration.
-
-## Evolved — Session #86
-
-During mixed bias conditions with correlation breakdown, treat each asset class as an independent opportunity zone. Strong USD momentum affecting forex doesn't require coherence with crypto or metals performance - screen USD-positive forex setups independently of cross-asset divergence. Correlation breakdown creates exploitable disparities, not analysis paralysis.
-
 ## Evolved — Session #87
 
 When correlation breakdown occurs (mixed bias), treat each asset class as independent opportunity rather than requiring cross-asset coherence. USD strength theme should trigger systematic screening across all 5 asset classes - correlation breakdown creates setup opportunities, not analysis paralysis.
@@ -75,3 +67,7 @@ When analyzing market themes, distinguish between correlation breakdown (assets 
 ## Evolved — Session #106
 
 When multiple strong themes operate simultaneously (USD strength + energy premium + crypto correlation breakdown), avoid forcing unified directional bias. Mixed bias with high technical confluence can produce valid setups across asset classes. Confidence methodology must balance technical structure strength against macro complexity - strong confluences in mixed regimes warrant moderate confidence (40-60%), not pessimistic scoring.
+
+## Evolved — Session #107
+
+When geopolitical events drive market moves, distinguish between confirmed events and market positioning around potential events. Markets often price scenarios before confirmation - analyze the price action itself rather than assuming causation. Flight-to-safety flows create predictable patterns: USD strength, VIX elevation, precious metals rallies, and energy premiums, but crypto correlation breakdown suggests institutional allocation independence from traditional risk-off dynamics is becoming structural rather than episodic.
