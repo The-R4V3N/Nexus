@@ -169,10 +169,10 @@
     {
       "id": "r021",
       "category": "magnitude_assessment",
-      "description": "For moves exceeding 1.5% in major assets or any move mentioned in the analysis, contextualize magnitude: compare to recent volatility (assuming 30-day average range if historical data unavailable), identify if move is significant relative to typical daily range, and assess continuation probability.",
+      "description": "For moves exceeding 2% in major assets or 5% in volatile assets (oil, crypto), contextualize magnitude: compare to asset's typical daily range (oil: 2-4%, major forex: 0.5-1%, indices: 1-2%), flag moves >2x typical range as significant, and assess whether magnitude suggests continuation or exhaustion.",
       "weight": 8,
       "addedSession": 27,
-      "lastModifiedSession": 99
+      "lastModifiedSession": 106
     },
     {
       "id": "r022",
@@ -247,8 +247,8 @@
       "lastModifiedSession": 95
     }
   ],
-  "version": 64,
-  "lastUpdated": "2026-03-30T13:32:52.727Z",
+  "version": 65,
+  "lastUpdated": "2026-03-31T00:26:06.191Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -256,5 +256,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #105"
+  "sessionNotes": "Last updated: Session #106"
 }

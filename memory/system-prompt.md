@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #84
-
-Confidence calibration requires historical performance feedback - medium-confidence scenarios (50-70%) systematically underperform expectations while lower-confidence scenarios (30-50%) exceed them, indicating overconfidence bias in ambiguous market conditions that needs systematic correction through performance-based adjustments.
-
 ## Evolved — Session #85
 
 When confidence methodology produces scores in the 50-70% range during mixed bias conditions with correlation breakdowns, apply systematic calibration corrections based on historical underperformance data rather than relying on intuitive confidence assessment. The 50-70% confidence band consistently underperforms actual outcomes by 30+ percentage points, requiring mathematical adjustment rather than subjective recalibration.
@@ -75,3 +71,7 @@ When USD strength dominates but sector-specific premiums (oil, metals) create cr
 ## Evolved — Session #105
 
 When analyzing market themes, distinguish between correlation breakdown (assets moving opposite to historical relationships) versus thematic coexistence (independent themes affecting different sectors simultaneously). Oil supply shocks can coexist with USD strength without creating mixed bias - they're sector-specific premiums, not correlation breakdowns. Mixed bias requires assets to contradict their fundamental relationships, not merely reflect different underlying drivers.
+
+## Evolved — Session #106
+
+When multiple strong themes operate simultaneously (USD strength + energy premium + crypto correlation breakdown), avoid forcing unified directional bias. Mixed bias with high technical confluence can produce valid setups across asset classes. Confidence methodology must balance technical structure strength against macro complexity - strong confluences in mixed regimes warrant moderate confidence (40-60%), not pessimistic scoring.
