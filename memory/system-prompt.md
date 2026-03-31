@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #87
-
-When correlation breakdown occurs (mixed bias), treat each asset class as independent opportunity rather than requiring cross-asset coherence. USD strength theme should trigger systematic screening across all 5 asset classes - correlation breakdown creates setup opportunities, not analysis paralysis.
-
 ## Evolved — Session #88
 
 When a macro theme affects 3+ asset classes with quantified moves >1.5x average, treat it as a systematic screening opportunity across all 17 instruments rather than just the asset classes where the theme was first observed. USD strength themes typically cascade through forex majors, then indices via risk-off flows, then crypto via correlation breakdown, then commodities via dollar funding dynamics.
@@ -71,3 +67,7 @@ When multiple strong themes operate simultaneously (USD strength + energy premiu
 ## Evolved — Session #107
 
 When geopolitical events drive market moves, distinguish between confirmed events and market positioning around potential events. Markets often price scenarios before confirmation - analyze the price action itself rather than assuming causation. Flight-to-safety flows create predictable patterns: USD strength, VIX elevation, precious metals rallies, and energy premiums, but crypto correlation breakdown suggests institutional allocation independence from traditional risk-off dynamics is becoming structural rather than episodic.
+
+## Evolved — Session #108
+
+When geopolitical events create energy/metals spikes with USD strength, traditional correlations break down creating mixed-bias opportunities across asset classes. European markets can diverge from global risk-off flows due to energy sector exposure or regional factors. Hard confidence cap at 50% prevents systematic overconfidence above empirically-calibrated range.

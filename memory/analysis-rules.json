@@ -107,10 +107,10 @@
     {
       "id": "r014",
       "category": "confidence_methodology",
-      "description": "Confidence methodology: (1) Technical confluence: 1=15%, 2=30%, 3=45%, 4+=60% (reduced from analytics showing overconfidence). (2) Macro alignment: 50-70% for strong correlation, 15-35% for weak correlation, 0-15% for breakdown. (3) RR clarity: high for RR>2.5, medium for 1.5-2.5, low for <1.5. (4) Volatility adjustment: reduce by 15-25% during VIX>25. (5) Final calibration: cap confidence at 65% regardless of calculation to prevent systematic overconfidence in 70-85% range.",
+      "description": "Confidence methodology: (1) Technical confluence: 1=20%, 2=35%, 3=45%, 4+=55%. (2) Macro alignment: 40-60% for strong correlation, 20-40% for weak correlation, 0-20% for breakdown. (3) RR clarity: +10% for RR>2.5, +5% for 1.5-2.5, -5% for <1.5. (4) Volatility adjustment: reduce by 10% during VIX>25. (5) Hard cap: maximum confidence 50% regardless of calculation. Analytics show 30-50% range well-calibrated (45% hit rate) while 50-70% range severely overconfident (21% hit rate).",
       "weight": 8,
       "addedSession": 2,
-      "lastModifiedSession": 105
+      "lastModifiedSession": 108
     },
     {
       "id": "r015",
@@ -247,8 +247,8 @@
       "lastModifiedSession": 95
     }
   ],
-  "version": 65,
-  "lastUpdated": "2026-03-31T00:26:06.191Z",
+  "version": 66,
+  "lastUpdated": "2026-03-31T13:33:25.994Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -256,5 +256,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #106"
+  "sessionNotes": "Last updated: Session #108"
 }
