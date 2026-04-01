@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires specific quantified justification: (1) equal-weighted conflicting signals across 3+ asset classes with magnitude differences <0.5%, or (2) correlation breakdown exceeding 2 standard deviations from 30-day average, or (3) VIX >30 with equity/bond correlation <0.3, or (4) weekend sessions where crypto ecosystem shows conflicting signals with BTC/ETH diverging >1% from altcoin average performance.",
+      "description": "Mixed bias requires explicit quantified justification in bias.notes field: (1) equal-weighted conflicting signals across 3+ asset classes with magnitude differences <0.5%, or (2) correlation breakdown exceeding 2 standard deviations from 30-day average, or (3) VIX >30 with equity/bond correlation <0.3, or (4) weekend sessions where crypto ecosystem shows conflicting signals with BTC/ETH diverging >1% from altcoin average performance. Must state which condition applies and provide the supporting ",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 102
+      "lastModifiedSession": 111
     },
     {
       "id": "r016",
@@ -255,8 +255,8 @@
       "lastModifiedSession": 109
     }
   ],
-  "version": 67,
-  "lastUpdated": "2026-04-01T00:29:01.088Z",
+  "version": 68,
+  "lastUpdated": "2026-04-01T13:32:38.201Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -264,5 +264,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #109"
+  "sessionNotes": "Last updated: Session #111"
 }
