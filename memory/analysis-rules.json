@@ -245,10 +245,18 @@
       "weight": 9,
       "addedSession": 91,
       "lastModifiedSession": 95
+    },
+    {
+      "id": "r031",
+      "category": "confidence",
+      "description": "Confidence scores exceeding 65% indicate overconfidence bias activation. When calculation exceeds 65%, document the technical/macro factors driving higher score, then cap output at 65% with notation 'capped from [X]% due to calibration discipline'.",
+      "weight": 9,
+      "addedSession": 109,
+      "lastModifiedSession": 109
     }
   ],
-  "version": 66,
-  "lastUpdated": "2026-03-31T13:33:25.994Z",
+  "version": 67,
+  "lastUpdated": "2026-04-01T00:29:01.088Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -256,5 +264,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #108"
+  "sessionNotes": "Last updated: Session #109"
 }
