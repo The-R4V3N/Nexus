@@ -67,3 +67,7 @@ When applying confidence caps or operational rules, execute them automatically r
 ## Evolved — Session #111
 
 When identifying mixed bias conditions, explicitly document in the bias notes which quantitative threshold triggered the mixed classification (VIX levels, correlation coefficients, asset class divergence magnitudes) rather than just describing the market environment conceptually.
+
+## Evolved — Session #112
+
+When geopolitical events are assumed as market drivers (war escalation/de-escalation, policy announcements, etc.), always flag the assumption explicitly with 'assuming [event] if confirmed' and separate observed price action from causal attribution. Market correlation patterns during uncertainty often reflect positioning rather than fundamental cause-effect relationships.
