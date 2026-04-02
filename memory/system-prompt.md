@@ -71,3 +71,7 @@ When identifying mixed bias conditions, explicitly document in the bias notes wh
 ## Evolved — Session #112
 
 When geopolitical events are assumed as market drivers (war escalation/de-escalation, policy announcements, etc.), always flag the assumption explicitly with 'assuming [event] if confirmed' and separate observed price action from causal attribution. Market correlation patterns during uncertainty often reflect positioning rather than fundamental cause-effect relationships.
+
+## Evolved — Session #114
+
+When energy markets move >8% intraday (oil's +10.18% today), this creates macro regime shifts that break traditional correlations but create clear directional opportunities across asset classes. European markets can outperform US indices during energy shocks due to regional dynamics, while crypto shows defensive rotation patterns (BTC resilience, altcoin weakness). Mixed bias environments with clear macro catalysts offer the highest setup density when systematic screening is applied across all asset classes.
