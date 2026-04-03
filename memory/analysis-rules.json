@@ -225,10 +225,10 @@
     {
       "id": "r028",
       "category": "setup_generation",
-      "description": "When confidence >55% with clear macro theme affecting 3+ asset classes, systematically evaluate each asset class for theme-aligned setups: (1) Forex majors (7 pairs), (2) Indices (4 instruments), (3) Crypto (2 instruments), (4) Metals (2 instruments), (5) Commodities (2 instruments). Document which asset classes were screened and reasoning for included/excluded setups. Mixed bias creates opportunities across asset classes independently - correlation breakdown means screening each class separatel",
+      "description": "When confidence >35% with mixed bias or correlation breakdown affecting 3+ asset classes, systematically evaluate ALL five asset classes for independent structural opportunities: (1) Forex majors (7 pairs), (2) Indices (4 instruments), (3) Crypto (8+ instruments), (4) Metals (2 instruments), (5) Commodities (2 instruments). Mixed bias scenarios require comprehensive screening since correlation breakdown creates uncorrelated opportunities. Document which specific instruments were evaluated within",
       "weight": 9,
       "addedSession": 51,
-      "lastModifiedSession": 87
+      "lastModifiedSession": 117
     },
     {
       "id": "r029",
@@ -263,8 +263,8 @@
       "lastModifiedSession": 116
     }
   ],
-  "version": 70,
-  "lastUpdated": "2026-04-03T08:17:32.860Z",
+  "version": 71,
+  "lastUpdated": "2026-04-03T13:29:13.807Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -272,5 +272,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #116"
+  "sessionNotes": "Last updated: Session #117"
 }
