@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires explicit quantified justification in bias.notes field: (1) equal-weighted conflicting signals across 3+ asset classes with magnitude differences <0.5%, or (2) correlation breakdown exceeding 2 standard deviations from 30-day average, or (3) VIX >30 with equity/bond correlation <0.3, or (4) weekend sessions where crypto ecosystem shows conflicting signals with BTC/ETH diverging >1% from altcoin average performance. Must state which condition applies and provide the supporting ",
+      "description": "Mixed bias requires explicit quantified justification with numerical evidence: (1) equal-weighted conflicting signals across 3+ asset classes with specific magnitude differences, or (2) correlation breakdown with actual standard deviation calculation from available proxy data, or (3) VIX level with specific correlation coefficient, or (4) weekend crypto divergence with precise percentage spreads. Must state which condition applies and provide the actual supporting numbers, not just the threshold",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 111
+      "lastModifiedSession": 116
     },
     {
       "id": "r016",
@@ -253,10 +253,18 @@
       "weight": 9,
       "addedSession": 109,
       "lastModifiedSession": 109
+    },
+    {
+      "id": "r032",
+      "category": "confidence",
+      "description": "Mixed bias scenarios with systematic cross-asset screening warrant higher confidence scoring. Analytics show 56% hit rate in mixed calls versus much lower directional accuracy. When producing 4+ quality setups across 3+ asset classes during correlation breakdown, apply +15% confidence adjustment to base technical/macro scoring.",
+      "weight": 8,
+      "addedSession": 116,
+      "lastModifiedSession": 116
     }
   ],
-  "version": 69,
-  "lastUpdated": "2026-04-02T13:32:20.752Z",
+  "version": 70,
+  "lastUpdated": "2026-04-03T08:17:32.860Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -264,5 +272,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #114"
+  "sessionNotes": "Last updated: Session #116"
 }
