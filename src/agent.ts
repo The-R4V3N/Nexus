@@ -578,16 +578,24 @@ export async function runAndValidateAxiom(
   let screeningNote: string;
   if (weekendMode) {
     // Weekend: check coverage of every available crypto instrument by name
-    const { covered, missing } = validateWeekendCryptoScreening(oracle, snapshots);
-    if (missing.length === 0) {
+    const { covered, mentionedOnly, missing } = validateWeekendCryptoScreening(oracle, snapshots);
+    const fullyComplete = missing.length === 0 && mentionedOnly.length === 0;
+    if (fullyComplete) {
       screeningNote = `\n\n### Weekend screening compliance: ✅ COMPLETE
-- All ${covered.length} crypto instruments were covered: ${covered.join(", ")}`;
+- All ${covered.length} crypto instruments have valid setups or key levels: ${covered.join(", ")}`;
     } else {
-      screeningNote = `\n\n### Weekend screening compliance: ❌ INCOMPLETE (${missing.length} instruments ignored)
-- Covered (${covered.length}): ${covered.join(", ")}
-- MISSING (${missing.length}): ${missing.join(", ")}
-- r030 requires ALL ${snapshots.length} available instruments to be evaluated.
-- This is a RULE VIOLATION. You MUST open a self-task or propose a code fix — do NOT just note it again.`;
+      const parts: string[] = [`\n\n### Weekend screening compliance: ❌ INCOMPLETE`];
+      parts.push(`- With valid setup/key level (${covered.length}): ${covered.join(", ") || "none"}`);
+      if (mentionedOnly.length > 0) {
+        parts.push(`- Text mention only — NO setup or key level produced (${mentionedOnly.length}): ${mentionedOnly.join(", ")}`);
+        parts.push(`  ↳ Mentioning an instrument in narrative WITHOUT a setup or key level is NOT r030 compliance.`);
+      }
+      if (missing.length > 0) {
+        parts.push(`- Completely ignored (${missing.length}): ${missing.join(", ")}`);
+      }
+      parts.push(`- r030 requires ALL ${snapshots.length} instruments to have a setup or key level.`);
+      parts.push(`- This is a RULE VIOLATION. You MUST open a self-task or propose a code fix — do NOT just note it again.`);
+      screeningNote = parts.join("\n");
     }
   } else {
     const setupCategories = new Set(oracle.setups.map((s: any) => {

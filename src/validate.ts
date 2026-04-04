@@ -137,8 +137,9 @@ export function applyCalibrationAdjustment(
 // must evaluate every instrument fetched from Binance.
 
 export interface WeekendScreeningResult {
-  covered: string[];   // instruments mentioned in analysis or setups
-  missing: string[];   // instruments completely ignored
+  covered: string[];       // instruments with a valid setup or key level
+  mentionedOnly: string[]; // instruments in analysis text only — no setup or key level produced
+  missing: string[];       // instruments completely ignored
 }
 
 export function validateWeekendCryptoScreening(
@@ -166,6 +167,7 @@ export function validateWeekendCryptoScreening(
   }
 
   const covered: string[] = [];
+  const mentionedOnly: string[] = [];
   const missing: string[] = [];
 
   for (const snap of availableSnapshots) {
@@ -179,14 +181,16 @@ export function validateWeekendCryptoScreening(
     const inKeyLevels = keyLevelTokens.has(name) || keyLevelTokens.has(symbol) ||
       [...keyLevelTokens].some(t => t.includes(symbol) || t.includes(name));
 
-    if (inAnalysis || inSetup || inKeyLevels) {
+    if (inSetup || inKeyLevels) {
       covered.push(snap.name);
+    } else if (inAnalysis) {
+      mentionedOnly.push(snap.name);
     } else {
       missing.push(snap.name);
     }
   }
 
-  return { covered, missing };
+  return { covered, mentionedOnly, missing };
 }
 
 // ── ORACLE Validator ──────────────────────────────────────
@@ -299,12 +303,16 @@ export function validateOracleOutput(
   }
 
   // r011 compliance: causal attribution language must be documented in assumptions[]
-  const causalPattern = /\b(assuming|if confirmed|driven by|due to|because of|amid geopolit|escalation|de-escalation)\b/i;
-  if (causalPattern.test(oracle.analysis ?? "")) {
+  // Catches both explicit causal phrases and softer attribution language ORACLE naturally uses
+  const causalPattern = /\b(assuming|if confirmed|driven by|due to|because of|amid geopolit|escalation|de-escalation|suggests?|consistent with|appears? to|following\s+\w*day|amid\b|reflects?|indicates?)\b/i;
+  // Also catch cross-asset price references in any session (e.g. "gold surged +8.49%" in a crypto session)
+  const crossAssetPattern = /\b(gold|silver|oil|crude|equities|equity|stocks?|bonds?|s&p|nasdaq|dow|dax|ftse|treasury|yields?)\b.*?[\+\-]?\d+\.?\d*%/i;
+  const hasCausal = causalPattern.test(oracle.analysis ?? "") || crossAssetPattern.test(oracle.analysis ?? "");
+  if (hasCausal) {
     const assumptions = (oracle as any).assumptions;
     if (!Array.isArray(assumptions) || assumptions.length === 0) {
       warnings.push(
-        "r011 compliance: analysis contains causal attribution language but assumptions[] is empty — unverified events must be listed in the assumptions field"
+        "r011 compliance: analysis contains causal attribution language or cross-asset price references but assumptions[] is empty — unverified events must be listed in the assumptions field"
       );
     }
   }
