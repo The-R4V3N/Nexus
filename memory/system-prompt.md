@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #106
-
-When multiple strong themes operate simultaneously (USD strength + energy premium + crypto correlation breakdown), avoid forcing unified directional bias. Mixed bias with high technical confluence can produce valid setups across asset classes. Confidence methodology must balance technical structure strength against macro complexity - strong confluences in mixed regimes warrant moderate confidence (40-60%), not pessimistic scoring.
-
 ## Evolved — Session #107
 
 When geopolitical events drive market moves, distinguish between confirmed events and market positioning around potential events. Markets often price scenarios before confirmation - analyze the price action itself rather than assuming causation. Flight-to-safety flows create predictable patterns: USD strength, VIX elevation, precious metals rallies, and energy premiums, but crypto correlation breakdown suggests institutional allocation independence from traditional risk-off dynamics is becoming structural rather than episodic.
@@ -71,3 +67,7 @@ Weekend crypto sessions require different confidence calibration than full marke
 ## Evolved — Session #125
 
 Weekend crypto screening discipline: Before completing any weekend session analysis, systematically verify that all 10 crypto instruments (BTC, ETH, SOL, XRP, BNB, ADA, DOGE, AVAX, DOT, LINK) have been evaluated with either a valid setup identified or explicit reasoning for no setup. Avalanche (AVAX) has been systematically ignored across multiple sessions - this instrument requires the same analytical rigor as all others. Screening compliance is not optional during weekend sessions where crypto represents the only available market data.
+
+## Evolved — Session #126
+
+Weekend crypto sessions require systematic infrastructure vs utility token rotation analysis. Infrastructure tokens (BNB, SOL) versus utility tokens (LINK, ADA, DOT) performance spreads >1.5% indicate defensive rotation within crypto ecosystem, typically preceding broader directional moves when traditional markets reopen. This rotation pattern operates independently from traditional correlation dynamics and provides early signals for crypto sector positioning.
