@@ -107,7 +107,13 @@ ${entry.fullAnalysis.keyLevels.length === 0 ? "No key levels identified." :
         `- **${l.instrument}** ${l.level} (${l.type}): ${l.notes}`
       ).join("\n")}
 
----
+${(entry.fullAnalysis.assumptions ?? []).length > 0 ? `### Assumptions (r011)
+
+> Unverified causal attributions — not confirmed by price data alone.
+
+${(entry.fullAnalysis.assumptions ?? []).map((a) => `- ${a}`).join("\n")}
+
+` : ""}---
 
 ## 🧠 AXIOM — Cognitive Reflection
 
@@ -312,6 +318,11 @@ function buildEntryHTML(entry: JournalEntry, index: number): string {
         <div class="oracle-col">
           <h3 class="col-header">// ORACLE</h3>
           <div class="analysis-text">${escapeAndBreak(entry.fullAnalysis.analysis)}</div>
+          ${(entry.fullAnalysis.assumptions ?? []).length > 0 ? `
+          <div class="assumptions-block">
+            <span class="assumptions-label">ASSUMPTIONS (r011)</span>
+            <ul class="assumptions-list">${(entry.fullAnalysis.assumptions ?? []).map((a) => `<li>${escapeHTML(a)}</li>`).join("")}</ul>
+          </div>` : ""}
           ${setupsHTML ? `<div class="setup-legend">FVG=Fair Value Gap &middot; OB=Order Block &middot; MSS=Market Structure Shift &middot; CISD=Change In State of Delivery &middot; PDH/PDL=Previous Day High/Low</div>` : ""}
           <div class="setups-row">${setupsHTML || '<span class="no-setup">NO SETUPS</span>'}</div>
         </div>
@@ -940,6 +951,29 @@ function buildPageHTML(
   }
 
   .setup-specs span { display: block; }
+
+  .assumptions-block {
+    margin: 10px 0;
+    padding: 6px 8px;
+    border: 1px solid rgba(255,200,0,0.25);
+    background: rgba(255,200,0,0.04);
+  }
+
+  .assumptions-label {
+    display: block;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    color: rgba(255,200,0,0.7);
+    margin-bottom: 4px;
+  }
+
+  .assumptions-list {
+    margin: 0;
+    padding-left: 14px;
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
 
   .setup-legend {
     font-size: 8px;

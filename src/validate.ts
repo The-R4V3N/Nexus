@@ -298,6 +298,17 @@ export function validateOracleOutput(
     }
   }
 
+  // r011 compliance: causal attribution language must be documented in assumptions[]
+  const causalPattern = /\b(assuming|if confirmed|driven by|due to|because of|amid geopolit|escalation|de-escalation)\b/i;
+  if (causalPattern.test(oracle.analysis ?? "")) {
+    const assumptions = (oracle as any).assumptions;
+    if (!Array.isArray(assumptions) || assumptions.length === 0) {
+      warnings.push(
+        "r011 compliance: analysis contains causal attribution language but assumptions[] is empty — unverified events must be listed in the assumptions field"
+      );
+    }
+  }
+
   // Recycled analysis check — compare against last session
   if (previousSessions.length > 0) {
     const lastSession = previousSessions[previousSessions.length - 1];

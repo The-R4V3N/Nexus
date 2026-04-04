@@ -37,6 +37,7 @@ export interface OracleAnalysis {
   setups: TradingSetup[];
   bias: MarketBias;
   keyLevels: KeyLevel[];
+  assumptions?: string[]; // r011: unverified causal attributions documented explicitly
   confidence: number; // 0-100
 }
 

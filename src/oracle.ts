@@ -184,6 +184,15 @@ FORMAT REQUIREMENTS:
 
 4. KEY LEVELS: Identify important support/resistance levels across all instruments.
 
+5. ASSUMPTIONS (r011 \u2014 MANDATORY): List every causal attribution to an unverified external event
+   in the "assumptions" array. This includes geopolitical events, central bank actions, earnings,
+   or any "X caused Y" claim not confirmed by price data alone.
+   - BAD: weaving "Iran war escalation driving oil surge" into the narrative without documenting it
+   - GOOD: list it in assumptions[], then write in the narrative: "oil surge consistent with supply
+     shock premium (see assumptions)"
+   - Use [] ONLY when every move is attributed purely to technical structure with zero reference to
+     external events. When in doubt, list it.
+
 Respond in JSON:
 
 {
@@ -192,6 +201,9 @@ Respond in JSON:
     "overall": "bullish|bearish|neutral|mixed",
     "notes": "Brief explanation \u2014 if mixed, state which signals conflict"
   },
+  "assumptions": [
+    "Each unverified causal attribution as a separate string \u2014 e.g. 'Iran escalation driving oil surge \u2014 unconfirmed from price data alone'"
+  ],
   "keyLevels": [
     {
       "instrument": "Name",

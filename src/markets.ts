@@ -102,6 +102,14 @@ export async function fetchAllMarkets(): Promise<MarketSnapshot[]> {
   return snapshots;
 }
 
+// Thresholds above which a single-session move is flagged as potentially bad data.
+// Crypto is excluded — extreme moves are normal there.
+const ANOMALY_THRESHOLDS: Partial<Record<string, number>> = {
+  forex:       3,   // >3% is extreme for any major pair
+  indices:    12,   // >12% in one session is highly suspicious
+  commodities: 20,  // >20% warrants verification (oil/gold spikes)
+};
+
 export function formatSnapshotsForPrompt(snapshots: MarketSnapshot[]): string {
   const byCategory = groupBy(snapshots, (s) => s.category);
   const lines: string[] = ["=== CURRENT MARKET DATA ===\n"];
@@ -113,7 +121,11 @@ export function formatSnapshotsForPrompt(snapshots: MarketSnapshot[]): string {
       const price = s.price < 10 ? s.price.toFixed(5) : s.price.toFixed(2);
       const isExceptional = s.avgDailyChange && Math.abs(s.changePercent) > s.avgDailyChange * 2;
       const avgNote = isExceptional ? ` [>2x avg move]` : "";
-      lines.push(`${s.name.padEnd(14)} ${price.padStart(12)}  ${sign}${s.change.toFixed(4)} (${sign}${pct}%)  H:${s.high.toFixed(2)} L:${s.low.toFixed(2)}${avgNote}`);
+      const anomalyThreshold = ANOMALY_THRESHOLDS[s.category];
+      const anomalyNote = anomalyThreshold && Math.abs(s.changePercent) > anomalyThreshold
+        ? ` [⚠ DATA WARNING: ${Math.abs(s.changePercent).toFixed(1)}% exceeds ${anomalyThreshold}% threshold — verify data integrity before trading]`
+        : "";
+      lines.push(`${s.name.padEnd(14)} ${price.padStart(12)}  ${sign}${s.change.toFixed(4)} (${sign}${pct}%)  H:${s.high.toFixed(2)} L:${s.low.toFixed(2)}${avgNote}${anomalyNote}`);
     }
     lines.push("");
   }
