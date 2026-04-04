@@ -6,7 +6,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
-import { validateAxiomOutput, logFailure, extractConfidenceFromText } from "./validate";
+import { validateAxiomOutput, logFailure, extractConfidenceFromText, calculateTextSimilarity } from "./validate";
 import { loadAllJournalEntries } from "./journal";
 import {
   salvageJSON, stripSurrogates, extractJSONFromResponse,
@@ -543,6 +543,23 @@ async function evolveMemory(
   // ── Update system prompt (capped to prevent unbounded growth) ──
   let newSystemPrompt = currentSystemPrompt;
   const maxLen        = getMaxSystemPromptLength();
+
+  if (axiomOutput.systemPromptAdditions?.trim()) {
+    // Dedup: block additions that are too similar to existing evolved sections
+    const newText = axiomOutput.systemPromptAdditions.trim();
+    const existingSections = currentSystemPrompt
+      .split(/\n\n## Evolved/)
+      .slice(1) // skip base prompt
+      .map(s => s.replace(/^[^\n]*\n/, "").trim()); // strip "— Session #N" header line
+    const isDuplicate = existingSections.some(existing => {
+      const similarity = calculateTextSimilarity(newText, existing);
+      return similarity > 0.55;
+    });
+    if (isDuplicate) {
+      console.log(`  ⏭ System prompt addition skipped — too similar to an existing evolved section`);
+      axiomOutput.systemPromptAdditions = "";
+    }
+  }
 
   if (axiomOutput.systemPromptAdditions?.trim()) {
     const addition =
