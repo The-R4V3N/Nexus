@@ -107,10 +107,10 @@
     {
       "id": "r014",
       "category": "confidence_methodology",
-      "description": "Confidence methodology: (1) Technical confluence per r022: 1=20%, 2=40%, 3=60%, 4+=80%. (2) Macro alignment: 40-60% for strong correlation, 20-40% for weak correlation, 0-20% for breakdown. (3) RR clarity: +10% for RR>2.5, +5% for 1.5-2.5, -5% for <1.5. (4) Mixed bias adjustment per r032: +15% when producing 4+ setups across 3+ asset classes during correlation breakdown. (5) Volatility adjustment: reduce by 10% during VIX>25. (6) Hard cap: maximum confidence 65% per r031. Show calculation explic",
+      "description": "Confidence methodology: (1) Technical confluence: 1=20%, 2=35%, 3=45%, 4+=55%. (2) Macro alignment: 40-60% for strong correlation, 20-40% for weak correlation, 0-20% for breakdown. (3) RR clarity: +10% for RR>2.5, +5% for 1.5-2.5, -5% for <1.5. (4) Volatility adjustment: reduce by 10% during VIX>25. (5) Hard cap: maximum confidence 50% regardless of calculation. Analytics show 30-50% range well-calibrated (45% hit rate) while 50-70% range severely overconfident (21% hit rate). NOTE: displayed confidence is system-calibrated — do not modify this rule to compensate for calibration adjustments.",
       "weight": 8,
       "addedSession": 2,
-      "lastModifiedSession": 124
+      "lastModifiedSession": 108
     },
     {
       "id": "r015",

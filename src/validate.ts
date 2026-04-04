@@ -433,10 +433,17 @@ export function validateAxiomOutput(
   }
 
   // Validate rule update IDs format (r + 3 digits)
+  // Also detect rule descriptions that will be truncated by security.ts (MAX_RULE_LENGTH = 500)
+  const MAX_RULE_LENGTH = 500;
   if (Array.isArray(parsed.ruleUpdates)) {
     for (const update of parsed.ruleUpdates) {
       if (update.ruleId && !/^r\d{3}$/.test(update.ruleId)) {
         warnings.push(`Rule update references invalid ID format: "${update.ruleId}" (expected r + 3 digits)`);
+      }
+      if (update.after && update.after.length >= MAX_RULE_LENGTH) {
+        warnings.push(
+          `Rule update ${update.ruleId} "after" text is ${update.after.length} chars (limit ${MAX_RULE_LENGTH}) — will be truncated by security gate`
+        );
       }
     }
   }

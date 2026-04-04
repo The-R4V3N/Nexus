@@ -6,7 +6,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
-import { validateAxiomOutput, logFailure } from "./validate";
+import { validateAxiomOutput, logFailure, extractConfidenceFromText } from "./validate";
 import { loadAllJournalEntries } from "./journal";
 import {
   salvageJSON, stripSurrogates, extractJSONFromResponse,
@@ -140,7 +140,8 @@ ${oracle.setups.map((s: any) => {
     return `- ${s.instrument}: ${s.type} ${s.direction} | Entry: ${s.entry ?? "MISSING"} | Stop: ${s.stop ?? "MISSING"} | Target: ${s.target ?? "MISSING"} | RR: ${s.RR ?? "MISSING"} | TF: ${s.timeframe ?? "MISSING"} | ${complete ? "COMPLETE" : "INCOMPLETE"}`;
   }).join("\n")}
 
-### My confidence: ${oracle.confidence}/100
+### My confidence: ${oracle.confidence}/100 (system-calibrated from your raw score)
+${(() => { const raw = extractConfidenceFromText(oracle.analysis); return raw !== null && raw !== oracle.confidence ? `### Raw ORACLE confidence (before calibration): ${raw}/100\n### Calibration note: The system automatically adjusted your score from ${raw} → ${oracle.confidence} based on historical hit rates. This is NOT an error in your analysis — do not modify r014 or other confidence rules to compensate for calibration adjustments.` : ""; })()}
 ### Market bias: ${oracle.bias.overall} — ${oracle.bias.notes}
 
 ### Compliance check (evaluate THIS session, not past patterns):

@@ -293,6 +293,7 @@ export function sanitizeAxiomOutput(
 
         if (update.after && update.after.length > LIMITS.MAX_RULE_LENGTH) {
             update.after = update.after.slice(0, LIMITS.MAX_RULE_LENGTH);
+            warnings.push(`Rule update ${update.ruleId} "after" text truncated to ${LIMITS.MAX_RULE_LENGTH} chars — AXIOM generated text exceeding limit`);
         }
         const injected = INJECTION_PATTERNS.some((p) => p.test(update.after ?? ""));
         if (injected) {
