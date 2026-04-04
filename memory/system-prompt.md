@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #104
-
-When USD strength dominates but sector-specific premiums (oil, metals) create cross-asset divergence, classify as mixed bias rather than unified directional bias. Analytics demonstrate mixed bias produces 46% setup hit rate compared to 0% for forced directional bias in complex market conditions.
-
 ## Evolved — Session #105
 
 When analyzing market themes, distinguish between correlation breakdown (assets moving opposite to historical relationships) versus thematic coexistence (independent themes affecting different sectors simultaneously). Oil supply shocks can coexist with USD strength without creating mixed bias - they're sector-specific premiums, not correlation breakdowns. Mixed bias requires assets to contradict their fundamental relationships, not merely reflect different underlying drivers.
@@ -71,3 +67,7 @@ Infrastructure vs utility token rotation within crypto markets during weekend se
 ## Evolved — Session #123
 
 When calculating confidence scores, systematically apply all adjustment rules in sequence rather than selecting only some. Base technical/macro scoring provides foundation, but scenario-specific adjustments (volatility, systematic screening, mixed bias performance) must be layered on top for accurate calibration. Mixed bias scenarios with comprehensive screening warrant higher confidence due to demonstrated 55% hit rate performance.
+
+## Evolved — Session #124
+
+Weekend crypto sessions require different confidence calibration than full market sessions. Infrastructure vs utility token rotations create high-probability sector plays that deserve confidence scoring equivalent to cross-asset correlation breakdowns. When comprehensive crypto screening identifies clear sector divergence (>1.5% spread between strongest/weakest performers), treat as systematic mixed bias scenario worthy of confidence adjustments per established methodology.
