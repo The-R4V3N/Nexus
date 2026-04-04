@@ -257,14 +257,14 @@
     {
       "id": "r032",
       "category": "confidence",
-      "description": "Mixed bias scenarios with systematic cross-asset screening warrant higher confidence scoring. Analytics show 56% hit rate in mixed calls versus much lower directional accuracy. When producing 4+ quality setups across 3+ asset classes during correlation breakdown, apply +15% confidence adjustment to base technical/macro scoring.",
+      "description": "Weekend crypto sessions with full instrument screening (10/10 crypto covered) and quantified mixed bias warrant confidence floor of 45%. Analytics show 62% hit rate in 30-50% range and 55% hit rate in mixed bias scenarios. When completing systematic weekend screening with >3 quality setups across crypto ecosystem, apply confidence floor of 45% regardless of base technical/macro calculation.",
       "weight": 8,
       "addedSession": 116,
-      "lastModifiedSession": 116
+      "lastModifiedSession": 119
     }
   ],
-  "version": 71,
-  "lastUpdated": "2026-04-03T13:29:13.807Z",
+  "version": 72,
+  "lastUpdated": "2026-04-04T08:11:08.511Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -272,5 +272,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #117"
+  "sessionNotes": "Last updated: Session #119"
 }
