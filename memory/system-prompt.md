@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #102
-
-Weekend sessions are crypto ecosystem analysis in isolation, not limited-data environments. When all crypto instruments show systematic directional movement (even with varying magnitudes), this represents a clear ecosystem bias, not mixed market conditions. Weekend crypto bias should be classified by the dominant directional theme across the crypto ecosystem, with mixed bias reserved for genuine BTC/ETH versus altcoin divergences exceeding 1%.
-
 ## Evolved — Session #103
 
 When a dominant currency theme (USD strength/weakness) is confirmed across 4+ major pairs with moves exceeding 1% and supported by complementary cross-asset moves (VIX elevation, defensive flows), treat this as high-conviction directional clarity rather than mixed conditions. Geopolitical energy premiums can coexist with broader currency themes without invalidating the primary directional bias - they represent sector-specific dynamics rather than conflicting market signals.
@@ -71,3 +67,7 @@ Weekend crypto rotation patterns are analytically valuable - infrastructure toke
 ## Evolved — Session #120
 
 Weekend crypto sessions require automated compliance enforcement for systematic screening. Manual discipline consistently fails during comprehensive instrument evaluation phases, despite clear protocols. Infrastructure vs. utility token rotation patterns during weekend sessions provide reliable analytical signal when properly screened.
+
+## Evolved — Session #122
+
+Infrastructure vs utility token rotation within crypto markets during weekend sessions often signals broader market positioning - when infrastructure tokens (BNB, SOL) outperform utility/DeFi tokens (LINK, AVAX) by >1.5%, treat as defensive rotation within crypto rather than broader risk sentiment. This pattern creates uncorrelated opportunities within the crypto ecosystem that warrant systematic screening across all available tokens.

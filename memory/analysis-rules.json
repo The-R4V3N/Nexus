@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires explicit quantified justification with numerical evidence: (1) equal-weighted conflicting signals across 3+ asset classes with specific magnitude differences >1.5%, or (2) correlation breakdown with actual standard deviation calculation from available proxy data, or (3) VIX level with specific correlation coefficient, or (4) weekend crypto divergence with precise percentage spreads >1.5% between strongest/weakest performers. Must state which condition applies, provide the act",
+      "description": "Mixed bias requires explicit quantified justification: (1) equal-weighted conflicting signals across 3+ asset classes with magnitude differences >1.5%, or (2) correlation breakdown with proxy data showing >1 standard deviation from norm, or (3) VIX >25 with risk assets rallying, or (4) weekend crypto sector divergence >1.5% between strongest/weakest performers. Must state specific condition, show calculation (e.g. 'BNB +0.99% vs LINK -0.60% = 1.59% spread, condition 4 met'), and reference histor",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 119
+      "lastModifiedSession": 122
     },
     {
       "id": "r016",
@@ -263,8 +263,8 @@
       "lastModifiedSession": 116
     }
   ],
-  "version": 72,
-  "lastUpdated": "2026-04-04T08:08:32.245Z",
+  "version": 73,
+  "lastUpdated": "2026-04-04T09:23:37.066Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -272,5 +272,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #119"
+  "sessionNotes": "Last updated: Session #122"
 }
