@@ -453,3 +453,217 @@ describe("oracle confidence enforcement", () => {
     expect(finalConfidence).toBe(55);
   });
 });
+
+// ── Weekend structural enforcement ────────────────────────
+
+const cryptoSnapshots = [
+  { symbol: "BTC-USD",  name: "Bitcoin",   category: "crypto", price: 66918, previousClose: 67000, high: 67100, low: 66500, change: -82,    changePercent: -0.06 },
+  { symbol: "ETH-USD",  name: "Ethereum",  category: "crypto", price: 2049,  previousClose: 2061,  high: 2070,  low: 2040,  change: -12,    changePercent: -0.60 },
+  { symbol: "SOL-USD",  name: "Solana",    category: "crypto", price: 79.5,  previousClose: 79.3,  high: 80.5,  low: 79.0,  change:  0.2,   changePercent:  0.27 },
+  { symbol: "XRP-USD",  name: "Ripple",    category: "crypto", price: 1.316, previousClose: 1.317, high: 1.330, low: 1.300, change: -0.001, changePercent: -0.10 },
+  { symbol: "BNB-USD",  name: "BNB",       category: "crypto", price: 585,   previousClose: 581,   high: 592,   low: 580,   change:  4,     changePercent:  0.66 },
+  { symbol: "ADA-USD",  name: "Cardano",   category: "crypto", price: 0.246, previousClose: 0.247, high: 0.250, low: 0.244, change: -0.001, changePercent: -0.18 },
+  { symbol: "DOGE-USD", name: "Dogecoin",  category: "crypto", price: 0.163, previousClose: 0.164, high: 0.165, low: 0.161, change: -0.001, changePercent: -0.34 },
+  { symbol: "AVAX-USD", name: "Avalanche", category: "crypto", price: 19.8,  previousClose: 19.9,  high: 20.1,  low: 19.6,  change: -0.1,   changePercent: -0.50 },
+  { symbol: "DOT-USD",  name: "Polkadot",  category: "crypto", price: 1.24,  previousClose: 1.248, high: 1.260, low: 1.230, change: -0.008, changePercent: -0.64 },
+  { symbol: "LINK-USD", name: "Chainlink", category: "crypto", price: 8.65,  previousClose: 8.71,  high: 8.80,  low: 8.60,  change: -0.06,  changePercent: -0.68 },
+] as any[];
+
+describe("buildWeekendInstrumentTemplate", () => {
+  it("exports the function", async () => {
+    const oracle = await import("../src/oracle");
+    expect(typeof oracle.buildWeekendInstrumentTemplate).toBe("function");
+  });
+
+  it("includes every instrument name in the template", async () => {
+    const { buildWeekendInstrumentTemplate } = await import("../src/oracle");
+    const template = buildWeekendInstrumentTemplate(cryptoSnapshots);
+    for (const snap of cryptoSnapshots) {
+      expect(template).toContain(snap.name);
+    }
+  });
+
+  it("produces valid JSON that parses as an array of the right length", async () => {
+    const { buildWeekendInstrumentTemplate } = await import("../src/oracle");
+    const template = buildWeekendInstrumentTemplate(cryptoSnapshots);
+    const parsed = JSON.parse(template);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed).toHaveLength(cryptoSnapshots.length);
+  });
+
+  it("each slot has instrument name, direction neutral, and null entry/stop/target", async () => {
+    const { buildWeekendInstrumentTemplate } = await import("../src/oracle");
+    const template = buildWeekendInstrumentTemplate(cryptoSnapshots);
+    const parsed = JSON.parse(template);
+    for (const slot of parsed) {
+      expect(slot).toHaveProperty("instrument");
+      expect(slot).toHaveProperty("direction", "neutral");
+      expect(slot.entry).toBeNull();
+    }
+  });
+});
+
+describe("parseWeekendSetups", () => {
+  it("exports the function", async () => {
+    const oracle = await import("../src/oracle");
+    expect(typeof oracle.parseWeekendSetups).toBe("function");
+  });
+
+  it("neutral entries become key levels, not valid setups", async () => {
+    const { parseWeekendSetups } = await import("../src/oracle");
+    const rawSetups = [
+      { instrument: "Bitcoin",   direction: "bullish", entry: 66000, stop: 65500, target: 67080, RR: 2.16, timeframe: "4H", type: "OB",    description: "Support play", invalidation: "Break below 66k" },
+      { instrument: "Ripple",    direction: "neutral",  entry: null,  stop: null,  target: null,  RR: null, timeframe: null, type: "Other", description: "No clear setup — range compression", invalidation: "" },
+      { instrument: "Avalanche", direction: "neutral",  entry: null,  stop: null,  target: null,  RR: null, timeframe: null, type: "Other", description: "No setup — sideways", invalidation: "" },
+    ];
+    const { validSetups, screeningKeyLevels } = parseWeekendSetups(rawSetups, cryptoSnapshots);
+    expect(validSetups.map((s: any) => s.instrument)).toContain("Bitcoin");
+    expect(validSetups.map((s: any) => s.instrument)).not.toContain("Ripple");
+    expect(validSetups.map((s: any) => s.instrument)).not.toContain("Avalanche");
+    expect(screeningKeyLevels.map((k: any) => k.instrument)).toContain("Ripple");
+    expect(screeningKeyLevels.map((k: any) => k.instrument)).toContain("Avalanche");
+  });
+
+  it("screening key levels have instrument, level (current price), and notes from description", async () => {
+    const { parseWeekendSetups } = await import("../src/oracle");
+    const rawSetups = [
+      { instrument: "Ripple", direction: "neutral", entry: null, stop: null, target: null, RR: null, timeframe: null, type: "Other", description: "No setup — sideways range", invalidation: "" },
+    ];
+    const { screeningKeyLevels } = parseWeekendSetups(rawSetups, cryptoSnapshots);
+    const xrpLevel = screeningKeyLevels.find((k: any) => k.instrument === "Ripple");
+    expect(xrpLevel).toBeDefined();
+    expect(xrpLevel.level).toBe(1.316); // current price from snapshot
+    expect(xrpLevel.type).toBe("screened");
+    expect(xrpLevel.notes).toContain("No setup");
+  });
+
+  it("full setup with entry/stop/target stays in validSetups and is not duplicated in keyLevels", async () => {
+    const { parseWeekendSetups } = await import("../src/oracle");
+    const rawSetups = [
+      { instrument: "Bitcoin", direction: "bullish", entry: 66000, stop: 65500, target: 67080, RR: 2.16, timeframe: "4H", type: "OB", description: "OB hold", invalidation: "Break below" },
+    ];
+    const { validSetups, screeningKeyLevels } = parseWeekendSetups(rawSetups, cryptoSnapshots);
+    expect(validSetups).toHaveLength(1);
+    expect(screeningKeyLevels.map((k: any) => k.instrument)).not.toContain("Bitcoin");
+  });
+});
+
+describe("runOracleAnalysis weekend integration — template + parseWeekendSetups", () => {
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    logSpy  = vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+    logSpy.mockRestore();
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
+  it("neutral ORACLE entries appear in keyLevels (covered) not in setups", async () => {
+    const setupsWithNeutral = [
+      { instrument: "Bitcoin",   direction: "bullish", entry: 66000, stop: 65500, target: 67080, RR: 2.16, timeframe: "4H", type: "OB",    description: "OB hold", invalidation: "Break below 66k" },
+      { instrument: "Ripple",    direction: "neutral",  entry: null,  stop: null,  target: null,  RR: null,  timeframe: null, type: "Other", description: "No setup — sideways range", invalidation: "" },
+      { instrument: "Avalanche", direction: "neutral",  entry: null,  stop: null,  target: null,  RR: null,  timeframe: null, type: "Other", description: "No setup — no structural level", invalidation: "" },
+    ];
+
+    const analysisResponse = {
+      analysis: "**Higher Timeframe Context:** Crypto mixed. **Intraday Analysis:** BTC stable. **Cross-Asset Dynamics:** Internal rotation. **Technical Confluence Analysis:** Confidence: 46% — TC (60%), MA (30%), RR (40%)",
+      bias: { overall: "mixed", notes: "Infrastructure vs utility divergence" },
+      keyLevels: [{ instrument: "Bitcoin", level: 66000, type: "support", notes: "Key level" }],
+      confidence: 46,
+    };
+
+    let callCount = 0;
+    const mockClient = {
+      messages: {
+        create: vi.fn(async (params: any) => {
+          callCount++;
+          const responseJSON = callCount === 1
+            ? JSON.stringify(analysisResponse)
+            : JSON.stringify(setupsWithNeutral);
+          return { stop_reason: "end_turn", content: [{ type: "text", text: responseJSON }] };
+        }),
+      },
+    };
+
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return {
+        ...actual,
+        existsSync: () => false,
+        readFileSync: actual.readFileSync,
+        mkdirSync: () => {},
+      };
+    });
+
+    vi.doMock("../src/journal", () => ({ loadAllJournalEntries: () => [] }));
+    vi.doMock("../src/analytics", () => ({ buildCalibrationContext: () => "" }));
+
+    const { runOracleAnalysis } = await import("../src/oracle");
+    const result = await runOracleAnalysis(
+      mockClient as any,
+      cryptoSnapshots,
+      "test-session",
+      1,
+      "",
+      "",
+      true  // isWeekend
+    );
+
+    // Neutral entries must NOT appear as tradeable setups
+    const setupInstruments = result.setups.map((s: any) => s.instrument);
+    expect(setupInstruments).not.toContain("Ripple");
+    expect(setupInstruments).not.toContain("Avalanche");
+
+    // Neutral entries MUST appear in keyLevels so screening counts them as covered
+    const keyLevelInstruments = result.keyLevels.map((k: any) => k.instrument);
+    expect(keyLevelInstruments).toContain("Ripple");
+    expect(keyLevelInstruments).toContain("Avalanche");
+  });
+
+  it("ORACLE SETUPS prompt contains pre-filled instrument template in weekend mode", async () => {
+    const capturedPrompts: string[] = [];
+    let callCount = 0;
+
+    const analysisResponse = {
+      analysis: "**Higher Timeframe Context:** Mixed. **Intraday Analysis:** Stable. **Cross-Asset Dynamics:** Rotation. **Technical Confluence Analysis:** Confidence: 46% — TC (60%), MA (30%), RR (40%)",
+      bias: { overall: "mixed", notes: "Rotation" },
+      keyLevels: [],
+      confidence: 46,
+    };
+
+    const mockClient = {
+      messages: {
+        create: vi.fn(async (params: any) => {
+          callCount++;
+          capturedPrompts.push(params.messages[0].content);
+          const responseJSON = callCount === 1
+            ? JSON.stringify(analysisResponse)
+            : JSON.stringify([]);
+          return { stop_reason: "end_turn", content: [{ type: "text", text: responseJSON }] };
+        }),
+      },
+    };
+
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return { ...actual, existsSync: () => false, readFileSync: actual.readFileSync, mkdirSync: () => {} };
+    });
+    vi.doMock("../src/journal", () => ({ loadAllJournalEntries: () => [] }));
+    vi.doMock("../src/analytics", () => ({ buildCalibrationContext: () => "" }));
+
+    const { runOracleAnalysis } = await import("../src/oracle");
+    await runOracleAnalysis(mockClient as any, cryptoSnapshots, "test-session", 1, "", "", true);
+
+    // The second call (SETUPS) should contain every instrument name in the template
+    const setupsPrompt = capturedPrompts[1];
+    for (const snap of cryptoSnapshots) {
+      expect(setupsPrompt).toContain(snap.name);
+    }
+  });
+});

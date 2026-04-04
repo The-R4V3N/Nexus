@@ -254,13 +254,19 @@ Only respond with the JSON, no other text.`;
     .map((kl: any) => `${kl.instrument}: ${kl.level} (${kl.type}) \u2014 ${kl.notes}`)
     .join("\n");
 
+  // Build the pre-filled JSON template — every instrument slot must be filled by ORACLE
+  const weekendTemplate = isWeekend ? buildWeekendInstrumentTemplate(snapshots) : "";
+
   const weekendSetupNote = isWeekend ? `\nThis is a WEEKEND session — only construct setups for crypto instruments.
-You MUST evaluate EVERY instrument in this list for potential setups:
-${weekendInstrumentList}
-For EACH instrument above, either:
-  (a) include a setup if a valid structural level exists aligned with your bias, OR
-  (b) explicitly note: "[Name]: no setup — [brief reason]" in the setup description field with direction "neutral"
-Do NOT stop after 1-2 setups. All ${snapshots.length} instruments must be accounted for.\n` : "";
+You MUST fill in EVERY slot in the JSON template below. Do NOT add or remove slots.
+For each instrument:
+  - If a valid structural level exists aligned with your bias → fill in entry, stop, target, RR, timeframe, set direction to "bullish" or "bearish"
+  - If no valid setup exists → leave entry/stop/target/RR/timeframe as null, set direction to "neutral", explain briefly in description
+All ${snapshots.length} instruments must be accounted for. Returning fewer slots is a rule violation.
+
+START WITH THIS TEMPLATE (fill in every slot):
+${weekendTemplate}
+\n` : "";
 
   const setupsUserMessage = `You are NEXUS ORACLE's setup construction engine. You have just completed market analysis.
 ${weekendSetupNote}
@@ -350,6 +356,20 @@ Only respond with the JSON array, no other text.`;
 
   // ── Merge & validate both calls ────────────────────────────
 
+  // For weekend sessions: separate neutral "screened" entries from real setups,
+  // then merge screening key levels into the analysis key levels so
+  // validateWeekendCryptoScreening counts them as covered (r030 compliance).
+  let screeningKeyLevels: any[] = [];
+  if (isWeekend) {
+    const { validSetups: weekendValid, screeningKeyLevels: weekendScreened } =
+      parseWeekendSetups(rawSetups, snapshots);
+    rawSetups = weekendValid;
+    screeningKeyLevels = weekendScreened;
+    if (weekendScreened.length > 0) {
+      console.log(`  📋 Weekend screening: ${weekendValid.length} setups + ${weekendScreened.length} screened (no-setup) instrument(s) added to key levels`);
+    }
+  }
+
   // Validate analysis completeness
   parsed.setups = rawSetups;
   const validationErrors = validateAnalysisCompleteness(parsed);
@@ -417,9 +437,71 @@ Only respond with the JSON array, no other text.`;
     analysis:        parsed.analysis,
     setups:          validSetups,
     bias:            parsed.bias           ?? { overall: "neutral", notes: "" },
-    keyLevels:       parsed.keyLevels      ?? [],
+    keyLevels:       [...(parsed.keyLevels ?? []), ...screeningKeyLevels],
     confidence:      finalConfidence,
   };
+}
+
+// ── Weekend structural enforcement ───────────────────────
+
+/**
+ * Builds a JSON template string with one pre-filled slot per instrument.
+ * Injected into the ORACLE SETUPS prompt so ORACLE must fill in every slot —
+ * it cannot omit instruments by simply not mentioning them.
+ */
+export function buildWeekendInstrumentTemplate(snapshots: MarketSnapshot[]): string {
+  const slots = snapshots.map(s => ({
+    instrument:  s.name,
+    type:        "Other",
+    direction:   "neutral",
+    description: "",
+    invalidation: "",
+    entry:       null,
+    stop:        null,
+    target:      null,
+    RR:          null,
+    timeframe:   null,
+  }));
+  return JSON.stringify(slots, null, 2);
+}
+
+/**
+ * Separates raw weekend ORACLE setups into valid tradeable setups and
+ * screening key levels (neutral/no-setup entries).
+ *
+ * Neutral entries count as "covered" for r030 screening without being
+ * included as trades. Their current price becomes the key level.
+ */
+export function parseWeekendSetups(
+  rawSetups: any[],
+  snapshots: MarketSnapshot[]
+): { validSetups: any[]; screeningKeyLevels: any[] } {
+  const priceMap: Record<string, number> = {};
+  for (const s of snapshots) {
+    priceMap[s.name.toLowerCase()] = s.price;
+    priceMap[s.symbol.toLowerCase().replace(/-usd[t]?$/, "")] = s.price;
+  }
+
+  const validSetups: any[] = [];
+  const screeningKeyLevels: any[] = [];
+
+  for (const s of rawSetups) {
+    const isNeutral = s.direction === "neutral" || s.entry == null;
+    if (isNeutral) {
+      const name = (s.instrument ?? "").toLowerCase();
+      const price = priceMap[name] ?? priceMap[name.replace(/[^a-z]/g, "")] ?? 0;
+      screeningKeyLevels.push({
+        instrument: s.instrument,
+        level:      price,
+        type:       "screened",
+        notes:      s.description || "Screened — no setup identified",
+      });
+    } else {
+      validSetups.push(s);
+    }
+  }
+
+  return { validSetups, screeningKeyLevels };
 }
 
 // ── Risk/Reward Warning ───────────────────────────────────
