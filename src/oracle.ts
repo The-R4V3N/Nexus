@@ -365,8 +365,30 @@ Only respond with the JSON array, no other text.`;
       parseWeekendSetups(rawSetups, snapshots);
     rawSetups = weekendValid;
     screeningKeyLevels = weekendScreened;
-    if (weekendScreened.length > 0) {
-      console.log(`  📋 Weekend screening: ${weekendValid.length} setups + ${weekendScreened.length} screened (no-setup) instrument(s) added to key levels`);
+
+    // Patch: auto-inject neutral screened entry for any snapshot ORACLE dropped
+    const coveredNames = new Set([
+      ...weekendValid.map((s: any) => (s.instrument ?? "").toLowerCase()),
+      ...weekendScreened.map((kl: any) => (kl.instrument ?? "").toLowerCase()),
+    ]);
+    const droppedSnaps = snapshots.filter(s =>
+      !coveredNames.has(s.name.toLowerCase()) &&
+      !coveredNames.has(s.symbol.toLowerCase().replace(/-usd[t]?$/, ""))
+    );
+    if (droppedSnaps.length > 0) {
+      for (const snap of droppedSnaps) {
+        screeningKeyLevels.push({
+          instrument: snap.name,
+          level: snap.price,
+          type: "support",
+          notes: `Auto-injected: ORACLE omitted ${snap.name} from weekend screening response (r030 compliance patch)`,
+        });
+        console.warn(`  ⚠ Weekend screening: ORACLE omitted ${snap.name} — auto-injected neutral screened entry`);
+      }
+    }
+
+    if (weekendScreened.length > 0 || droppedSnaps.length > 0) {
+      console.log(`  📋 Weekend screening: ${weekendValid.length} setups + ${screeningKeyLevels.length} screened (no-setup) instrument(s) added to key levels`);
     }
   }
 
