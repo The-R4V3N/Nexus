@@ -14,7 +14,7 @@ import { fetchAllMarkets, printMarketsTable }                     from "./market
 import { fetchCryptoMarkets }                                     from "./crypto-markets";
 import { fetchMacroSnapshot, formatMacroForPrompt, printMacroSummary } from "./macro";
 import { fetchCommunityIssues, formatIssuesForPrompt }             from "./issues";
-import { fetchOpenSelfTasks, formatSelfTasksForPrompt, setCachedOpenTasks } from "./self-tasks";
+import { fetchOpenSelfTasks, formatSelfTasksForPrompt, setCachedOpenTasks, createSelfTask } from "./self-tasks";
 import { runOracleAnalysis }                                       from "./oracle";
 import { runAxiomReflection, initMemoryIfNeeded }                  from "./axiom";
 import { runForge, formatForgeResults }                             from "./forge";
@@ -640,12 +640,30 @@ System prompt additions about this same topic do NOT count as action.`;
     axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, closeableNumbers, noChangeStreak, setupOutcomes);
     reflection = axiomResult.reflection;
 
-    // Block system prompt additions when AXIOM is ruminating without real action
+    // Block system prompt additions when AXIOM is ruminating without real action,
+    // and auto-create a self-task so there is persistent pressure across sessions.
     if (repeatedCritique && repeatCount >= 3) {
-      const hasRealAction = reflection.ruleUpdates.length > 0 || axiomResult.forgeRequests.length > 0;
-      if (!hasRealAction && reflection.newSystemPromptSections) {
-        console.warn(`  ⚠ AXIOM rumination block: system prompt addition stripped (${repeatCount} sessions of same critique without rule/code action)`);
+      // Always strip system prompt addition — adding more text about enforcement never helps
+      if (reflection.newSystemPromptSections) {
+        console.warn(`  ⚠ AXIOM rumination block: system prompt addition stripped (${repeatCount} sessions of same critique without concrete action)`);
         reflection.newSystemPromptSections = "";
+      }
+      // Auto-create a self-task if no code-level fix was proposed.
+      // Dedup in createSelfTask prevents duplicate issues if AXIOM already opened one.
+      if (axiomResult.forgeRequests.length === 0) {
+        try {
+          const taskTitle = `Recurring execution gap (${repeatCount} sessions): ${repeatedCritique.slice(0, 70)}`;
+          await createSelfTask({
+            title:         taskTitle,
+            body:          `NEXUS identified this same gap for **${repeatCount} consecutive sessions** without taking concrete action:\n\n> "${repeatedCritique}"\n\nThis self-task was auto-created by the agent because AXIOM kept adding system prompt text without building enforcement. Resolve by:\n1. Building a code-level validation gate in validate.ts or agent.ts\n2. Writing a rule that can be mechanically checked\n3. Explicitly accepting this as a known limitation and closing this issue`,
+            category:      "blind-spot",
+            priority:      "high",
+            sessionOpened: sessionNumber,
+          }, sessionNumber);
+          console.warn(`  ⚠ AXIOM rumination: auto-created self-task after ${repeatCount} sessions of same critique`);
+        } catch (err) {
+          console.warn(`  ⚠ Failed to auto-create rumination self-task: ${err}`);
+        }
       }
     }
 
