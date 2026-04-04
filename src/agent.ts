@@ -175,10 +175,15 @@ export function detectRepeatedCritiques(entries: import("./types").JournalEntry[
   if (recent.length < 3) return { critique: "", count: 0 };
 
   const critiques = recent.map(e => e.reflection?.whatFailed ?? "");
-  if (critiques.some(c => c.length === 0)) return { critique: "", count: 0 };
+  // Require only the 3 most recent entries to be non-empty — one blank older session
+  // shouldn't kill detection of an active streak
+  const lastThree = critiques.slice(-3);
+  if (lastThree.some(c => c.length === 0)) return { critique: "", count: 0 };
 
-  // Split first critique into sentences
-  const sentences = critiques[0].split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
+  // Split the MOST RECENT critique into sentences — not the oldest.
+  // Using critiques[0] caused the bug: if the oldest session had a different topic,
+  // it would never find overlap with the current streak.
+  const sentences = critiques[critiques.length - 1].split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
 
   const repeated: string[] = [];
   for (const sentence of sentences) {
@@ -640,6 +645,16 @@ System prompt additions about this same topic do NOT count as action.`;
       const hasRealAction = reflection.ruleUpdates.length > 0 || axiomResult.forgeRequests.length > 0;
       if (!hasRealAction && reflection.newSystemPromptSections) {
         console.warn(`  ⚠ AXIOM rumination block: system prompt addition stripped (${repeatCount} sessions of same critique without rule/code action)`);
+        reflection.newSystemPromptSections = "";
+      }
+    }
+
+    // Independent enforcement: weekend screening violation with no corrective action.
+    // This fires regardless of repeatCount so it cannot be evaded by varying critique language.
+    if (weekendMode && screeningNote.includes("❌ INCOMPLETE")) {
+      const hasCorrectiveAction = axiomResult.forgeRequests.length > 0;
+      if (!hasCorrectiveAction) {
+        console.warn(`  ⚠ r030 enforcement: screening violation with no forge request — stripping system prompt addition`);
         reflection.newSystemPromptSections = "";
       }
     }

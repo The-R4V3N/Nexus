@@ -509,12 +509,15 @@ describe("validateWeekendCryptoScreening", () => {
     };
   }
 
-  it("marks instrument as covered when name appears in analysis text", () => {
+  it("marks instrument as mentionedOnly when name appears only in analysis text", () => {
     const oracle = makeOracle({ analysis: "Bitcoin shows bearish structure. Ethereum testing support. Solana weak." });
-    const { covered, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
-    expect(covered).toContain("Bitcoin");
-    expect(covered).toContain("Ethereum");
-    expect(covered).toContain("Solana");
+    const { covered, mentionedOnly, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    // Text-only mentions go to mentionedOnly, not covered (no setup or key level produced)
+    expect(mentionedOnly).toContain("Bitcoin");
+    expect(mentionedOnly).toContain("Ethereum");
+    expect(mentionedOnly).toContain("Solana");
+    expect(covered).not.toContain("Bitcoin");
+    expect(missing).not.toContain("Bitcoin");
   });
 
   it("marks instrument as covered when it appears in setups array", () => {
@@ -526,9 +529,9 @@ describe("validateWeekendCryptoScreening", () => {
         entry: 2.5, stop: 2.65, target: 2.3, RR: 1.33, timeframe: "1H",
       }],
     });
-    const { covered, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
-    expect(covered).toContain("Ripple");   // XRP → matched via symbol
-    expect(covered).toContain("Bitcoin");  // in analysis text
+    const { covered, mentionedOnly } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(covered).toContain("Ripple");       // XRP → matched via symbol (has setup)
+    expect(mentionedOnly).toContain("Bitcoin"); // in analysis text only — no setup or key level
   });
 
   it("marks instrument as missing when not mentioned anywhere", () => {
@@ -594,9 +597,9 @@ describe("validateWeekendCryptoScreening", () => {
     expect(covered).toContain("Ethereum");
   });
 
-  it("returns covered and missing arrays that together equal total snapshots", () => {
+  it("returns covered, mentionedOnly, and missing arrays that together equal total snapshots", () => {
     const oracle = makeOracle({ analysis: "Bitcoin showing weakness." });
-    const { covered, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
-    expect(covered.length + missing.length).toBe(cryptoSnapshots.length);
+    const { covered, mentionedOnly, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
+    expect(covered.length + mentionedOnly.length + missing.length).toBe(cryptoSnapshots.length);
   });
 });

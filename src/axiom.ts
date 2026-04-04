@@ -256,7 +256,7 @@ ISSUE RESOLUTION POLICY — CRITICAL:
 - If an open self-task describes an analytical gap and a corresponding rule already exists (e.g. "build confidence template" → r014 exists), CLOSE IT via resolvedSelfTasks with a comment explaining which rule addresses it.
 - Before opening ANY new self-task, check if a similar one already exists in your open self-tasks list.
 - Only open a new self-task if it covers a genuinely NEW gap not already tracked.
-- Set newSelfTasks to [] if you have 5+ open self-tasks already.
+- Set newSelfTasks to [] if you have 8+ open self-tasks already. Exception: compliance violations (category: rule-gap) must always be trackable regardless of count.
 
 FORGE rules:
 - Do NOT open new self-tasks for problems you can fix right now with codeChanges.
