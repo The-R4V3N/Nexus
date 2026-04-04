@@ -290,7 +290,8 @@ RULE POLICY — CRITICAL:
 export function parseAxiomResponse(
   rawText: string,
   sessionNumber: number,
-  currentRules: AnalysisRules
+  currentRules: AnalysisRules,
+  oracle?: OracleAnalysis
 ): any {
   const jsonText = extractJSONFromResponse(rawText);
 
@@ -323,7 +324,7 @@ export function parseAxiomResponse(
 
   // ── Validate AXIOM output ──
   const axiomEntries = loadAllJournalEntries();
-  const axiomValidation = validateAxiomOutput(rawParsed, sessionNumber, axiomEntries);
+  const axiomValidation = validateAxiomOutput(rawParsed, sessionNumber, axiomEntries, oracle);
   if (axiomValidation.warnings.length > 0) {
     for (const w of axiomValidation.warnings) console.warn(`  ⚠ Axiom: ${w}`);
   }
@@ -449,7 +450,7 @@ export async function runAxiomReflection(
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  const parsed = parseAxiomResponse(rawText, sessionNumber, currentRules);
+  const parsed = parseAxiomResponse(rawText, sessionNumber, currentRules, oracle);
 
   const reflection: AxiomReflection = {
     timestamp:               new Date(),

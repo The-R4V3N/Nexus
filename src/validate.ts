@@ -338,12 +338,60 @@ export function validateOracleOutput(
   };
 }
 
+// ── AXIOM Justification Cross-checker ────────────────────
+// Detects when AXIOM's stated reasons contradict measurable session facts.
+// Catches fabricated justifications before they corrupt rules.
+
+function checkAxiomJustifications(
+  parsed: any,
+  oracle: OracleAnalysis
+): string[] {
+  const warnings: string[] = [];
+  const actualSetups = oracle.setups?.length ?? 0;
+  const actualConfidence = oracle.confidence;
+
+  // Collect all text AXIOM used to justify rule changes
+  const justificationTexts: string[] = [
+    parsed.whatFailed ?? "",
+    parsed.whatWorked ?? "",
+    parsed.evolutionSummary ?? "",
+    ...(parsed.ruleUpdates ?? []).map((r: any) => `${r.reason ?? ""} ${r.after ?? ""}`),
+  ];
+
+  for (const text of justificationTexts) {
+    // Check for setup count overclaims: "4+ quality setups", "5+ setups", etc.
+    const setupClaimMatch = text.match(/(\d+)\+\s*(?:quality\s+)?setups?/i);
+    if (setupClaimMatch) {
+      const claimed = parseInt(setupClaimMatch[1], 10);
+      if (actualSetups < claimed) {
+        warnings.push(
+          `AXIOM justification claims "${setupClaimMatch[0]}" but only ${actualSetups} setup(s) were produced — fabricated justification detected`
+        );
+      }
+    }
+
+    // Check confidence value misrepresentation: "scored only X%" or "only X% confidence"
+    const confClaimMatch = text.match(/scored\s+only\s+(\d+)%|only\s+(\d+)%\s+confidence/i);
+    if (confClaimMatch) {
+      const claimed = parseInt(confClaimMatch[1] ?? confClaimMatch[2], 10);
+      if (Math.abs(claimed - actualConfidence) > 10) {
+        warnings.push(
+          `AXIOM justification references confidence of ${claimed}% but ORACLE actual confidence was ${actualConfidence}% — misrepresented value`
+        );
+      }
+    }
+  }
+
+  return warnings;
+}
+
 // ── AXIOM Validator ───────────────────────────────────────
 
 export function validateAxiomOutput(
   parsed: any,
   sessionNumber: number,
-  previousSessions: JournalEntry[]
+  previousSessions: JournalEntry[],
+  oracle?: OracleAnalysis
 ): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -390,6 +438,17 @@ export function validateAxiomOutput(
       if (update.ruleId && !/^r\d{3}$/.test(update.ruleId)) {
         warnings.push(`Rule update references invalid ID format: "${update.ruleId}" (expected r + 3 digits)`);
       }
+    }
+  }
+
+  // Cross-check AXIOM's stated justifications against measurable oracle facts
+  if (oracle) {
+    const justificationWarnings = checkAxiomJustifications(parsed, oracle);
+    warnings.push(...justificationWarnings);
+    // Fabricated justifications for rule changes are hard errors — block the rule update
+    const fabricated = justificationWarnings.filter(w => w.includes("fabricated justification"));
+    if (fabricated.length > 0) {
+      errors.push(`AXIOM rule update(s) blocked: justification contradicts session data (${fabricated.length} fabrication(s) detected)`);
     }
   }
 
