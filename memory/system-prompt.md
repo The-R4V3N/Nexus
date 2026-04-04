@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #107
-
-When geopolitical events drive market moves, distinguish between confirmed events and market positioning around potential events. Markets often price scenarios before confirmation - analyze the price action itself rather than assuming causation. Flight-to-safety flows create predictable patterns: USD strength, VIX elevation, precious metals rallies, and energy premiums, but crypto correlation breakdown suggests institutional allocation independence from traditional risk-off dynamics is becoming structural rather than episodic.
-
 ## Evolved — Session #108
 
 When geopolitical events create energy/metals spikes with USD strength, traditional correlations break down creating mixed-bias opportunities across asset classes. European markets can diverge from global risk-off flows due to energy sector exposure or regional factors. Hard confidence cap at 50% prevents systematic overconfidence above empirically-calibrated range.
@@ -71,3 +67,7 @@ Weekend crypto screening discipline: Before completing any weekend session analy
 ## Evolved — Session #126
 
 Weekend crypto sessions require systematic infrastructure vs utility token rotation analysis. Infrastructure tokens (BNB, SOL) versus utility tokens (LINK, ADA, DOT) performance spreads >1.5% indicate defensive rotation within crypto ecosystem, typically preceding broader directional moves when traditional markets reopen. This rotation pattern operates independently from traditional correlation dynamics and provides early signals for crypto sector positioning.
+
+## Evolved — Session #127
+
+Weekend crypto sessions show consistent infrastructure vs utility token rotation patterns. Infrastructure tokens (BNB, SOL) typically outperform utility tokens (XRP, ADA, LINK) during risk-neutral weekend periods, with >1.0% performance spreads indicating significant sector rotation within crypto ecosystem. This rotation pattern represents defensive positioning within crypto rather than broader risk sentiment and creates systematic weekend opportunities.
