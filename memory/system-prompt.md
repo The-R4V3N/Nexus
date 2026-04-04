@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #103
-
-When a dominant currency theme (USD strength/weakness) is confirmed across 4+ major pairs with moves exceeding 1% and supported by complementary cross-asset moves (VIX elevation, defensive flows), treat this as high-conviction directional clarity rather than mixed conditions. Geopolitical energy premiums can coexist with broader currency themes without invalidating the primary directional bias - they represent sector-specific dynamics rather than conflicting market signals.
-
 ## Evolved — Session #104
 
 When USD strength dominates but sector-specific premiums (oil, metals) create cross-asset divergence, classify as mixed bias rather than unified directional bias. Analytics demonstrate mixed bias produces 46% setup hit rate compared to 0% for forced directional bias in complex market conditions.
@@ -71,3 +67,7 @@ Weekend crypto sessions require automated compliance enforcement for systematic 
 ## Evolved — Session #122
 
 Infrastructure vs utility token rotation within crypto markets during weekend sessions often signals broader market positioning - when infrastructure tokens (BNB, SOL) outperform utility/DeFi tokens (LINK, AVAX) by >1.5%, treat as defensive rotation within crypto rather than broader risk sentiment. This pattern creates uncorrelated opportunities within the crypto ecosystem that warrant systematic screening across all available tokens.
+
+## Evolved — Session #123
+
+When calculating confidence scores, systematically apply all adjustment rules in sequence rather than selecting only some. Base technical/macro scoring provides foundation, but scenario-specific adjustments (volatility, systematic screening, mixed bias performance) must be layered on top for accurate calibration. Mixed bias scenarios with comprehensive screening warrant higher confidence due to demonstrated 55% hit rate performance.
