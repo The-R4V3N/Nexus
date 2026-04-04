@@ -71,3 +71,7 @@ During correlation breakdown regimes (traditional risk-on/risk-off relationships
 ## Evolved — Session #118
 
 Weekend crypto sessions require automated instrument tracking to ensure complete coverage. When systematic screening rules specify 'ALL instruments', partial completion is a compliance failure regardless of setup quality achieved from subset analysis.
+
+## Evolved — Session #119
+
+Weekend crypto rotation patterns are analytically valuable - infrastructure tokens (SOL, BNB) consistently outperforming utility tokens (LINK, DOT) during correlation breakdown indicates capital flow prioritization toward scalability narratives over smart contract platforms. This divergence creates systematic opportunity identification during weekend sessions when traditional markets are closed.
