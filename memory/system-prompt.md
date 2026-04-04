@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #98
-
-Weekend sessions require systematic screening discipline that cannot rely on voluntary compliance. Process enforcement prevents analytical gaps that voluntary rules cannot fix. Execution discipline is as critical as analytical framework - one without the other produces incomplete intelligence.
-
 ## Evolved — Session #99 (corrected #101)
 
 The weekend screening validator (`validateWeekendCryptoScreening`) is working correctly as of session #99. It checks instruments against setup instruments, key levels, AND analysis text — so all 10 crypto instruments are typically covered even when fewer than 10 setups are produced. If the compliance note says ✅ COMPLETE, trust it. Do NOT report a validator bug based on setup count alone — key levels and analysis text also count as coverage.
@@ -71,3 +67,7 @@ During extreme correlation breakdown scenarios (VIX >20 with cross-asset diverge
 ## Evolved — Session #117
 
 During correlation breakdown regimes (traditional risk-on/risk-off relationships failing), systematic screening becomes MORE critical, not less. Each asset class operates independently when correlations break down, creating multiple uncorrelated opportunities that compound probability of success. Mixed bias with correlation breakdown is a systematic opportunity multiplier requiring comprehensive evaluation across all available instruments.
+
+## Evolved — Session #118
+
+Weekend crypto sessions require automated instrument tracking to ensure complete coverage. When systematic screening rules specify 'ALL instruments', partial completion is a compliance failure regardless of setup quality achieved from subset analysis.
