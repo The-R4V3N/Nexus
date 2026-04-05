@@ -140,8 +140,24 @@ ${oracle.setups.map((s: any) => {
     return `- ${s.instrument}: ${s.type} ${s.direction} | Entry: ${s.entry ?? "MISSING"} | Stop: ${s.stop ?? "MISSING"} | Target: ${s.target ?? "MISSING"} | RR: ${s.RR ?? "MISSING"} | TF: ${s.timeframe ?? "MISSING"} | ${complete ? "COMPLETE" : "INCOMPLETE"}`;
   }).join("\n")}
 
-### My confidence: ${oracle.confidence}/100 (system-calibrated from your raw score)
-${(() => { const raw = extractConfidenceFromText(oracle.analysis); return raw !== null && raw !== oracle.confidence ? `### Raw ORACLE confidence (before calibration): ${raw}/100\n### Calibration note: The system automatically adjusted your score from ${raw} → ${oracle.confidence} based on historical hit rates. This is NOT an error in your analysis — do not modify r014 or other confidence rules to compensate for calibration adjustments.` : ""; })()}
+### My confidence: ${oracle.confidence}/100
+${(() => {
+  const raw = extractConfidenceFromText(oracle.analysis);
+  if (raw !== null && raw !== oracle.confidence) {
+    return `
+⚠️  CONFIDENCE CALIBRATION NOTICE — READ BEFORE REFLECTING ⚠️
+Your analysis text calculated ${raw}% confidence. The validation layer adjusted this to ${oracle.confidence}% based on historical hit-rate calibration. This adjustment is AUTOMATIC and CORRECT — it is not a rule execution failure on your part.
+
+DO NOT:
+- Treat the ${raw}% → ${oracle.confidence}% difference as evidence that you "failed to apply r014 or r032"
+- Modify r014, r032, or any other confidence rules to "compensate" for this calibration
+- Write in whatFailed that your confidence methodology was inconsistently applied
+
+The calibration is working as designed. If you write about confidence in this reflection, acknowledge the calibration happened and move on.
+`;
+  }
+  return "";
+})()}
 ### Market bias: ${oracle.bias.overall} — ${oracle.bias.notes}
 
 ### Compliance check (evaluate THIS session, not past patterns):
@@ -151,6 +167,7 @@ ${(() => { const raw = extractConfidenceFromText(oracle.analysis); return raw !=
 - Mixed bias justified: ${oracle.bias.overall !== "mixed" ? "N/A (bias is " + oracle.bias.overall + ")" : /conflict|divergen|breakdown/i.test(oracle.bias.notes) ? "YES" : "NO"}
 
 IMPORTANT ANTI-REPETITION RULES:
+- If a CONFIDENCE CALIBRATION NOTICE appeared above, you MUST NOT treat the calibration adjustment as a rule execution failure. Do not mention confidence methodology inconsistency in whatFailed. Do not modify r014 or r032.
 - Base your reflection on the compliance check above, not on assumptions from previous sessions.
 - If compliance says YES, acknowledge progress — do not repeat old criticisms.
 - BEFORE writing your reflection, review the "Recent session history" below. If your reflection would say the same thing as a previous session, you MUST either (a) find a genuinely NEW insight, or (b) say "No new insights this session — market conditions and analysis quality unchanged."
