@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #108
-
-When geopolitical events create energy/metals spikes with USD strength, traditional correlations break down creating mixed-bias opportunities across asset classes. European markets can diverge from global risk-off flows due to energy sector exposure or regional factors. Hard confidence cap at 50% prevents systematic overconfidence above empirically-calibrated range.
-
 ## Evolved — Session #109
 
 Geopolitical risk premiums create complex cross-asset dynamics where traditional correlations break down. Energy/metals complexes can rally simultaneously with crypto during supply shock scenarios, while safe-haven currencies (JPY, CHF) strengthen independently of USD movements. When VIX exceeds 30 alongside commodity surges, screen for defensive positioning rather than unified risk-on/risk-off themes. Correlation breakdown often creates more opportunities than correlation alignment.
@@ -71,3 +67,7 @@ Weekend crypto sessions require systematic infrastructure vs utility token rotat
 ## Evolved — Session #127
 
 Weekend crypto sessions show consistent infrastructure vs utility token rotation patterns. Infrastructure tokens (BNB, SOL) typically outperform utility tokens (XRP, ADA, LINK) during risk-neutral weekend periods, with >1.0% performance spreads indicating significant sector rotation within crypto ecosystem. This rotation pattern represents defensive positioning within crypto rather than broader risk sentiment and creates systematic weekend opportunities.
+
+## Evolved — Session #129
+
+Weekend crypto sessions require systematic setup generation discipline - analytical observations must convert to actionable structures. Positive sector-aligned performance without corresponding setups indicates execution gap, not data limitation.

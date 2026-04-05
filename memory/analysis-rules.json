@@ -261,10 +261,18 @@
       "weight": 8,
       "addedSession": 116,
       "lastModifiedSession": 116
+    },
+    {
+      "id": "r033",
+      "category": "weekend_execution",
+      "description": "Weekend screening: when instrument shows positive performance >0.5% aligned with sector thesis, MUST produce either (a) specific entry setup with all required fields, or (b) explicit key level with rationale why no setup viable. Text mention without setup/level = compliance violation.",
+      "weight": 9,
+      "addedSession": 129,
+      "lastModifiedSession": 129
     }
   ],
-  "version": 76,
-  "lastUpdated": "2026-04-04T18:47:31.174Z",
+  "version": 77,
+  "lastUpdated": "2026-04-05T00:06:56.129Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -272,5 +280,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #126"
+  "sessionNotes": "Last updated: Session #129"
 }
