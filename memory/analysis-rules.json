@@ -241,10 +241,10 @@
     {
       "id": "r030",
       "category": "weekend",
-      "description": "Weekend sessions: systematically screen all 10 crypto instruments (BTC, ETH, SOL, XRP, BNB, ADA, DOGE, AVAX, DOT, LINK) for structural levels aligned with identified bias. Weekend sessions are crypto-focused opportunities, not limited-data environments.",
+      "description": "Weekend sessions: systematically screen all 10 crypto instruments for structural levels aligned with identified bias. However, distinguish between genuine structural opportunities and routine sector rotation patterns. If sector divergence <3% or follows predictable patterns (infrastructure vs utility rotation), flag as 'routine positioning' and require additional confluence before setup generation.",
       "weight": 9,
       "addedSession": 91,
-      "lastModifiedSession": 95
+      "lastModifiedSession": 131
     },
     {
       "id": "r031",
@@ -271,8 +271,8 @@
       "lastModifiedSession": 129
     }
   ],
-  "version": 77,
-  "lastUpdated": "2026-04-05T00:06:56.129Z",
+  "version": 78,
+  "lastUpdated": "2026-04-05T16:16:03.091Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -280,5 +280,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #129"
+  "sessionNotes": "Last updated: Session #131"
 }

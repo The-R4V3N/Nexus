@@ -71,3 +71,7 @@ Weekend crypto sessions require systematic setup generation discipline - analyti
 ## Evolved — Session #130
 
 Weekend crypto sessions require discrimination between routine sector rotation and genuine structural opportunities. Infrastructure token outperformance during risk-off periods often represents defensive positioning rather than directional conviction. Prioritize setups with structural confluence over performance-based entries when analyzing weekend-isolated crypto data.
+
+## Evolved — Session #131
+
+Weekend crypto sessions require discrimination between genuine structural opportunities and routine sector rotation. Infrastructure vs utility token divergence below 3% often represents predictable positioning rather than actionable intelligence. Focus weekend analysis on crypto movements that break from typical sector patterns or show unusual structural confluence.
