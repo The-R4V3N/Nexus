@@ -233,10 +233,10 @@
     {
       "id": "r029",
       "category": "setup_precision",
-      "description": "When VIX >25 or daily ATR >1.5x 20-day average, increase entry buffers to 1.5-2.5% from structural levels and widen stops proportionally to account for elevated volatility noise. Static proximity rules fail in volatile regimes.",
+      "description": "When volatility elevated (VIX >25, daily moves >2x typical range, or news-driven displacement), avoid using current market price as entry. Require minimum 0.75% buffer from current price to structural level for entry validity. During extreme moves >5%, require 1.5% buffer and proportionally wider stops.",
       "weight": 9,
       "addedSession": 56,
-      "lastModifiedSession": 56
+      "lastModifiedSession": 132
     },
     {
       "id": "r030",
@@ -271,8 +271,8 @@
       "lastModifiedSession": 129
     }
   ],
-  "version": 78,
-  "lastUpdated": "2026-04-05T16:16:03.091Z",
+  "version": 79,
+  "lastUpdated": "2026-04-06T00:27:23.161Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -280,5 +280,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #131"
+  "sessionNotes": "Last updated: Session #132"
 }
