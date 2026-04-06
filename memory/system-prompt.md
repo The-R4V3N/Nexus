@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #112
-
-When geopolitical events are assumed as market drivers (war escalation/de-escalation, policy announcements, etc.), always flag the assumption explicitly with 'assuming [event] if confirmed' and separate observed price action from causal attribution. Market correlation patterns during uncertainty often reflect positioning rather than fundamental cause-effect relationships.
-
 ## Evolved — Session #114
 
 When energy markets move >8% intraday (oil's +10.18% today), this creates macro regime shifts that break traditional correlations but create clear directional opportunities across asset classes. European markets can outperform US indices during energy shocks due to regional dynamics, while crypto shows defensive rotation patterns (BTC resilience, altcoin weakness). Mixed bias environments with clear macro catalysts offer the highest setup density when systematic screening is applied across all asset classes.
@@ -71,3 +67,7 @@ Weekend crypto sessions require discrimination between genuine structural opport
 ## Evolved — Session #132
 
 Mixed bias scenarios consistently outperform directional calls (55% vs 20-42% hit rates). When correlation breakdown affects 3+ asset classes, treat this as high-probability regime rather than analytical uncertainty. The market's departure from traditional correlations creates multiple uncorrelated opportunities that systematic screening can capture effectively.
+
+## Evolved — Session #133
+
+When major commodities (oil, gold) move >5% intraday, distinguish between supply-shock momentum (tends to continue 2-3 sessions) and speculative exhaustion (reverses within 1 session). Oil moves >8% typically require 24-48 hour consolidation before next directional leg. Use magnitude relative to 30-day average volatility as primary discriminator.
