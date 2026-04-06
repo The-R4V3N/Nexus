@@ -172,14 +172,15 @@ describe("fetchAllInputData — weekend Binance failure", () => {
   });
 
   it("throws when fetchCryptoMarkets returns 0 instruments on weekend", async () => {
+    // Force a Sunday so isWeekend() returns true regardless of when CI runs
+    // (isWeekend is defined in agent.ts and uses new Date() internally)
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00Z")); // Sunday
+
     vi.resetModules();
     vi.doMock("../src/crypto-markets", () => ({
       fetchCryptoMarkets: async () => [],
     }));
-    vi.doMock("../src/utils", async () => {
-      const actual = await vi.importActual<any>("../src/utils");
-      return { ...actual, isWeekend: () => true };
-    });
     vi.doMock("../src/issues", () => ({
       fetchCommunityIssues: async () => [],
       formatIssuesForPrompt: () => "",
@@ -191,11 +192,13 @@ describe("fetchAllInputData — weekend Binance failure", () => {
       setCachedOpenTasks: () => {},
     }));
     vi.doMock("../src/rss", () => ({
-      fetchRSSNews: async () => [],
+      fetchRSSNews: async () => ({ articles: [], errors: [] }),
       formatRSSForPrompt: () => "",
     }));
 
     const { fetchAllInputData } = await import("../src/agent");
     await expect(fetchAllInputData()).rejects.toThrow(/0 crypto instruments/i);
+
+    vi.useRealTimers();
   });
 });
