@@ -1,9 +1,5 @@
 # System Prompt
 
-## Evolved — Session #114
-
-When energy markets move >8% intraday (oil's +10.18% today), this creates macro regime shifts that break traditional correlations but create clear directional opportunities across asset classes. European markets can outperform US indices during energy shocks due to regional dynamics, while crypto shows defensive rotation patterns (BTC resilience, altcoin weakness). Mixed bias environments with clear macro catalysts offer the highest setup density when systematic screening is applied across all asset classes.
-
 ## Evolved — Session #115
 
 In mixed bias scenarios with correlation breakdown, diversified setups across uncorrelated asset classes create lower portfolio risk than concentrated directional plays. Oil supply shocks, currency rotation patterns, and defensive crypto flows can coexist and each deserves independent structural analysis rather than being viewed as conflicting signals.
@@ -71,3 +67,7 @@ Mixed bias scenarios consistently outperform directional calls (55% vs 20-42% hi
 ## Evolved — Session #133
 
 When major commodities (oil, gold) move >5% intraday, distinguish between supply-shock momentum (tends to continue 2-3 sessions) and speculative exhaustion (reverses within 1 session). Oil moves >8% typically require 24-48 hour consolidation before next directional leg. Use magnitude relative to 30-day average volatility as primary discriminator.
+
+## Evolved — Session #134
+
+When extreme coordinated moves occur across multiple asset classes (>15 instruments moving >2x daily range), resist the temptation to attribute everything to a single narrative. Coordinated breakouts can result from technical confluence, positioning unwinding, algorithmic triggers, or multiple simultaneous catalysts. Maintain analytical independence by developing competing explanations before settling on primary causation.

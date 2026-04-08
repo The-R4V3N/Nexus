@@ -83,10 +83,10 @@
     {
       "id": "r011",
       "category": "catalyst_verification",
-      "description": "Never attribute market moves to specific events without confirming the event occurred via news data. If making causal assumptions without confirmation, state 'assuming [event] if confirmed' and flag the assumption as unverified. Separate observed price action from assumed causation.",
+      "description": "Never attribute market moves to specific events without confirming the event occurred via news data. If making causal assumptions, state 'assuming [event] if confirmed' and develop at least one alternative explanation for the price action. Dominant narratives create confirmation bias — always maintain analytical independence by considering multiple causation pathways.",
       "weight": 9,
       "addedSession": 1,
-      "lastModifiedSession": 89
+      "lastModifiedSession": 134
     },
     {
       "id": "r012",
@@ -271,8 +271,8 @@
       "lastModifiedSession": 129
     }
   ],
-  "version": 79,
-  "lastUpdated": "2026-04-06T00:27:23.161Z",
+  "version": 80,
+  "lastUpdated": "2026-04-08T15:35:32.746Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -280,5 +280,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #132"
+  "sessionNotes": "Last updated: Session #134"
 }
