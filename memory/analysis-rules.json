@@ -169,10 +169,10 @@
     {
       "id": "r021",
       "category": "magnitude_assessment",
-      "description": "For moves exceeding 2% in major assets or 5% in volatile assets (oil, crypto), contextualize magnitude: compare to asset's typical daily range (oil: 2-4%, major forex: 0.5-1%, indices: 1-2%), flag moves >2x typical range as significant, and assess whether magnitude suggests continuation or exhaustion.",
+      "description": "For coordinated moves exceeding 2% across 3+ asset classes, activate exceptional conditions analysis: (1) quantify coordination magnitude using correlation coefficients or cross-asset momentum alignment, (2) distinguish between single-catalyst moves vs multi-factor environments, (3) assess structural level quality - during exceptional conditions, require stronger confluence (4+ factors) before setup generation, (4) flag regime-change potential if coordination persists >2 sessions.",
       "weight": 8,
       "addedSession": 27,
-      "lastModifiedSession": 106
+      "lastModifiedSession": 139
     },
     {
       "id": "r022",
@@ -271,8 +271,8 @@
       "lastModifiedSession": 129
     }
   ],
-  "version": 81,
-  "lastUpdated": "2026-04-09T00:46:29.971Z",
+  "version": 82,
+  "lastUpdated": "2026-04-09T16:53:50.873Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -280,5 +280,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #135"
+  "sessionNotes": "Last updated: Session #139"
 }

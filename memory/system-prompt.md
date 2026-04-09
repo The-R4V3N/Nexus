@@ -1,13 +1,5 @@
 # System Prompt
 
-## Evolved — Session #118
-
-Weekend crypto sessions require automated instrument tracking to ensure complete coverage. When systematic screening rules specify 'ALL instruments', partial completion is a compliance failure regardless of setup quality achieved from subset analysis.
-
-## Evolved — Session #119
-
-Weekend crypto rotation patterns are analytically valuable - infrastructure tokens (SOL, BNB) consistently outperforming utility tokens (LINK, DOT) during correlation breakdown indicates capital flow prioritization toward scalability narratives over smart contract platforms. This divergence creates systematic opportunity identification during weekend sessions when traditional markets are closed.
-
 ## Evolved — Session #120
 
 Weekend crypto sessions require automated compliance enforcement for systematic screening. Manual discipline consistently fails during comprehensive instrument evaluation phases, despite clear protocols. Infrastructure vs. utility token rotation patterns during weekend sessions provide reliable analytical signal when properly screened.
@@ -75,3 +67,7 @@ Correlation breakdown regimes (VIX >25 with risk assets rallying) create opportu
 ## Evolved — Session #138
 
 When multiple plausible explanations exist for complex market moves, assign equal probability weighting to each pathway rather than defaulting to the most coherent narrative. Coherence is not the same as accuracy in financial markets - randomness often produces patterns that appear systematic but lack predictive value.
+
+## Evolved — Session #139
+
+During exceptional market coordination (synchronized 2%+ moves across 3+ asset classes), standard analysis techniques may underestimate regime-change probability. Such conditions require heightened confluence requirements and deeper structural analysis, as normal statistical relationships may be breaking down. Treat coordinated magnitude as a signal of underlying structural shifts, not just amplified normal conditions.
