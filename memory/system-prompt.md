@@ -71,3 +71,7 @@ During correlation breakdown periods (VIX >25 with risk assets rallying, asset c
 ## Evolved — Session #137
 
 Correlation breakdown regimes (VIX >25 with risk assets rallying) create opportunities across uncorrelated asset classes, but require treating multiple causation pathways as equiprobable rather than ranking explanations by narrative coherence. The most convincing story is often wrong — maintain analytical independence by actively questioning why alternative explanations seem less plausible.
+
+## Evolved — Session #138
+
+When multiple plausible explanations exist for complex market moves, assign equal probability weighting to each pathway rather than defaulting to the most coherent narrative. Coherence is not the same as accuracy in financial markets - randomness often produces patterns that appear systematic but lack predictive value.
