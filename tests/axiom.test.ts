@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { buildAxiomPrompt, parseAxiomResponse, handleSelfTasks } from "../src/axiom";
+import { buildAxiomPrompt, parseAxiomResponse, handleSelfTasks, isThemeDuplicate } from "../src/axiom";
 import type { OracleAnalysis, AnalysisRules } from "../src/types";
 
 function makeOracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
@@ -230,6 +230,73 @@ describe("parseAxiomResponse", () => {
     // ruleUpdates should pass through security sanitization
     expect(result.ruleUpdates).toBeDefined();
     expect(Array.isArray(result.ruleUpdates)).toBe(true);
+  });
+});
+
+// ── isThemeDuplicate ─────────────────────────────────────
+
+describe("isThemeDuplicate", () => {
+  // Real examples from NEXUS session #134-#139: same "resist narrative dominance"
+  // theme expressed in different words — current 0.55 Jaccard misses these
+  const narrativeSection134 =
+    "Resist the temptation to attribute everything to a single narrative. " +
+    "Coordinated breakouts can result from technical confluence, positioning unwinding, " +
+    "algorithmic triggers, or multiple simultaneous catalysts. Maintain analytical " +
+    "independence by developing competing explanations before settling on primary causation.";
+
+  const narrativeSection135 =
+    "During major market moves exceeding 2x typical ranges across multiple asset classes, " +
+    "resist single-narrative dominance by systematically considering at least two competing " +
+    "explanations for the price action, even when one narrative appears to explain all movements " +
+    "coherently. Geopolitical events, central bank actions, and technical factors can simultaneously " +
+    "drive markets — analytical independence requires maintaining multiple causation pathways.";
+
+  const narrativeSection138 =
+    "When multiple plausible explanations exist for complex market moves, assign equal probability " +
+    "weighting to each pathway rather than defaulting to the most coherent narrative. Coherence is " +
+    "not the same as accuracy in financial markets - randomness often produces patterns that appear " +
+    "systematic but lack predictive value.";
+
+  const weekendSection =
+    "Weekend crypto sessions require systematic setup generation discipline - analytical observations " +
+    "must convert to actionable structures. Positive sector-aligned performance without corresponding " +
+    "setups indicates execution gap, not data limitation.";
+
+  const oilSection =
+    "When major commodities like oil move more than 5% intraday, distinguish between supply-shock " +
+    "momentum which tends to continue 2-3 sessions and speculative exhaustion which reverses within " +
+    "1 session. Oil moves exceeding 8% typically require 24-48 hour consolidation before next directional leg.";
+
+  it("detects same narrative-dominance theme expressed in different words (the real stagnation case)", () => {
+    const result = isThemeDuplicate(narrativeSection138, [narrativeSection134, narrativeSection135]);
+    expect(result.isDuplicate).toBe(true);
+  });
+
+  it("does not flag genuinely different themes as duplicates", () => {
+    const result = isThemeDuplicate(oilSection, [narrativeSection134, weekendSection]);
+    expect(result.isDuplicate).toBe(false);
+  });
+
+  it("returns conflictingSection when duplicate detected", () => {
+    const result = isThemeDuplicate(narrativeSection135, [narrativeSection134]);
+    expect(result.isDuplicate).toBe(true);
+    expect(result.conflictingSection).not.toBeNull();
+  });
+
+  it("detects exact duplicates (existing 0.55 Jaccard behavior preserved)", () => {
+    const result = isThemeDuplicate(narrativeSection134, [narrativeSection134]);
+    expect(result.isDuplicate).toBe(true);
+  });
+
+  it("returns false with empty existing sections", () => {
+    const result = isThemeDuplicate(narrativeSection134, []);
+    expect(result.isDuplicate).toBe(false);
+    expect(result.conflictingSection).toBeNull();
+  });
+
+  it("does not flag weekend theme against narrative theme", () => {
+    const result = isThemeDuplicate(weekendSection, [narrativeSection134, narrativeSection135]);
+    expect(result.isDuplicate).toBe(false);
   });
 });
 

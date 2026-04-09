@@ -496,6 +496,51 @@ export async function runAxiomReflection(
   return { reflection, forgeRequests };
 }
 
+// ── System Prompt Theme Deduplication ─────────────────────
+// The existing 0.55 Jaccard check catches direct rephrasing.
+// This extends it with a topic-keyword check to catch the same
+// theme expressed in different words across multiple sessions
+// (e.g. "resist narrative dominance" appearing 5 sessions in a row).
+
+const DOMAIN_STOP_WORDS = new Set([
+  "market", "markets", "session", "sessions",
+]);
+
+function extractTopicWords(text: string): Set<string> {
+  return new Set(
+    text.toLowerCase()
+      .split(/\s+/)
+      .map(w => w.replace(/[^a-z]/g, ""))
+      .filter(w => w.length >= 6 && !DOMAIN_STOP_WORDS.has(w))
+  );
+}
+
+export function isThemeDuplicate(
+  newText: string,
+  existingSections: string[]
+): { isDuplicate: boolean; conflictingSection: string | null } {
+  for (const existing of existingSections) {
+    // Standard full-text Jaccard (preserves existing behavior)
+    if (calculateTextSimilarity(newText, existing) > 0.55) {
+      return { isDuplicate: true, conflictingSection: existing.slice(0, 80) };
+    }
+    // Topic keyword overlap: count shared distinctive words (>= 6 chars).
+    // Catches the same theme expressed in different words across sessions.
+    const newTopics = extractTopicWords(newText);
+    const existingTopics = extractTopicWords(existing);
+    if (newTopics.size >= 3 && existingTopics.size >= 3) {
+      let sharedCount = 0;
+      for (const word of newTopics) {
+        if (existingTopics.has(word)) sharedCount++;
+      }
+      if (sharedCount >= 3) {
+        return { isDuplicate: true, conflictingSection: existing.slice(0, 80) };
+      }
+    }
+  }
+  return { isDuplicate: false, conflictingSection: null };
+}
+
 // ── Memory Evolution ───────────────────────────────────────
 
 async function evolveMemory(
@@ -568,12 +613,9 @@ async function evolveMemory(
       .split(/\n\n## Evolved/)
       .slice(1) // skip base prompt
       .map(s => s.replace(/^[^\n]*\n/, "").trim()); // strip "— Session #N" header line
-    const isDuplicate = existingSections.some(existing => {
-      const similarity = calculateTextSimilarity(newText, existing);
-      return similarity > 0.55;
-    });
+    const { isDuplicate, conflictingSection } = isThemeDuplicate(newText, existingSections);
     if (isDuplicate) {
-      console.log(`  ⏭ System prompt addition skipped — too similar to an existing evolved section`);
+      console.log(`  ⏭ System prompt addition blocked — theme already covered (${conflictingSection?.slice(0, 60) ?? "existing section"}). Express this insight as a concrete rule instead.`);
       axiomOutput.systemPromptAdditions = "";
     }
   }
