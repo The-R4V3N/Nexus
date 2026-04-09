@@ -399,24 +399,62 @@ Only respond with the JSON array, no other text.`;
     console.warn(`  \u26a0 Analysis validation warnings: ${validationErrors.join('; ')}`);
   }
 
-  // Filter out setups with missing or zero numeric fields
+  // Filter out setups with missing fields, bad geometry, or insufficient R:R
   const validSetups = rawSetups.filter((s: any) => {
     const hasEntry  = typeof s.entry  === "number" && s.entry  !== 0;
     const hasStop   = typeof s.stop   === "number" && s.stop   !== 0;
     const hasTarget = typeof s.target === "number" && s.target !== 0;
-    const hasRR     = typeof s.RR     === "number" && s.RR     >= 1.3;
     const hasTF     = typeof s.timeframe === "string" && s.timeframe.length > 0;
-    if (!hasEntry || !hasStop || !hasTarget || !hasRR || !hasTF) {
-      console.warn(`  \u26a0 Dropped incomplete setup: ${s.instrument ?? "unknown"} (entry=${s.entry}, stop=${s.stop}, target=${s.target}, RR=${s.RR}, TF=${s.timeframe})`);
+    if (!hasEntry || !hasStop || !hasTarget || !hasTF) {
+      console.warn(`  \u26a0 Dropped setup: ${s.instrument ?? "unknown"} — missing required field (entry=${s.entry}, stop=${s.stop}, target=${s.target}, TF=${s.timeframe})`);
       return false;
     }
+
+    // Geometry check: stop and target must be on the correct side of entry
+    const dir = (s.direction ?? "").toLowerCase();
+    if (dir === "bullish") {
+      if (s.stop >= s.entry) {
+        console.warn(`  \u26a0 Dropped setup: ${s.instrument} — bullish but stop (${s.stop}) >= entry (${s.entry})`);
+        return false;
+      }
+      if (s.target <= s.entry) {
+        console.warn(`  \u26a0 Dropped setup: ${s.instrument} — bullish but target (${s.target}) <= entry (${s.entry})`);
+        return false;
+      }
+    } else if (dir === "bearish") {
+      if (s.stop <= s.entry) {
+        console.warn(`  \u26a0 Dropped setup: ${s.instrument} — bearish but stop (${s.stop}) <= entry (${s.entry})`);
+        return false;
+      }
+      if (s.target >= s.entry) {
+        console.warn(`  \u26a0 Dropped setup: ${s.instrument} — bearish but target (${s.target}) >= entry (${s.entry})`);
+        return false;
+      }
+    }
+
+    // Cross-check R:R against actual math — don't trust the model's self-reported value
+    let calculatedRR: number;
+    if (dir === "bullish") {
+      calculatedRR = (s.target - s.entry) / (s.entry - s.stop);
+    } else if (dir === "bearish") {
+      calculatedRR = (s.entry - s.target) / (s.stop - s.entry);
+    } else {
+      // Unknown direction — fall back to self-reported RR
+      calculatedRR = typeof s.RR === "number" ? s.RR : 0;
+    }
+
+    if (calculatedRR < 1.3) {
+      console.warn(`  \u26a0 Dropped setup: ${s.instrument} — calculated R:R ${calculatedRR.toFixed(2)} < 1.3 (self-reported: ${s.RR})`);
+      return false;
+    }
+
+    // Overwrite self-reported RR with the verified calculated value
+    s.RR = parseFloat(calculatedRR.toFixed(2));
     return true;
   });
 
-  warnPoorRiskReward(validSetups);
-
   if (validSetups.length < rawSetups.length) {
-    console.warn(`  \u26a0 ${rawSetups.length - validSetups.length} setup(s) dropped for missing entry/stop/target/RR/timeframe`);
+    console.warn(`  \u26a0 ${rawSetups.length - validSetups.length} setup(s) dropped — see warnings above`);
   }
 
   // Fix undefined bias notes

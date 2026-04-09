@@ -341,6 +341,132 @@ describe("runOracleAnalysis two-call split", () => {
   });
 });
 
+// ── Setup geometry and R:R cross-validation tests ─────────
+
+describe("setup filter: geometry and calculated R:R", () => {
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  const analysisResponse = {
+    analysis: "**Higher Timeframe Context:** Bullish. **Intraday Analysis:** Strong. **Cross-Asset Dynamics:** Risk-on. **Technical Confluence Analysis:** Confidence: 70% — TC (80%), MA (60%), RR (70%)",
+    bias: { overall: "bullish", notes: "Uptrend" },
+    keyLevels: [],
+    confidence: 70,
+  };
+
+  function makeMockClient(setups: any[]) {
+    let callCount = 0;
+    return {
+      messages: {
+        create: vi.fn(async () => {
+          callCount++;
+          return {
+            stop_reason: "end_turn",
+            content: [{ type: "text", text: JSON.stringify(callCount === 1 ? analysisResponse : setups) }],
+          };
+        }),
+      },
+    };
+  }
+
+  const snapshots = [
+    {
+      symbol: "GC=F", name: "Gold", category: "commodities" as const,
+      price: 2010, previousClose: 2000, change: 10, changePercent: 0.5,
+      high: 2020, low: 1995, timestamp: new Date(),
+    },
+  ];
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    logSpy  = vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return { ...actual, existsSync: () => false, readFileSync: actual.readFileSync, mkdirSync: () => {} };
+    });
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+    logSpy.mockRestore();
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
+  it("drops bullish setup where stop >= entry (AUD/USD typo case from session #138)", async () => {
+    const setups = [
+      // stop=1.705 instead of 0.705 — the exact bug from session #138
+      { instrument: "AUD/USD", type: "OB", direction: "bullish", description: "desc", invalidation: "inv",
+        entry: 0.7089, stop: 1.705, target: 0.715, RR: 1.56, timeframe: "1H" },
+    ];
+    const { runOracleAnalysis } = await import("../src/oracle");
+    const result = await runOracleAnalysis(makeMockClient(setups) as any, snapshots, "test", 1, "", "");
+    expect(result.setups).toHaveLength(0);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("bullish but stop"));
+  });
+
+  it("drops bearish setup where stop <= entry", async () => {
+    const setups = [
+      { instrument: "EUR/USD", type: "MSS", direction: "bearish", description: "desc", invalidation: "inv",
+        entry: 1.17, stop: 1.15, target: 1.16, RR: 2.0, timeframe: "1H" },
+    ];
+    const { runOracleAnalysis } = await import("../src/oracle");
+    const result = await runOracleAnalysis(makeMockClient(setups) as any, snapshots, "test", 2, "", "");
+    expect(result.setups).toHaveLength(0);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("bearish but stop"));
+  });
+
+  it("drops setup where self-reported R:R >= 1.3 but calculated R:R < 1.3 (NASDAQ case from session #138)", async () => {
+    // NASDAQ from #138: entry=25030, stop=24800, target=25100 → actual R:R = 70/230 = 0.30, not 1.3
+    const setups = [
+      { instrument: "NASDAQ", type: "MSS", direction: "bullish", description: "desc", invalidation: "inv",
+        entry: 25030, stop: 24800, target: 25100, RR: 1.3, timeframe: "1H" },
+    ];
+    const { runOracleAnalysis } = await import("../src/oracle");
+    const result = await runOracleAnalysis(makeMockClient(setups) as any, snapshots, "test", 3, "", "");
+    expect(result.setups).toHaveLength(0);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("calculated R:R"));
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("self-reported: 1.3"));
+  });
+
+  it("drops Gold setup where self-reported R:R=1.45 but calculated R:R=0.45 (session #138 case)", async () => {
+    // Gold from #138: entry=4819, stop=4750, target=4850 → actual R:R = 31/69 = 0.45
+    const setups = [
+      { instrument: "Gold", type: "MSS", direction: "bullish", description: "desc", invalidation: "inv",
+        entry: 4819, stop: 4750, target: 4850, RR: 1.45, timeframe: "1H" },
+    ];
+    const { runOracleAnalysis } = await import("../src/oracle");
+    const result = await runOracleAnalysis(makeMockClient(setups) as any, snapshots, "test", 4, "", "");
+    expect(result.setups).toHaveLength(0);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("calculated R:R 0.45"));
+  });
+
+  it("corrects self-reported R:R to the calculated value when geometry is valid", async () => {
+    // entry=2000, stop=1980, target=2060 → actual R:R = 60/20 = 3.0, model said 2.0
+    const setups = [
+      { instrument: "Gold", type: "FVG", direction: "bullish", description: "desc", invalidation: "inv",
+        entry: 2000, stop: 1980, target: 2060, RR: 2.0, timeframe: "4H" },
+    ];
+    const { runOracleAnalysis } = await import("../src/oracle");
+    const result = await runOracleAnalysis(makeMockClient(setups) as any, snapshots, "test", 5, "", "");
+    expect(result.setups).toHaveLength(1);
+    expect(result.setups[0].RR).toBeCloseTo(3.0, 1);
+  });
+
+  it("passes a setup with correct geometry and R:R >= 1.3 unchanged", async () => {
+    // entry=1.17, stop=1.165, target=1.18 → R:R = 0.01/0.005 = 2.0
+    const setups = [
+      { instrument: "EUR/USD", type: "MSS", direction: "bullish", description: "desc", invalidation: "inv",
+        entry: 1.17, stop: 1.165, target: 1.18, RR: 2.0, timeframe: "4H" },
+    ];
+    const { runOracleAnalysis } = await import("../src/oracle");
+    const result = await runOracleAnalysis(makeMockClient(setups) as any, snapshots, "test", 6, "", "");
+    expect(result.setups).toHaveLength(1);
+    expect(result.setups[0].instrument).toBe("EUR/USD");
+    expect(result.setups[0].RR).toBeCloseTo(2.0, 1);
+  });
+});
+
 // ── warnPoorRiskReward tests ──────────────────────────────
 
 describe("warnPoorRiskReward", () => {
