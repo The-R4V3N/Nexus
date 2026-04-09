@@ -491,7 +491,7 @@ export async function runAndValidateOracle(
   issuesText: string,
   macroText: string,
   weekendMode: boolean = false
-): Promise<OracleAnalysis> {
+): Promise<{ oracle: OracleAnalysis; oracleWarnings: string[] }> {
   console.log(chalk.bold.yellow("  ── PHASE 2: ORACLE ANALYSIS ──\n"));
   const oracleSpinner = ora({ text: "ORACLE analyzing (2 calls: analysis + setups)...", color: "yellow" }).start();
 
@@ -509,8 +509,9 @@ export async function runAndValidateOracle(
   // Validate ORACLE output
   const allEntries = loadAllJournalEntries();
   const oracleValidation = validateOracleOutput(oracle, allEntries);
-  if (oracleValidation.warnings.length > 0) {
-    for (const w of oracleValidation.warnings) console.warn(`  ⚠ Oracle: ${w}`);
+  const oracleWarnings = oracleValidation.warnings;
+  if (oracleWarnings.length > 0) {
+    for (const w of oracleWarnings) console.warn(`  ⚠ Oracle: ${w}`);
   }
   if (!oracleValidation.valid) {
     console.error(`  ✗ ORACLE output failed validation: ${oracleValidation.errors.join('; ')}`);
@@ -541,7 +542,16 @@ export async function runAndValidateOracle(
     console.log("");
   }
 
-  return oracle;
+  return { oracle, oracleWarnings };
+}
+
+export function formatComplianceReport(warnings: string[]): string {
+  if (warnings.length === 0) return "";
+  const lines = warnings.map(w => `- ${w}`).join("\n");
+  return `\n\n## ORACLE Compliance Report
+The following validation warnings were triggered this session:
+${lines}
+These are persistent issues. If a warning has appeared 3+ sessions in a row, write a rule to address it.`;
 }
 
 export async function runAndValidateAxiom(
@@ -553,7 +563,8 @@ export async function runAndValidateAxiom(
   selfTasksText: string,
   selfTaskNumbers: number[],
   issueNumbers: number[] = [],
-  weekendMode: boolean = false
+  weekendMode: boolean = false,
+  oracleWarnings: string[] = []
 ): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
   console.log(chalk.bold.yellow("  ── PHASE 3: AXIOM REFLECTION ──\n"));
   const axiomSpinner = ora({ text: "AXIOM reflecting on cognitive performance...", color: "magenta" }).start();
@@ -619,6 +630,12 @@ export async function runAndValidateAxiom(
 - If you covered 3+ asset classes, do NOT critique screening as a failure. Focus your reflection on analysis quality instead.`;
   }
   prevContext += screeningNote;
+
+  // Inject ORACLE compliance warnings so AXIOM can write rules to fix recurring issues
+  const complianceReport = formatComplianceReport(oracleWarnings);
+  if (complianceReport) {
+    prevContext += complianceReport;
+  }
 
   // Detect repeated critiques across recent sessions
   const { critique: repeatedCritique, count: repeatCount } = detectRepeatedCritiques(allEntries);
@@ -866,10 +883,10 @@ export async function runSession(force = false): Promise<void> {
   }
 
   currentPhase = "oracle";
-  const oracle = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, oracleContext, weekendMode);
+  const { oracle, oracleWarnings } = await runAndValidateOracle(client, snapshots, sessionId, sessionNumber, issuesText, oracleContext, weekendMode);
 
   currentPhase = "axiom";
-  const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, weekendMode);
+  const { reflection, forgeRequests } = await runAndValidateAxiom(client, oracle, sessionNumber, snapshots, issuesText, selfTasksText, selfTaskNumbers, issueNumbers, weekendMode, oracleWarnings);
 
   currentPhase = "forge";
   await runAndValidateForge(client, forgeRequests, sessionNumber);

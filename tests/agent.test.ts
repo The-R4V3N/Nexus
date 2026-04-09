@@ -202,3 +202,36 @@ describe("fetchAllInputData — weekend Binance failure", () => {
     vi.useRealTimers();
   });
 });
+
+// ── formatComplianceReport ────────────────────────────────────
+
+describe("formatComplianceReport", () => {
+  it("is exported from agent", async () => {
+    const mod = await import("../src/agent");
+    expect(typeof (mod as any).formatComplianceReport).toBe("function");
+  });
+
+  it("returns empty string when no warnings", async () => {
+    const { formatComplianceReport } = await import("../src/agent") as any;
+    expect(formatComplianceReport([])).toBe("");
+  });
+
+  it("formats single warning into compliance report", async () => {
+    const { formatComplianceReport } = await import("../src/agent") as any;
+    const result = formatComplianceReport(["r011 compliance: assumptions[] empty despite causal language"]);
+    expect(result).toContain("ORACLE Compliance Report");
+    expect(result).toContain("r011 compliance");
+  });
+
+  it("formats multiple warnings into compliance report", async () => {
+    const { formatComplianceReport } = await import("../src/agent") as any;
+    const warnings = [
+      "r011 compliance: assumptions[] empty despite causal language",
+      "Confidence mismatch: text says 67% but JSON says 35%",
+    ];
+    const result = formatComplianceReport(warnings);
+    expect(result).toContain("r011 compliance");
+    expect(result).toContain("Confidence mismatch");
+    expect(result).toContain("3+ sessions in a row");
+  });
+});

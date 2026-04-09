@@ -793,3 +793,94 @@ describe("runOracleAnalysis weekend integration — template + parseWeekendSetup
     }
   });
 });
+
+// ── assumptions field in oracle return ────────────────────────
+
+describe("runOracleAnalysis assumptions field", () => {
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+    logSpy.mockRestore();
+    vi.restoreAllMocks();
+  });
+
+  it("includes assumptions from parsed response in return object", async () => {
+    const analysisResponse = {
+      analysis: "**Higher Timeframe Context:** Bullish. **Intraday Analysis:** Strong. **Cross-Asset Dynamics:** Risk-on. **Technical Confluence Analysis:** Confidence: 45% — TC (50%), MA (40%), RR (40%)",
+      bias: { overall: "bullish", notes: "Trend up" },
+      keyLevels: [],
+      confidence: 45,
+      assumptions: ["Oil surge assumed to be supply shock", "Fed pivot assumed if CPI declines"],
+    };
+
+    const mockClient = {
+      messages: {
+        create: vi.fn(async () => ({
+          stop_reason: "end_turn",
+          content: [{ type: "text", text: JSON.stringify(analysisResponse) }],
+        })),
+      },
+    };
+
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return { ...actual, existsSync: () => false };
+    });
+
+    vi.resetModules();
+    const { runOracleAnalysis } = await import("../src/oracle");
+
+    const snapshots = [
+      { symbol: "GC=F", name: "Gold", category: "commodities" as const, price: 2010, previousClose: 2000, change: 10, changePercent: 0.5, high: 2020, low: 1995, timestamp: new Date() },
+    ];
+
+    const result = await runOracleAnalysis(mockClient as any, snapshots, "test-session", 1, "", "");
+
+    expect(result.assumptions).toBeDefined();
+    expect(Array.isArray(result.assumptions)).toBe(true);
+    expect(result.assumptions).toContain("Oil surge assumed to be supply shock");
+  });
+
+  it("returns empty assumptions array when response has none", async () => {
+    const analysisResponse = {
+      analysis: "**Higher Timeframe Context:** Neutral. **Intraday Analysis:** Flat. **Cross-Asset Dynamics:** Mixed. **Technical Confluence Analysis:** Confidence: 40% — TC (40%), MA (40%), RR (40%)",
+      bias: { overall: "neutral", notes: "No direction" },
+      keyLevels: [],
+      confidence: 40,
+    };
+
+    const mockClient = {
+      messages: {
+        create: vi.fn(async () => ({
+          stop_reason: "end_turn",
+          content: [{ type: "text", text: JSON.stringify(analysisResponse) }],
+        })),
+      },
+    };
+
+    vi.doMock("fs", async () => {
+      const actual = await vi.importActual<typeof import("fs")>("fs");
+      return { ...actual, existsSync: () => false };
+    });
+
+    vi.resetModules();
+    const { runOracleAnalysis } = await import("../src/oracle");
+
+    const snapshots = [
+      { symbol: "GC=F", name: "Gold", category: "commodities" as const, price: 2010, previousClose: 2000, change: 10, changePercent: 0.5, high: 2020, low: 1995, timestamp: new Date() },
+    ];
+
+    const result = await runOracleAnalysis(mockClient as any, snapshots, "test-session", 1, "", "");
+
+    expect(result.assumptions).toBeDefined();
+    expect(Array.isArray(result.assumptions)).toBe(true);
+    expect(result.assumptions!.length).toBe(0);
+  });
+});

@@ -499,6 +499,7 @@ Only respond with the JSON array, no other text.`;
     bias:            parsed.bias           ?? { overall: "neutral", notes: "" },
     keyLevels:       [...(parsed.keyLevels ?? []), ...screeningKeyLevels],
     confidence:      finalConfidence,
+    assumptions:     Array.isArray(parsed.assumptions) ? parsed.assumptions : [],
   };
 }
 
