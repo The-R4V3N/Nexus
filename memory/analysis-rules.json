@@ -59,10 +59,10 @@
     {
       "id": "r008",
       "category": "metals",
-      "description": "Gold (XAU) often leads as a risk-off signal — rising gold with falling indices = fear in the market",
+      "description": "Gold (XAU) correlation analysis: rising gold with falling indices = risk-off confirmation, but rising gold with rising indices = currency debasement/inflation signal. Context determines interpretation",
       "weight": 7,
       "addedSession": 0,
-      "lastModifiedSession": 0
+      "lastModifiedSession": 141
     },
     {
       "id": "r009",
@@ -277,10 +277,18 @@
       "weight": 9,
       "addedSession": 139,
       "lastModifiedSession": 139
+    },
+    {
+      "id": "r035",
+      "category": "bias_methodology",
+      "description": "Bearish bias requires: (1) minimum 2 consecutive sessions of confirmed lower highs AND lower lows across primary instrument, (2) correlation alignment (VIX rising while risk assets fall), (3) distribution volume pattern confirmation. Without all three criteria, default to mixed bias regardless of short-term bearish signals",
+      "weight": 9,
+      "addedSession": 141,
+      "lastModifiedSession": 141
     }
   ],
-  "version": 83,
-  "lastUpdated": "2026-04-09T18:59:31.701Z",
+  "version": 84,
+  "lastUpdated": "2026-04-09T19:41:42.890Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -288,5 +296,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #140"
+  "sessionNotes": "Last updated: Session #141"
 }
