@@ -25,6 +25,44 @@ export interface ResolvedSetup {
   nextPrice: number | null;
 }
 
+// ── Instrument name normalization ───────────────────────────
+
+const INSTRUMENT_ALIASES: Record<string, string[]> = {
+  "NASDAQ 100": ["NAS100", "NASDAQ", "NDX", "NQ"],
+  "S&P 500":    ["SPX", "SP500", "S&P500"],
+  "Dow Jones":  ["DJIA", "DOW"],
+  "Bitcoin":    ["BTC", "BTC/USD", "XBTUSD"],
+  "Ethereum":   ["ETH", "ETH/USD"],
+  "Solana":     ["SOL", "SOL/USD"],
+  "Ripple":     ["XRP", "XRP/USD"],
+  "BNB":        ["BNB/USD"],
+  "Cardano":    ["ADA", "ADA/USD"],
+  "Dogecoin":   ["DOGE", "DOGE/USD"],
+  "Avalanche":  ["AVAX", "AVAX/USD"],
+  "Polkadot":   ["DOT", "DOT/USD"],
+  "Chainlink":  ["LINK", "LINK/USD"],
+  "Gold":       ["XAU", "XAU/USD", "XAUUSD"],
+  "Silver":     ["XAG", "XAG/USD"],
+  "Crude Oil":  ["OIL", "WTI", "USOIL"],
+};
+
+// Build reverse map: alias → canonical name
+const ALIAS_TO_CANONICAL: Record<string, string> = {};
+for (const [canonical, aliases] of Object.entries(INSTRUMENT_ALIASES)) {
+  for (const alias of aliases) {
+    ALIAS_TO_CANONICAL[alias.toLowerCase()] = canonical;
+    ALIAS_TO_CANONICAL[alias] = canonical;
+  }
+}
+
+/**
+ * Normalize an instrument name used in a setup to the canonical
+ * name used in market snapshots, enabling cross-session price lookup.
+ */
+export function normalizeInstrumentName(name: string): string {
+  return ALIAS_TO_CANONICAL[name] ?? ALIAS_TO_CANONICAL[name.toLowerCase()] ?? name;
+}
+
 // ── Core Analytics ──────────────────────────────────────────
 
 /**
@@ -53,8 +91,11 @@ export function resolveAllSetups(entries: JournalEntry[]): ResolvedSetup[] {
         continue; // skip incomplete setups
       }
 
+      const canonical = normalizeInstrumentName(setup.instrument);
       const nextPrice = priceMap[setup.instrument]
         ?? priceMap[setup.instrument.toLowerCase()]
+        ?? priceMap[canonical]
+        ?? priceMap[canonical.toLowerCase()]
         ?? null;
 
       let outcome: SetupOutcome = "INCOMPLETE";

@@ -284,3 +284,58 @@ describe("analytics", () => {
     spy.mockRestore();
   });
 });
+
+// ── resolveAllSetups instrument name normalization ────────────
+
+describe("resolveAllSetups instrument normalization", () => {
+  it("matches NAS100 setup against NASDAQ 100 snapshot", async () => {
+    const { resolveAllSetups } = await import("../src/analytics");
+    const entries: JournalEntry[] = [
+      makeEntry(1, {
+        setups: [makeSetup({ instrument: "NAS100", direction: "bullish", entry: 20000, stop: 19800, target: 20400 })],
+        snapshots: [],
+      }),
+      makeEntry(2, {
+        setups: [],
+        snapshots: [{ symbol: "^NDX", name: "NASDAQ 100", price: 20500, previousClose: 20000, change: 500, changePercent: 2.5, high: 20600, low: 19900, timestamp: new Date(), category: "indices" }],
+      }),
+    ];
+    const results = resolveAllSetups(entries);
+    expect(results).toHaveLength(1);
+    expect(results[0].outcome).toBe("TARGET_HIT");
+  });
+
+  it("matches BTC setup against Bitcoin snapshot", async () => {
+    const { resolveAllSetups } = await import("../src/analytics");
+    const entries: JournalEntry[] = [
+      makeEntry(1, {
+        setups: [makeSetup({ instrument: "BTC", direction: "bullish", entry: 70000, stop: 69000, target: 72000 })],
+        snapshots: [],
+      }),
+      makeEntry(2, {
+        setups: [],
+        snapshots: [{ symbol: "BTC-USD", name: "Bitcoin", price: 68000, previousClose: 70000, change: -2000, changePercent: -2.9, high: 70100, low: 67500, timestamp: new Date(), category: "crypto" }],
+      }),
+    ];
+    const results = resolveAllSetups(entries);
+    expect(results).toHaveLength(1);
+    expect(results[0].outcome).toBe("STOPPED_OUT");
+  });
+
+  it("matches ETH/USD setup against Ethereum snapshot", async () => {
+    const { resolveAllSetups } = await import("../src/analytics");
+    const entries: JournalEntry[] = [
+      makeEntry(1, {
+        setups: [makeSetup({ instrument: "ETH/USD", direction: "bullish", entry: 2000, stop: 1950, target: 2100 })],
+        snapshots: [],
+      }),
+      makeEntry(2, {
+        setups: [],
+        snapshots: [{ symbol: "ETH-USD", name: "Ethereum", price: 2050, previousClose: 2000, change: 50, changePercent: 2.5, high: 2060, low: 1990, timestamp: new Date(), category: "crypto" }],
+      }),
+    ];
+    const results = resolveAllSetups(entries);
+    expect(results).toHaveLength(1);
+    expect(results[0].outcome).toBe("OPEN");
+  });
+});
