@@ -401,6 +401,74 @@ describe("validateAxiomOutput", () => {
   });
 });
 
+// ── checkBiasRuleMapping ─────────────────────────────────────
+
+describe("validateAxiomOutput bias-to-rule mapping", () => {
+  function makeAxiom(overrides: Record<string, any> = {}) {
+    return {
+      whatWorked: "Good analysis",
+      whatFailed: "Missed correlations",
+      evolutionSummary: "Improved this session",
+      cognitiveBiases: [],
+      ruleUpdates: [],
+      newRules: [],
+      ...overrides,
+    };
+  }
+
+  it("warns when biases detected but no rule updates or new rules address them", () => {
+    const result = validateAxiomOutput(
+      makeAxiom({ cognitiveBiases: ["narrative dominance", "anchoring bias"], ruleUpdates: [], newRules: [] }),
+      5, []
+    );
+    expect(result.warnings.some((w) => w.includes("cognitive bias") && w.includes("no rule"))).toBe(true);
+  });
+
+  it("does not warn when no biases detected", () => {
+    const result = validateAxiomOutput(
+      makeAxiom({ cognitiveBiases: [], ruleUpdates: [], newRules: [] }),
+      5, []
+    );
+    expect(result.warnings.some((w) => w.includes("cognitive bias") && w.includes("no rule"))).toBe(false);
+  });
+
+  it("does not warn when biases detected and a rule update reason overlaps with a bias", () => {
+    const result = validateAxiomOutput(
+      makeAxiom({
+        cognitiveBiases: ["narrative dominance"],
+        ruleUpdates: [{ ruleId: "r011", type: "modify", reason: "Address narrative dominance by requiring alternative explanations", after: "new rule text" }],
+        newRules: [],
+      }),
+      5, []
+    );
+    expect(result.warnings.some((w) => w.includes("cognitive bias") && w.includes("no rule"))).toBe(false);
+  });
+
+  it("warns when biases detected but rule update reason has no overlap with any bias", () => {
+    const result = validateAxiomOutput(
+      makeAxiom({
+        cognitiveBiases: ["narrative dominance", "anchoring bias"],
+        ruleUpdates: [{ ruleId: "r029", type: "modify", reason: "Increase volatility buffer from 0.75% to 1.25%", after: "new buffer rule" }],
+        newRules: [],
+      }),
+      5, []
+    );
+    expect(result.warnings.some((w) => w.includes("cognitive bias") || w.includes("rule update"))).toBe(true);
+  });
+
+  it("does not warn when a new rule is added that overlaps with detected bias", () => {
+    const result = validateAxiomOutput(
+      makeAxiom({
+        cognitiveBiases: ["confirmation bias"],
+        ruleUpdates: [],
+        newRules: [{ id: "r035", description: "Avoid confirmation bias by checking counter-signals before setup entry", category: "bias_prevention", weight: 8 }],
+      }),
+      5, []
+    );
+    expect(result.warnings.some((w) => w.includes("cognitive bias") && w.includes("no rule"))).toBe(false);
+  });
+});
+
 // ── applyCalibrationAdjustment ────────────────────────────────
 
 describe("applyCalibrationAdjustment", () => {

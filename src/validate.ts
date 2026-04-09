@@ -338,6 +338,46 @@ export function validateOracleOutput(
   };
 }
 
+// ── Bias-to-Rule Mapping Checker ─────────────────────────
+// Detects when AXIOM identifies cognitive biases but produces no rule updates
+// that address them. Warns so the feedback reaches AXIOM's next context.
+
+function checkBiasRuleMapping(parsed: any): string[] {
+  const warnings: string[] = [];
+  const biases: string[] = Array.isArray(parsed.cognitiveBiases) ? parsed.cognitiveBiases : [];
+  if (biases.length === 0) return warnings;
+
+  const ruleUpdates: any[] = Array.isArray(parsed.ruleUpdates) ? parsed.ruleUpdates : [];
+  const newRules: any[] = Array.isArray(parsed.newRules) ? parsed.newRules : [];
+
+  // Collect all text from rule changes that could address a bias
+  const ruleTexts: string[] = [
+    ...ruleUpdates.map((r: any) => `${r.reason ?? ""} ${r.after ?? ""}`),
+    ...newRules.map((r: any) => `${r.description ?? ""}`),
+  ].filter(Boolean);
+
+  if (ruleTexts.length === 0) {
+    warnings.push(
+      `${biases.length} cognitive bias(es) detected (${biases.join(", ")}) but no rule updates or new rules address them — biases must drive concrete rule changes`
+    );
+    return warnings;
+  }
+
+  // Check if any rule text overlaps meaningfully with any bias
+  const biasText = biases.join(" ");
+  const anyOverlap = ruleTexts.some(
+    (ruleText) => calculateTextSimilarity(biasText, ruleText) > 0.1
+  );
+
+  if (!anyOverlap) {
+    warnings.push(
+      `Cognitive bias(es) detected (${biases.join(", ")}) but rule updates don't appear to address them — ensure rule changes target the identified biases`
+    );
+  }
+
+  return warnings;
+}
+
 // ── AXIOM Justification Cross-checker ────────────────────
 // Detects when AXIOM's stated reasons contradict measurable session facts.
 // Catches fabricated justifications before they corrupt rules.
@@ -458,6 +498,9 @@ export function validateAxiomOutput(
       errors.push(`AXIOM rule update(s) blocked: justification contradicts session data (${fabricated.length} fabrication(s) detected)`);
     }
   }
+
+  // Check that detected cognitive biases are addressed by rule changes
+  warnings.push(...checkBiasRuleMapping(parsed));
 
   return {
     valid: errors.length === 0,

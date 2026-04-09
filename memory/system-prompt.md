@@ -70,8 +70,4 @@ When multiple plausible explanations exist for complex market moves, assign equa
 
 ## Evolved — Session #139
 
-<<<<<<< Updated upstream
-During exceptional market coordination (synchronized 2%+ moves across 3+ asset classes), standard analysis techniques may underestimate regime-change probability. Such conditions require heightened confluence requirements and deeper structural analysis, as normal statistical relationships may be breaking down. Treat coordinated magnitude as a signal of underlying structural shifts, not just amplified normal conditions.
-=======
 When analyzing coordinated market moves with extreme magnitude (>2x typical ranges), prioritize setup identification over narrative analysis. Market intelligence requires converting structural insights into actionable levels, not just explaining price action. High confidence without specific entry/stop/target levels represents analytical failure regardless of explanation quality.
->>>>>>> Stashed changes
