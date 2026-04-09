@@ -83,10 +83,10 @@
     {
       "id": "r011",
       "category": "catalyst_verification",
-      "description": "Never attribute market moves to specific events without confirming the event occurred via news data. If making causal assumptions, state 'assuming [event] if confirmed' and develop at least one alternative explanation for the price action. Dominant narratives create confirmation bias — always maintain analytical independence by considering multiple causation pathways.",
+      "description": "When attributing market moves to specific events, develop minimum two equiprobable explanations using this format: 'Primary thesis: [explanation A] with [evidence]. Alternative thesis: [explanation B] with [evidence]. Probability assessment: [A%]/[B%].' Both explanations must receive equal analytical development — no primary/secondary hierarchy. If one explanation dominates analysis length or conviction, flag as narrative bias violation.",
       "weight": 9,
       "addedSession": 1,
-      "lastModifiedSession": 134
+      "lastModifiedSession": 140
     },
     {
       "id": "r012",
@@ -279,8 +279,8 @@
       "lastModifiedSession": 139
     }
   ],
-  "version": 82,
-  "lastUpdated": "2026-04-09T16:54:23.180Z",
+  "version": 83,
+  "lastUpdated": "2026-04-09T18:59:31.701Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -288,5 +288,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #139"
+  "sessionNotes": "Last updated: Session #140"
 }
