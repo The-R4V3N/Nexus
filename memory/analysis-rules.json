@@ -209,10 +209,10 @@
     {
       "id": "r026",
       "category": "setup_construction",
-      "description": "When market analysis identifies clear directional bias (confidence >60%), scan all available instruments for structural levels aligned with that bias. Weekend sessions: screen all 8 crypto instruments. Regular sessions: screen all 17 instruments across asset classes. Document which instruments were evaluated and why setups were/weren't identified.",
+      "description": "When market analysis identifies directional bias (confidence >50%), systematically evaluate instruments by asset class priority: (1) forex majors during USD moves, (2) indices during broad risk sentiment, (3) crypto during correlation breakdown, (4) metals during inflation signals, (5) commodities during sector-specific moves. Document specific price levels evaluated, not just instruments reviewed. Confidence >60% without at least one structural level identification indicates screening failure.",
       "weight": 9,
       "addedSession": 46,
-      "lastModifiedSession": 67
+      "lastModifiedSession": 139
     },
     {
       "id": "r027",
@@ -269,10 +269,22 @@
       "weight": 9,
       "addedSession": 129,
       "lastModifiedSession": 129
+    },
+    {
+      "id": "r034",
+      "category": "setup_identification",
+      "description": "Screening accountability: when confidence exceeds 50% with identified bias, must document evaluation of minimum 3 specific structural levels (support/resistance, liquidity zones, fair value gaps) across different instruments. If no setups generated from 3+ level evaluations, explicitly state why each level was rejected (poor RR, high volatility risk, or conflicting timeframes).",
+      "weight": 9,
+      "addedSession": 139,
+      "lastModifiedSession": 139
     }
   ],
   "version": 82,
+<<<<<<< Updated upstream
   "lastUpdated": "2026-04-09T16:53:50.873Z",
+=======
+  "lastUpdated": "2026-04-09T16:54:23.180Z",
+>>>>>>> Stashed changes
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
