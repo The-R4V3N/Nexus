@@ -233,10 +233,10 @@
     {
       "id": "r029",
       "category": "setup_precision",
-      "description": "When volatility elevated (VIX >25, daily moves >2x typical range, or news-driven displacement), avoid using current market price as entry. Require minimum 0.75% buffer from current price to structural level for entry validity. During extreme moves >5%, require 1.5% buffer and proportionally wider stops.",
+      "description": "When volatility elevated (VIX >25, daily moves >2x typical range, or news-driven displacement), avoid using current market price as entry. Require minimum 1.25% buffer from current price to structural level for entry validity. During extreme moves >5%, require 2% buffer and proportionally wider stops. If structural level is within buffer range, flag as 'elevated volatility risk' but setup remains valid.",
       "weight": 9,
       "addedSession": 56,
-      "lastModifiedSession": 132
+      "lastModifiedSession": 135
     },
     {
       "id": "r030",
@@ -271,8 +271,8 @@
       "lastModifiedSession": 129
     }
   ],
-  "version": 80,
-  "lastUpdated": "2026-04-08T15:35:32.746Z",
+  "version": 81,
+  "lastUpdated": "2026-04-09T00:46:29.971Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -280,5 +280,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #134"
+  "sessionNotes": "Last updated: Session #135"
 }
