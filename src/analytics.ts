@@ -23,6 +23,7 @@ export interface ResolvedSetup {
   RR: number;
   outcome: SetupOutcome;
   nextPrice: number | null;
+  resolvedAtSession?: number; // sessions forward until resolution (1 = N+1), undefined if OPEN/INCOMPLETE
 }
 
 // ── Instrument name normalization ───────────────────────────
@@ -66,61 +67,83 @@ export function normalizeInstrumentName(name: string): string {
 // ── Core Analytics ──────────────────────────────────────────
 
 /**
- * Resolves setup outcomes by comparing each session's setups
- * against the NEXT session's market prices.
+ * Build a price lookup map from a session's market snapshots.
  */
-export function resolveAllSetups(entries: JournalEntry[]): ResolvedSetup[] {
+function buildPriceMap(entry: JournalEntry): Record<string, number> {
+  const map: Record<string, number> = {};
+  for (const snap of entry.fullAnalysis?.marketSnapshots ?? []) {
+    map[snap.symbol] = snap.price;
+    map[snap.name] = snap.price;
+    map[snap.name.toLowerCase()] = snap.price;
+  }
+  return map;
+}
+
+/**
+ * Look up price for an instrument, trying direct name then normalized alias.
+ */
+function lookupPrice(instrument: string, priceMap: Record<string, number>): number | null {
+  const canonical = normalizeInstrumentName(instrument);
+  return priceMap[instrument]
+    ?? priceMap[instrument.toLowerCase()]
+    ?? priceMap[canonical]
+    ?? priceMap[canonical.toLowerCase()]
+    ?? null;
+}
+
+/**
+ * Resolves setup outcomes by scanning forward up to windowSize sessions.
+ * A setup is resolved when price crosses stop or target in any future session.
+ * INCOMPLETE means no price data was found in any forward session.
+ */
+export function resolveAllSetups(entries: JournalEntry[], windowSize: number = 10): ResolvedSetup[] {
   const resolved: ResolvedSetup[] = [];
+  const effectiveWindow = windowSize > 0 ? windowSize : 10;
 
   for (let i = 0; i < entries.length - 1; i++) {
     const current = entries[i];
-    const next = entries[i + 1];
     const setups = current.fullAnalysis?.setups ?? [];
-    const nextSnapshots = next.fullAnalysis?.marketSnapshots ?? [];
-
-    // Build price lookup from next session
-    const priceMap: Record<string, number> = {};
-    for (const snap of nextSnapshots) {
-      priceMap[snap.symbol] = snap.price;
-      priceMap[snap.name] = snap.price;
-      priceMap[snap.name.toLowerCase()] = snap.price;
-    }
 
     for (const setup of setups) {
       if (setup.entry == null || setup.stop == null || setup.target == null) {
         continue; // skip incomplete setups
       }
 
-      const canonical = normalizeInstrumentName(setup.instrument);
-      const nextPrice = priceMap[setup.instrument]
-        ?? priceMap[setup.instrument.toLowerCase()]
-        ?? priceMap[canonical]
-        ?? priceMap[canonical.toLowerCase()]
-        ?? null;
-
       let outcome: SetupOutcome = "INCOMPLETE";
-      if (nextPrice !== null) {
-        if (setup.direction === "bullish") {
-          if (nextPrice <= setup.stop)        outcome = "STOPPED_OUT";
-          else if (nextPrice >= setup.target) outcome = "TARGET_HIT";
-          else                                outcome = "OPEN";
-        } else if (setup.direction === "bearish") {
-          if (nextPrice >= setup.stop)        outcome = "STOPPED_OUT";
-          else if (nextPrice <= setup.target) outcome = "TARGET_HIT";
-          else                                outcome = "OPEN";
+      let nextPrice: number | null = null;
+      let resolvedAtSession: number | undefined;
+      const dir = setup.direction;
+
+      const maxK = Math.min(effectiveWindow, entries.length - 1 - i);
+      for (let k = 1; k <= maxK; k++) {
+        const price = lookupPrice(setup.instrument, buildPriceMap(entries[i + k]));
+        if (price === null) continue;
+
+        // Capture first price found (N+1 or nearest available) for backward compat
+        if (nextPrice === null) nextPrice = price;
+
+        if (dir === "bullish") {
+          if (price <= setup.stop)        { outcome = "STOPPED_OUT"; resolvedAtSession = k; break; }
+          if (price >= setup.target)      { outcome = "TARGET_HIT";  resolvedAtSession = k; break; }
+          outcome = "OPEN"; // alive at this session — keep scanning
+        } else if (dir === "bearish") {
+          if (price >= setup.stop)        { outcome = "STOPPED_OUT"; resolvedAtSession = k; break; }
+          if (price <= setup.target)      { outcome = "TARGET_HIT";  resolvedAtSession = k; break; }
+          outcome = "OPEN";
         }
       }
 
       resolved.push({
         sessionNumber: current.sessionNumber,
         instrument: setup.instrument,
-        direction: setup.direction ?? "unknown",
+        direction: dir ?? "unknown",
         entry: setup.entry,
         stop: setup.stop,
         target: setup.target,
         RR: setup.RR ?? 0,
         outcome,
         nextPrice,
+        resolvedAtSession,
       });
     }
   }

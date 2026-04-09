@@ -339,3 +339,59 @@ describe("resolveAllSetups instrument normalization", () => {
     expect(results[0].outcome).toBe("OPEN");
   });
 });
+
+// ── resolveAllSetups multi-session resolution ─────────────────
+
+describe("resolveAllSetups multi-session", () => {
+  it("resolves TARGET_HIT at session N+2 when N+1 is open", async () => {
+    const { resolveAllSetups } = await import("../src/analytics");
+    const s1 = makeEntry(1, { setups: [makeSetup({ instrument: "EUR/USD", direction: "bullish", entry: 1.10, stop: 1.09, target: 1.12 })], snapshots: [] });
+    const s2 = makeEntry(2, { setups: [], snapshots: [{ symbol: "EURUSD=X", name: "EUR/USD", price: 1.11, previousClose: 1.10, change: 0.01, changePercent: 0.9, high: 1.115, low: 1.095, timestamp: new Date(), category: "forex" }] });
+    const s3 = makeEntry(3, { setups: [], snapshots: [{ symbol: "EURUSD=X", name: "EUR/USD", price: 1.13, previousClose: 1.11, change: 0.02, changePercent: 1.8, high: 1.135, low: 1.105, timestamp: new Date(), category: "forex" }] });
+    const results = resolveAllSetups([s1, s2, s3]);
+    expect(results[0].outcome).toBe("TARGET_HIT");
+    expect(results[0].resolvedAtSession).toBe(2);
+  });
+
+  it("resolvedAtSession is 1 when resolved immediately at N+1", async () => {
+    const { resolveAllSetups } = await import("../src/analytics");
+    const s1 = makeEntry(1, { setups: [makeSetup({ instrument: "EUR/USD", direction: "bullish", entry: 1.10, stop: 1.09, target: 1.12 })], snapshots: [] });
+    const s2 = makeEntry(2, { setups: [], snapshots: [{ symbol: "EURUSD=X", name: "EUR/USD", price: 1.13, previousClose: 1.10, change: 0.03, changePercent: 2.7, high: 1.135, low: 1.095, timestamp: new Date(), category: "forex" }] });
+    const results = resolveAllSetups([s1, s2]);
+    expect(results[0].outcome).toBe("TARGET_HIT");
+    expect(results[0].resolvedAtSession).toBe(1);
+  });
+
+  it("respects windowSize and does not look past it", async () => {
+    const { resolveAllSetups } = await import("../src/analytics");
+    const snap = (price: number) => [{ symbol: "EURUSD=X", name: "EUR/USD", price, previousClose: price, change: 0, changePercent: 0, high: price, low: price, timestamp: new Date(), category: "forex" as const }];
+    const s1 = makeEntry(1, { setups: [makeSetup({ instrument: "EUR/USD", direction: "bullish", entry: 1.10, stop: 1.09, target: 1.12 })], snapshots: [] });
+    const s2 = makeEntry(2, { setups: [], snapshots: snap(1.11) });
+    const s3 = makeEntry(3, { setups: [], snapshots: snap(1.13) }); // would be TARGET_HIT if checked
+    const results = resolveAllSetups([s1, s2, s3], 1);
+    expect(results[0].outcome).toBe("OPEN");
+    expect(results[0].resolvedAtSession).toBeUndefined();
+  });
+
+  it("outcome is INCOMPLETE when no price data in any forward session", async () => {
+    const { resolveAllSetups } = await import("../src/analytics");
+    const s1 = makeEntry(1, { setups: [makeSetup({ instrument: "EXOTIC/PAIR", direction: "bullish", entry: 100, stop: 99, target: 102 })], snapshots: [] });
+    const s2 = makeEntry(2, { setups: [], snapshots: [] });
+    const s3 = makeEntry(3, { setups: [], snapshots: [] });
+    const results = resolveAllSetups([s1, s2, s3]);
+    expect(results[0].outcome).toBe("INCOMPLETE");
+    expect(results[0].nextPrice).toBeNull();
+    expect(results[0].resolvedAtSession).toBeUndefined();
+  });
+
+  it("STOPPED_OUT beats OPEN across two sessions — bearish stops when price rises", async () => {
+    const { resolveAllSetups } = await import("../src/analytics");
+    const snap = (price: number) => [{ symbol: "EURUSD=X", name: "EUR/USD", price, previousClose: price, change: 0, changePercent: 0, high: price, low: price, timestamp: new Date(), category: "forex" as const }];
+    const s1 = makeEntry(1, { setups: [makeSetup({ instrument: "EUR/USD", direction: "bearish", entry: 1.10, stop: 1.12, target: 1.07 })], snapshots: [] });
+    const s2 = makeEntry(2, { setups: [], snapshots: snap(1.11) }); // OPEN (below stop 1.12, above target 1.07)
+    const s3 = makeEntry(3, { setups: [], snapshots: snap(1.13) }); // STOPPED_OUT (>= stop 1.12)
+    const results = resolveAllSetups([s1, s2, s3]);
+    expect(results[0].outcome).toBe("STOPPED_OUT");
+    expect(results[0].resolvedAtSession).toBe(2);
+  });
+});
