@@ -246,6 +246,9 @@ export function validateOracleOutput(
       if (s.RR != null && (typeof s.RR !== "number" || s.RR <= 0)) {
         errors.push(`${label}: RR must be a positive number (got ${s.RR})`);
       }
+      if (s.RR != null && typeof s.RR === "number" && s.RR > 20) {
+        warnings.push(`${label}: implausible RR of ${s.RR} — likely a decimal point error in entry, stop, or target`);
+      }
 
       // Timeframe string
       if (s.timeframe != null && typeof s.timeframe !== "string") {

@@ -178,6 +178,35 @@ describe("validateOracleOutput", () => {
     expect(result.warnings.some((w) => w.includes("bearish but stop"))).toBe(true);
   });
 
+  it("warns on implausibly high R:R (>20) indicating likely decimal error", () => {
+    // Reproduces session #143 AUD/USD bug: entry 0.7073, target 1.715 → RR 159.95
+    const result = validateOracleOutput(
+      makeOracle({
+        setups: [{
+          instrument: "AUD/USD", type: "MSS", direction: "bullish",
+          description: "test", invalidation: "test",
+          entry: 0.7073, stop: 0.701, target: 1.715, RR: 159.95, timeframe: "1H",
+        }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(true);
+  });
+
+  it("does not warn on a legitimate high R:R up to 20", () => {
+    const result = validateOracleOutput(
+      makeOracle({
+        setups: [{
+          instrument: "Gold", type: "FVG", direction: "bullish",
+          description: "test", invalidation: "test",
+          entry: 2000, stop: 1990, target: 2200, RR: 20, timeframe: "1H",
+        }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(false);
+  });
+
   // ── Recycled analysis detection ──
 
   it("warns when analysis is >80% similar to previous session", () => {
