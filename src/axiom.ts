@@ -470,13 +470,24 @@ export async function runAxiomReflection(
 
   const parsed = parseAxiomResponse(rawText, sessionNumber, currentRules, oracle);
 
+  // Map newRules into ruleUpdates so the journal renders them correctly.
+  // evolveMemory writes both ruleUpdates and newRules to the JSON, but only
+  // ruleUpdates was being stored on the reflection — causing "No rule changes
+  // this session" even when new rules were added.
+  const newRuleEntries: RuleUpdate[] = (parsed.newRules ?? []).map((nr: any) => ({
+    ruleId: nr.id,
+    type:   "add" as const,
+    after:  nr.description,
+    reason: nr.reason ?? "New rule added",
+  }));
+
   const reflection: AxiomReflection = {
     timestamp:               new Date(),
     sessionId:               oracle.sessionId,
     whatWorked:              parsed.whatWorked       ?? "",
     whatFailed:              parsed.whatFailed       ?? "",
     cognitiveBiases:         parsed.cognitiveBiases  ?? [],
-    ruleUpdates:             parsed.ruleUpdates      ?? [],
+    ruleUpdates:             [...(parsed.ruleUpdates ?? []), ...newRuleEntries],
     newSystemPromptSections: parsed.systemPromptAdditions ?? "",
     evolutionSummary:        parsed.evolutionSummary ?? "",
   };
