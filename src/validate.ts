@@ -282,6 +282,26 @@ export function validateOracleOutput(
     }
   }
 
+  // Tight stop warning on extreme volatility days (r029 enforcement)
+  // If any snapshot moved ≥5%, stops <1% of entry are almost certainly
+  // too narrow to survive normal noise on that instrument.
+  const extremeDay = oracle.marketSnapshots?.some(s => Math.abs(s.changePercent) >= 3);
+  if (extremeDay && oracle.setups) {
+    for (const s of oracle.setups) {
+      if (
+        typeof s.entry === "number" && s.entry > 0 &&
+        typeof s.stop  === "number" && s.stop  > 0
+      ) {
+        const stopPct = (Math.abs(s.entry - s.stop) / s.entry) * 100;
+        if (stopPct < 1) {
+          warnings.push(
+            `${s.instrument ?? "Setup"}: stop is only ${stopPct.toFixed(2)}% from entry during extreme volatility (≥5% session move) — r029 requires wider stops`
+          );
+        }
+      }
+    }
+  }
+
   // "Other" type overuse — ICT types should be preferred
   if (oracle.setups && oracle.setups.length > 0) {
     const otherCount = oracle.setups.filter(s => s.type === "Other").length;

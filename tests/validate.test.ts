@@ -207,6 +207,69 @@ describe("validateOracleOutput", () => {
     expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(false);
   });
 
+  // ── Tight stop on extreme volatility days ──
+
+  it("warns when stop is <1% from entry during an extreme volatility session (≥3% move)", () => {
+    // Reproduces session #145: NASDAQ 20-point stop after +4.78% day, ~0.08% of entry
+    const extremeSnapshot = {
+      symbol: "NAS100", name: "NASDAQ 100", category: "index",
+      price: 25200, previousClose: 24050, change: 1150, changePercent: 4.78,
+      high: 25202, low: 24050, timestamp: new Date(),
+    };
+    const result = validateOracleOutput(
+      makeOracle({
+        marketSnapshots: [extremeSnapshot],
+        setups: [{
+          instrument: "NASDAQ 100", type: "PDH", direction: "bullish",
+          description: "test", invalidation: "test",
+          entry: 25200, stop: 25180, target: 25250, RR: 2.5, timeframe: "4H",
+        }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("stop") && w.includes("volatility"))).toBe(true);
+  });
+
+  it("does not warn about stop size when session moves are normal (<5%)", () => {
+    const normalSnapshot = {
+      symbol: "NAS100", name: "NASDAQ 100", category: "index",
+      price: 25200, previousClose: 25000, change: 200, changePercent: 0.8,
+      high: 25210, low: 24990, timestamp: new Date(),
+    };
+    const result = validateOracleOutput(
+      makeOracle({
+        marketSnapshots: [normalSnapshot],
+        setups: [{
+          instrument: "NASDAQ 100", type: "PDH", direction: "bullish",
+          description: "test", invalidation: "test",
+          entry: 25200, stop: 25180, target: 25250, RR: 2.5, timeframe: "4H",
+        }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("stop") && w.includes("volatility"))).toBe(false);
+  });
+
+  it("does not warn when stop is adequately wide (≥1% of entry) even on extreme day", () => {
+    const extremeSnapshot = {
+      symbol: "NAS100", name: "NASDAQ 100", category: "index",
+      price: 25200, previousClose: 24050, change: 1150, changePercent: 4.78,
+      high: 25202, low: 24050, timestamp: new Date(),
+    };
+    const result = validateOracleOutput(
+      makeOracle({
+        marketSnapshots: [extremeSnapshot],
+        setups: [{
+          instrument: "NASDAQ 100", type: "PDH", direction: "bullish",
+          description: "test", invalidation: "test",
+          entry: 25200, stop: 24900, target: 25800, RR: 2, timeframe: "4H",
+        }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("stop") && w.includes("volatility"))).toBe(false);
+  });
+
   // ── Recycled analysis detection ──
 
   it("warns when analysis is >80% similar to previous session", () => {
