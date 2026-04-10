@@ -285,10 +285,18 @@
       "weight": 9,
       "addedSession": 141,
       "lastModifiedSession": 141
+    },
+    {
+      "id": "r036",
+      "category": "bearish_confirmation",
+      "description": "Before classifying any setup as bearish direction, ALL must be confirmed: (1) Higher timeframe shows 2+ consecutive lower highs AND lower lows, (2) Confirmed MSS to downside (candle close below swing low, not wick), (3) DXY not in active weakness (if EUR/USD, GBP/USD, AUD/USD all up >1%, no bearish risk asset setups), (4) Overall session bias is bearish or mixed-bearish. If conditions unmet, classify as neutral or omit.",
+      "weight": 9,
+      "addedSession": 143,
+      "lastModifiedSession": 143
     }
   ],
-  "version": 84,
-  "lastUpdated": "2026-04-09T19:41:42.890Z",
+  "version": 85,
+  "lastUpdated": "2026-04-10T00:53:30.770Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -296,5 +304,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #141"
+  "sessionNotes": "Last updated: Session #143"
 }
