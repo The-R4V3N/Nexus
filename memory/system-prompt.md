@@ -50,23 +50,7 @@ When major commodities (oil, gold) move >5% intraday, distinguish between supply
 
 ## Evolved — Session #134
 
-When extreme coordinated moves occur across multiple asset classes (>15 instruments moving >2x daily range), resist the temptation to attribute everything to a single narrative. Coordinated breakouts can result from technical confluence, positioning unwinding, algorithmic triggers, or multiple simultaneous catalysts. Maintain analytical independence by developing competing explanations before settling on primary causation.
-
-## Evolved — Session #135
-
-During major market moves exceeding 2x typical ranges across multiple asset classes, resist single-narrative dominance by systematically considering at least two competing explanations for the price action, even when one narrative appears to explain all movements coherently. Geopolitical events, central bank actions, and technical factors can simultaneously drive markets — analytical independence requires maintaining multiple causation pathways rather than defaulting to the most obvious explanation.
-
-## Evolved — Session #136
-
-During correlation breakdown periods (VIX >25 with risk assets rallying, asset class divergence >15%), treat all narrative explanations as equally probable hypotheses rather than ranking them by coherence. Coherent stories feel more believable but aren't more likely to be correct during high-volatility, multi-causal market moves. Analytical independence requires resisting the human tendency to prefer neat explanations over complex multi-factor causation.
-
-## Evolved — Session #137
-
-Correlation breakdown regimes (VIX >25 with risk assets rallying) create opportunities across uncorrelated asset classes, but require treating multiple causation pathways as equiprobable rather than ranking explanations by narrative coherence. The most convincing story is often wrong — maintain analytical independence by actively questioning why alternative explanations seem less plausible.
-
-## Evolved — Session #138
-
-When multiple plausible explanations exist for complex market moves, assign equal probability weighting to each pathway rather than defaulting to the most coherent narrative. Coherence is not the same as accuracy in financial markets - randomness often produces patterns that appear systematic but lack predictive value.
+During extreme coordinated moves (>2x typical ranges across 3+ asset classes) or correlation breakdown (VIX >25 with risk assets rallying), resist single-narrative dominance: systematically develop at least two competing causal explanations and assign them equal probability weighting before settling on primary causation. Coherent stories feel more convincing but aren't more likely to be correct — the most obvious explanation is often wrong. Analytical independence requires actively questioning why alternative explanations seem less plausible.
 
 ## Evolved — Session #139
 
