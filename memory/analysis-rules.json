@@ -241,10 +241,10 @@
     {
       "id": "r030",
       "category": "weekend",
-      "description": "Weekend sessions: systematically screen all 10 crypto instruments for structural levels aligned with identified bias. However, distinguish between genuine structural opportunities and routine sector rotation patterns. If sector divergence <3% or follows predictable patterns (infrastructure vs utility rotation), flag as 'routine positioning' and require additional confluence before setup generation.",
+      "description": "Weekend sessions: systematically screen all 10 crypto instruments for structural levels. Each instrument mentioned in analysis MUST produce either (a) complete setup with entry/stop/target/RR/TF, or (b) explicit key level with rationale why no setup viable ('poor RR', 'conflicting timeframes', 'insufficient confluence'). Text mention without setup/level = immediate compliance violation. If sector divergence <3%, flag as 'routine positioning' but screening requirement unchanged.",
       "weight": 9,
       "addedSession": 91,
-      "lastModifiedSession": 131
+      "lastModifiedSession": 146
     },
     {
       "id": "r031",
@@ -304,7 +304,11 @@
     }
   ],
   "version": 87,
+<<<<<<< Updated upstream
   "lastUpdated": "2026-04-11T13:07:21.650Z",
+=======
+  "lastUpdated": "2026-04-11T13:08:42.414Z",
+>>>>>>> Stashed changes
   "focusInstruments": [
     "NAS100",
     "EUR/USD",

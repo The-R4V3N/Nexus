@@ -424,7 +424,11 @@ Every session is committed to this repo. The journal lives at [the-r4v3n.github.
 
 | # | Date | Bias | Setups | Confidence | Rule Δ |
 | - | ---- | ---- | ------ | ---------- | ------ |
+<<<<<<< Updated upstream
 | 146 | 2026-04-11 | mixed | 2 | 54% | 37 rules |
+=======
+| 146 | 2026-04-11 | mixed | 2 | 54% | 36 rules |
+>>>>>>> Stashed changes
 | 145 | 2026-04-10 | bullish | 4 | 48% | 36 rules |
 | 144 | 2026-04-10 | mixed | 4 | 38% | 36 rules |
 | 143 | 2026-04-10 | bullish | 1 | 45% | 36 rules |
