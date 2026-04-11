@@ -293,10 +293,18 @@
       "weight": 9,
       "addedSession": 143,
       "lastModifiedSession": 143
+    },
+    {
+      "id": "r037",
+      "category": "weekend",
+      "description": "Weekend crypto screening validation: after completing analysis text, systematically verify each of the 10 crypto instruments (BTC, ETH, BNB, XRP, SOL, DOGE, ADA, LINK, DOT, AVAX) has either (1) complete setup with entry/stop/target/RR/TF, or (2) explicit key level with reasoning. Any instrument mentioned in analysis text without corresponding setup/level constitutes compliance violation requiring immediate correction before session completion.",
+      "weight": 9,
+      "addedSession": 146,
+      "lastModifiedSession": 146
     }
   ],
-  "version": 86,
-  "lastUpdated": "2026-04-10T13:34:10.340Z",
+  "version": 87,
+  "lastUpdated": "2026-04-11T13:07:21.650Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -304,5 +312,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #145"
+  "sessionNotes": "Last updated: Session #146"
 }
