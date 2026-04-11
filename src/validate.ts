@@ -302,6 +302,19 @@ export function validateOracleOutput(
     }
   }
 
+  // r026: high confidence must produce broad setup coverage
+  // When confidence > 55%, fewer than 3 setups indicates incomplete screening.
+  // Analytics show this is the most common cause of hit rate underperformance
+  // in the 50-85% confidence bands.
+  if (typeof oracle.confidence === "number" && oracle.confidence > 55) {
+    const setupCount = oracle.setups?.length ?? 0;
+    if (setupCount < 3) {
+      warnings.push(
+        `r026: confidence ${oracle.confidence}% with only ${setupCount} setup(s) — high-confidence sessions require systematic screening across all available instruments (minimum 3 setups)`
+      );
+    }
+  }
+
   // "Other" type overuse — ICT types should be preferred
   if (oracle.setups && oracle.setups.length > 0) {
     const otherCount = oracle.setups.filter(s => s.type === "Other").length;

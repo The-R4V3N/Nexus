@@ -320,6 +320,56 @@ describe("validateOracleOutput", () => {
     );
     expect(result.warnings.some((w) => w.includes("Recycled"))).toBe(false);
   });
+
+  // ── Insufficient setup count (r026 enforcement) ──
+
+  function makeValidSetup(instrument: string) {
+    return {
+      instrument, type: "FVG" as const, direction: "bullish" as const,
+      description: "test", invalidation: "test",
+      entry: 1.3, stop: 1.28, target: 1.34, RR: 2, timeframe: "1H",
+    };
+  }
+
+  it("warns when confidence > 55 and only 1 setup produced (r026)", () => {
+    const result = validateOracleOutput(
+      makeOracle({ confidence: 72, setups: [makeValidSetup("AUD/USD")] }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r026"))).toBe(true);
+  });
+
+  it("warns when confidence > 55 and 2 setups produced (r026)", () => {
+    const result = validateOracleOutput(
+      makeOracle({ confidence: 60, setups: [makeValidSetup("EUR/USD"), makeValidSetup("GBP/USD")] }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r026"))).toBe(true);
+  });
+
+  it("does not warn when confidence > 55 with 3 setups", () => {
+    const result = validateOracleOutput(
+      makeOracle({ confidence: 72, setups: [makeValidSetup("EUR/USD"), makeValidSetup("GBP/USD"), makeValidSetup("AUD/USD")] }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r026"))).toBe(false);
+  });
+
+  it("does not warn when confidence <= 55 with 1 setup", () => {
+    const result = validateOracleOutput(
+      makeOracle({ confidence: 45, setups: [makeValidSetup("AUD/USD")] }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r026"))).toBe(false);
+  });
+
+  it("does not warn when confidence exactly 55 with 1 setup", () => {
+    const result = validateOracleOutput(
+      makeOracle({ confidence: 55, setups: [makeValidSetup("AUD/USD")] }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r026"))).toBe(false);
+  });
 });
 
 // ── extractConfidenceFromText ────────────────────────────────
