@@ -30,7 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.NEXUS_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -81,6 +81,8 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
       - name: Commit memory & journal to main
+        env:
+          NEXUS_PAT: ${{ secrets.NEXUS_PAT }}
         run: |
           git config user.name "NEXUS"
           git config user.email "nexus-bot@users.noreply.github.com"
@@ -100,6 +102,11 @@ jobs:
             git stash push -- src/
           else
             echo "FORGE_CHANGED=false" >> "$GITHUB_ENV"
+          fi
+
+          # Use NEXUS_PAT to bypass branch protection for bot commits (falls back to GITHUB_TOKEN)
+          if [ -n "$NEXUS_PAT" ]; then
+            git remote set-url origin "https://x-access-token:${NEXUS_PAT}@github.com/${{ github.repository }}"
           fi
 
           # Commit memory/journal/docs/README to main (always)
