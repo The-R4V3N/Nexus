@@ -66070,7 +66070,6 @@
   },
   {
     "sessionNumber": 146,
-<<<<<<< Updated upstream
     "date": "2026-04-11 13:07",
     "title": "WEEKEND ↕ BNB Liquidity Sweep + rule evolution",
     "oracleSummary": "MIXED bias | 2 setups | Confidence: 54/100 | BNB Liquidity Sweep (bullish), Polkadot OB (bearish)",
@@ -66078,21 +66077,11 @@
     "fullAnalysis": {
       "timestamp": "2026-04-11T13:06:59.270Z",
       "sessionId": "nx-1775912776029-ib926c",
-=======
-    "date": "2026-04-11 13:08",
-    "title": "WEEKEND ↕ Bitcoin PDH + rule evolution",
-    "oracleSummary": "MIXED bias | 2 setups | Confidence: 54/100 | Bitcoin PDH (bearish), Avalanche Liquidity Sweep (bearish)",
-    "axiomSummary": "This session exposed execution discipline breakdown in weekend screening protocols. While my analytical framework correctly identified mixed bias conditions and generated quality setups where structure aligned, I failed basic compliance requirements by mentioning Cardano without producing required setup or key level. This represents a shift from analytical refinement challenges to basic execution discipline issues that must be addressed immediately.",
-    "fullAnalysis": {
-      "timestamp": "2026-04-11T13:08:18.416Z",
-      "sessionId": "nx-1775912859753-3ou409",
->>>>>>> Stashed changes
       "marketSnapshots": [
         {
           "symbol": "BTC-USD",
           "name": "Bitcoin",
           "category": "crypto",
-<<<<<<< Updated upstream
           "price": 72839,
           "previousClose": 72247.12,
           "change": 591.88,
@@ -66100,21 +66089,11 @@
           "high": 73370,
           "low": 72027,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "price": 72843,
-          "previousClose": 72246.91,
-          "change": 596.09,
-          "changePercent": 0.82507,
-          "high": 73370,
-          "low": 72027,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "ETH-USD",
           "name": "Ethereum",
           "category": "crypto",
-<<<<<<< Updated upstream
           "price": 2242.89,
           "previousClose": 2219.04,
           "change": 23.85,
@@ -66122,21 +66101,11 @@
           "high": 2255.77,
           "low": 2212.98,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "price": 2242.9,
-          "previousClose": 2219.04,
-          "change": 23.86,
-          "changePercent": 1.07503,
-          "high": 2255.77,
-          "low": 2212.98,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "BNB-USD",
           "name": "BNB",
           "category": "crypto",
-<<<<<<< Updated upstream
           "price": 606.32,
           "previousClose": 602.49,
           "change": 3.83,
@@ -66144,42 +66113,23 @@
           "high": 610.24,
           "low": 601.43,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "price": 606.14,
-          "previousClose": 602.48,
-          "change": 3.66,
-          "changePercent": 0.60686,
-          "high": 610.24,
-          "low": 601.43,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "XRP-USD",
           "name": "Ripple",
           "category": "crypto",
           "price": 1.34,
-<<<<<<< Updated upstream
           "previousClose": 1.3377719000000001,
           "change": 0.0022281,
           "changePercent": 0.16595,
           "high": 1.36,
           "low": 1.34,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "previousClose": 1.3381932200000002,
-          "change": 0.00180678,
-          "changePercent": 0.13457,
-          "high": 1.36,
-          "low": 1.34,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "SOL-USD",
           "name": "Solana",
           "category": "crypto",
-<<<<<<< Updated upstream
           "price": 84.21,
           "previousClose": 84.04943999999999,
           "change": 0.16056,
@@ -66187,21 +66137,11 @@
           "high": 85.48,
           "low": 83.76,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "price": 84.22,
-          "previousClose": 84.055739,
-          "change": 0.164261,
-          "changePercent": 0.19543,
-          "high": 85.48,
-          "low": 83.76,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "DOGE-USD",
           "name": "Dogecoin",
           "category": "crypto",
-<<<<<<< Updated upstream
           "price": 0.092863,
           "previousClose": 0.09305208819143315,
           "change": -0.000189088191433151,
@@ -66209,21 +66149,11 @@
           "high": 0.095106,
           "low": 0.092476,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "price": 0.092875,
-          "previousClose": 0.09305246812270107,
-          "change": -0.000177468122701072,
-          "changePercent": -0.19072,
-          "high": 0.095106,
-          "low": 0.092476,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "ADA-USD",
           "name": "Cardano",
           "category": "crypto",
-<<<<<<< Updated upstream
           "price": 0.250006,
           "previousClose": 0.25299031447488013,
           "change": -0.002984314474880123,
@@ -66231,64 +66161,36 @@
           "high": 0.258531,
           "low": 0.249644,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "price": 0.249998,
-          "previousClose": 0.25299036107381573,
-          "change": -0.00299236107381573,
-          "changePercent": -1.1828,
-          "high": 0.258531,
-          "low": 0.249644,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "LINK-USD",
           "name": "Chainlink",
           "category": "crypto",
           "price": 9,
-<<<<<<< Updated upstream
           "previousClose": 9.009316369674163,
           "change": -0.009316369674163383,
           "changePercent": -0.10337,
           "high": 9.17,
           "low": 8.99,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "previousClose": 9.00814991071807,
-          "change": -0.008149910718069364,
-          "changePercent": -0.09042,
-          "high": 9.17,
-          "low": 8.99,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "AVAX-USD",
           "name": "Avalanche",
           "category": "crypto",
           "price": 9.26,
-<<<<<<< Updated upstream
           "previousClose": 9.383001220170073,
           "change": -0.12300122017007276,
           "changePercent": -1.31027,
           "high": 9.54,
           "low": 9.25,
           "timestamp": "2026-04-11T13:06:18.612Z"
-=======
-          "previousClose": 9.385815824539074,
-          "change": -0.12581582453907458,
-          "changePercent": -1.34025,
-          "high": 9.54,
-          "low": 9.25,
-          "timestamp": "2026-04-11T13:07:42.282Z"
->>>>>>> Stashed changes
         },
         {
           "symbol": "DOT-USD",
           "name": "Polkadot",
           "category": "crypto",
           "price": 1.28,
-<<<<<<< Updated upstream
           "previousClose": 1.3021223368404666,
           "change": -0.022122336840466605,
           "changePercent": -1.70193,
@@ -66321,46 +66223,11 @@
           "stop": 1.33,
           "target": 1.2,
           "RR": 1.36,
-=======
-          "previousClose": 1.3022938619481095,
-          "change": -0.02229386194810945,
-          "changePercent": -1.71513,
-          "high": 1.32,
-          "low": 1.28,
-          "timestamp": "2026-04-11T13:07:42.282Z"
-        }
-      ],
-      "analysis": "**Higher Timeframe Context:** Bitcoin maintains daily uptrend structure with Friday's session establishing new swing high around 73,370, confirming continuation from previous week's bullish MSS. Weekend crypto action shows moderate consolidation with BTC holding above 72,000 support zone. Infrastructure tokens (BNB +0.61%, SOL +0.20%) outperforming utility tokens (ADA -1.18%, AVAX -1.34%, DOT -1.72%) by approximately 1.4% spread, indicating defensive rotation within crypto ecosystem typical of weekend positioning.\n\n**Intraday Analysis:** Current session displays mixed crypto performance with large caps (BTC +0.83%, ETH +1.08%) leading while mid-caps show weakness. Bitcoin testing Friday's highs near 73,370 with solid support holding at 72,027 low. Ethereum showing relative strength at 2,242 after breaking above 2,200 psychological level. The 1.9% performance spread between strongest (ETH) and weakest (DOT) performers suggests normal weekend sector rotation rather than directional conviction.\n\n**Cross-Asset Dynamics:** Infrastructure vs utility token divergence at 1.4% falls below the 3% threshold for exceptional positioning, representing routine weekend defensive rotation within crypto. Large cap dominance (BTC, ETH positive) while smaller caps struggle indicates risk-averse positioning within the crypto ecosystem. This pattern typically precedes broader directional moves when traditional markets reopen, suggesting consolidation rather than breakout potential.\n\n**Technical Confluence Analysis:** Bitcoin confluence count: (1) Daily uptrend alignment, (2) holding above 72K psychological support, (3) Friday's swing high as resistance reference. Three valid confluences present. Confidence breakdown: Technical confluence 50% (3 confluences), Macro alignment 40% (crypto-only weekend data limits broader correlation assessment), Risk/reward clarity 45% (clear levels but weekend volatility reduces precision). Overall confidence: (50×0.4)+(40×0.3)+(45×0.3) = 20+12+13.5 = 46%",
-      "setups": [
-        {
-          "instrument": "Bitcoin",
-          "type": "PDH",
-          "direction": "bearish",
-          "description": "BTC testing Friday's high at 73,370 with defensive rotation in crypto ecosystem. Infrastructure outperformance suggests consolidation rather than breakout. Fade the retest with defensive positioning.",
-          "invalidation": "Break and hold above 73,400",
-          "entry": 73300,
-          "stop": 73450,
-          "target": 72500,
-          "RR": 5.33,
-          "timeframe": "4H"
-        },
-        {
-          "instrument": "Avalanche",
-          "type": "Liquidity Sweep",
-          "direction": "bearish",
-          "description": "Utility token showing significant weakness (-1.34%) in sector rotation. Testing session lows at 9.25 with breakdown potential below psychological 9.00.",
-          "invalidation": "Recovery above 9.40",
-          "entry": 9.27,
-          "stop": 9.42,
-          "target": 8.95,
-          "RR": 2.13,
->>>>>>> Stashed changes
           "timeframe": "1H"
         }
       ],
       "bias": {
         "overall": "mixed",
-<<<<<<< Updated upstream
         "notes": "Infrastructure tokens showing strength while utility tokens decline - defensive rotation within crypto rather than clear directional conviction. BTC/ETH positive but sector divergence >2.5% indicates mixed internal dynamics."
       },
       "keyLevels": [
@@ -66393,58 +66260,11 @@
           "level": 0.25,
           "type": "support",
           "notes": "Psychological level and session low - utility token weakness test"
-=======
-        "notes": "Infrastructure token outperformance versus utility token weakness creates sector divergence, but magnitude below exceptional thresholds. Large cap strength with mid-cap weakness indicates defensive positioning rather than directional conviction."
-      },
-      "keyLevels": [
-        {
-          "instrument": "Bitcoin",
-          "level": 73370,
-          "type": "resistance",
-          "notes": "Friday's session high, current retest zone"
-        },
-        {
-          "instrument": "Bitcoin",
-          "level": 72027,
-          "type": "support",
-          "notes": "Weekend session low, key structural support"
-        },
-        {
-          "instrument": "Ethereum",
-          "level": 2200,
-          "type": "support",
-          "notes": "Psychological level broken above, now support"
-        },
-        {
-          "instrument": "Ethereum",
-          "level": 2255.77,
-          "type": "resistance",
-          "notes": "Current session high"
-        },
-        {
-          "instrument": "BNB",
-          "level": 610.24,
-          "type": "resistance",
-          "notes": "Session high, infrastructure token strength level"
-        },
-        {
-          "instrument": "Avalanche",
-          "level": 9.25,
-          "type": "support",
-          "notes": "Session low, utility token weakness reference"
-        },
-        {
-          "instrument": "BNB",
-          "level": 606.14,
-          "type": "screened",
-          "notes": "Infrastructure token showing defensive outperformance but no clear structural levels for entry"
->>>>>>> Stashed changes
         },
         {
           "instrument": "Ripple",
           "level": 1.34,
           "type": "screened",
-<<<<<<< Updated upstream
           "notes": "Minimal movement +0.17% with no clear structural levels. Range-bound between 1.34-1.36 without directional conviction."
         },
         {
@@ -66458,27 +66278,11 @@
           "level": 0.092863,
           "type": "screened",
           "notes": "Slight negative -0.20% with no structural levels nearby. Range-bound weekend action without clear bias."
-=======
-          "notes": "Minimal movement, no structural levels aligned with defensive rotation theme"
-        },
-        {
-          "instrument": "Solana",
-          "level": 84.22,
-          "type": "screened",
-          "notes": "Infrastructure token showing slight outperformance but lack of clear technical structure for entry"
-        },
-        {
-          "instrument": "Dogecoin",
-          "level": 0.092875,
-          "type": "screened",
-          "notes": "Minimal movement in consolidation, no alignment with sector rotation theme"
->>>>>>> Stashed changes
         },
         {
           "instrument": "Chainlink",
           "level": 9,
           "type": "screened",
-<<<<<<< Updated upstream
           "notes": "Utility token with minimal -0.10% decline. No clear structural levels for setup construction despite sector weakness."
         }
       ],
@@ -66509,42 +66313,6 @@
       "evolutionSummary": "This session exposed a critical implementation gap between rule awareness and rule execution. I correctly identified crypto sector rotation patterns and applied quantified thresholds, but failed basic weekend screening compliance by omitting an Avalanche setup despite textual mention. This represents a systematic execution failure that undermines rule integrity and requires immediate architectural correction."
     },
     "ruleCount": 37,
-=======
-          "notes": "Utility token showing mild weakness but no clear structural breakdown for entry"
-        },
-        {
-          "instrument": "Polkadot",
-          "level": 1.28,
-          "type": "screened",
-          "notes": "Weakest performer (-1.72%) but already at session lows without clear continuation structure"
-        }
-      ],
-      "confidence": 54,
-      "assumptions": []
-    },
-    "reflection": {
-      "timestamp": "2026-04-11T13:08:42.414Z",
-      "sessionId": "nx-1775912859753-3ou409",
-      "whatWorked": "Weekend crypto screening methodology functioned well, identifying clear structural opportunities across Bitcoin (PDH bearish at 73300) and Avalanche (liquidity sweep bearish at 9.27) with proper risk/reward ratios. Confidence calibration at 54% aligns with mixed bias scenarios where my analytics show 45% hit rate. Cross-asset analysis correctly identified infrastructure vs utility token divergence at 1.4%, staying below exceptional thresholds.",
-      "whatFailed": "Critical compliance violation: failed to produce setup or key level for Cardano despite text mention, violating r030. This represents systematic weekend screening breakdown - mentioning an instrument without actionable analysis serves no purpose. Additionally, r011 violation with empty assumptions[] despite causal attribution language throughout analysis. These are basic execution failures, not analytical gaps.",
-      "cognitiveBiases": [
-        "selective screening - completed analysis for 9/10 crypto instruments but dropped Cardano without explanation",
-        "narrative completion bias - wrote about Cardano performance without following through to setup generation"
-      ],
-      "ruleUpdates": [
-        {
-          "ruleId": "r030",
-          "type": "modify",
-          "before": "Weekend sessions: systematically screen all 10 crypto instruments for structural levels aligned with identified bias. However, distinguish between genuine structural opportunities and routine sector rotation patterns. If sector divergence <3% or follows predictable patterns (infrastructure vs utility rotation), flag as 'routine positioning' and require additional confluence before setup generation.",
-          "after": "Weekend sessions: systematically screen all 10 crypto instruments for structural levels. Each instrument mentioned in analysis MUST produce either (a) complete setup with entry/stop/target/RR/TF, or (b) explicit key level with rationale why no setup viable ('poor RR', 'conflicting timeframes', 'insufficient confluence'). Text mention without setup/level = immediate compliance violation. If sector divergence <3%, flag as 'routine positioning' but screening requirement unchanged.",
-          "reason": "Session #146 compliance violation - mentioned Cardano without setup or key level. Rule must eliminate ambiguity about weekend screening requirements"
-        }
-      ],
-      "newSystemPromptSections": "Weekend crypto analysis requires complete follow-through discipline: every instrument analyzed in text must produce either a complete setup or explicit key level with rejection rationale. Partial analysis that mentions performance without structural assessment violates screening protocols and provides no analytical value.",
-      "evolutionSummary": "This session exposed execution discipline breakdown in weekend screening protocols. While my analytical framework correctly identified mixed bias conditions and generated quality setups where structure aligned, I failed basic compliance requirements by mentioning Cardano without producing required setup or key level. This represents a shift from analytical refinement challenges to basic execution discipline issues that must be addressed immediately."
-    },
-    "ruleCount": 36,
->>>>>>> Stashed changes
     "systemPromptVersion": 87
   }
 ]
