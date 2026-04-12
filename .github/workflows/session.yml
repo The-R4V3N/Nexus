@@ -105,6 +105,10 @@ jobs:
             console.log('Saved session entry:', entry.sessionId);
           " || true
 
+          # Save current analysis-rules.json BEFORE pulling so we can merge it
+          # if the autostash pop conflicts with a concurrent session's version
+          cp memory/analysis-rules.json /tmp/nexus-local-rules.json 2>/dev/null || true
+
           # Check if FORGE changed any src/ files
           FORGE_CHANGES=$(git diff --name-only src/ 2>/dev/null || true)
 
@@ -140,6 +144,17 @@ jobs:
                 fs.writeFileSync('./memory/sessions.json', JSON.stringify(remote, null, 2));
               "
               git add memory/sessions.json
+            fi
+
+            # analysis-rules.json: merge remote + local using the dedicated script.
+            # Remote is taken as the base; local rule changes are applied on top
+            # (new rules added, rules with higher lastModifiedSession win).
+            if grep -ql "^<<<<<<" memory/analysis-rules.json 2>/dev/null; then
+              git show origin/main:memory/analysis-rules.json > /tmp/nexus-remote-rules.json 2>/dev/null
+              node scripts/merge-analysis-rules.js /tmp/nexus-remote-rules.json /tmp/nexus-local-rules.json > /tmp/nexus-merged-rules.json
+              cp /tmp/nexus-merged-rules.json memory/analysis-rules.json
+              echo "Merged analysis-rules.json (concurrent session conflict resolved)"
+              git add memory/analysis-rules.json
             fi
 
             # docs/index.html: take theirs — we always rebuild it below anyway
