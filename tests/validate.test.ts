@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening } from "../src/validate";
+import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening, filterNonCompliantSetups, detectAxiomRumination } from "../src/validate";
 import type { OracleAnalysis, JournalEntry } from "../src/types";
 
 // ── calculateTextSimilarity ─────────────────────────────────
@@ -811,5 +811,216 @@ describe("validateWeekendCryptoScreening", () => {
     const oracle = makeOracle({ analysis: "Bitcoin showing weakness." });
     const { covered, mentionedOnly, missing } = validateWeekendCryptoScreening(oracle, cryptoSnapshots);
     expect(covered.length + mentionedOnly.length + missing.length).toBe(cryptoSnapshots.length);
+  });
+});
+
+// ── filterNonCompliantSetups ─────────────────────────────────
+
+describe("filterNonCompliantSetups", () => {
+  function makeSnap(changePercent: number) {
+    return {
+      symbol: "NAS100", name: "NASDAQ 100", category: "indices" as const,
+      price: 25000, previousClose: 25000 / (1 + changePercent / 100),
+      change: 25000 * changePercent / 100, changePercent,
+      high: 25100, low: 24900, timestamp: new Date(),
+    };
+  }
+
+  function makeSetup(instrument: string, entry: number, stop: number, direction: "bullish" | "bearish" = "bullish") {
+    return {
+      instrument, type: "MSS" as const, direction,
+      description: "test", invalidation: "test",
+      entry, stop,
+      target: direction === "bullish" ? entry * 1.05 : entry * 0.95,
+      RR: 2, timeframe: "4H",
+    };
+  }
+
+  function makeOracle(snaps: ReturnType<typeof makeSnap>[], setups: ReturnType<typeof makeSetup>[]): OracleAnalysis {
+    return {
+      timestamp: new Date(), sessionId: "test", marketSnapshots: snaps,
+      analysis: "A".repeat(300), setups: setups as any,
+      bias: { overall: "mixed", notes: "volatile" }, keyLevels: [], confidence: 45,
+    };
+  }
+
+  it("removes setup with stop < 1.5% during extreme volatility (≥5% session move)", () => {
+    const oracle = makeOracle([makeSnap(5.5)], [makeSetup("NASDAQ 100", 25000, 24900)]); // 0.4% stop
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(0);
+    expect(removed).toHaveLength(1);
+    expect(removed[0].instrument).toBe("NASDAQ 100");
+  });
+
+  it("keeps setup with stop ≥ 1.5% during extreme volatility", () => {
+    const oracle = makeOracle([makeSnap(5.5)], [makeSetup("EUR/USD", 1.0, 0.984)]); // 1.6% stop — clearly compliant
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("removes setup with stop < 1.0% during moderate volatility (3–4.9% session move)", () => {
+    const oracle = makeOracle([makeSnap(3.5)], [makeSetup("GBP/USD", 1.34, 1.333)]); // ~0.52% stop
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(0);
+    expect(removed).toHaveLength(1);
+  });
+
+  it("keeps setup with stop ≥ 1.0% during moderate volatility", () => {
+    const oracle = makeOracle([makeSnap(3.5)], [makeSetup("GBP/USD", 1.34, 1.3265)]); // ~1.0% stop
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("keeps all setups during normal volatility (< 3% moves)", () => {
+    const oracle = makeOracle([makeSnap(1.5)], [makeSetup("EUR/USD", 1.17, 1.169)]); // 0.09% — would fail in extreme
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("keeps compliant and removes non-compliant in mixed setup list during extreme day", () => {
+    const oracle = makeOracle(
+      [makeSnap(5.2)],
+      [
+        makeSetup("NASDAQ 100", 25000, 24600), // 1.6% stop — compliant
+        makeSetup("EUR/USD", 1.17, 1.168),      // 0.17% stop — non-compliant
+      ]
+    );
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect((filtered.setups as any)[0].instrument).toBe("NASDAQ 100");
+    expect(removed[0].instrument).toBe("EUR/USD");
+  });
+
+  it("returns empty removed array when no setups present", () => {
+    const { removed } = filterNonCompliantSetups(
+      makeOracle([makeSnap(6.0)], [])
+    );
+    expect(removed).toHaveLength(0);
+  });
+
+  it("returns empty removed array when no snapshots present", () => {
+    const { removed } = filterNonCompliantSetups(
+      makeOracle([], [makeSetup("EUR/USD", 1.17, 1.169)])
+    );
+    expect(removed).toHaveLength(0);
+  });
+
+  it("does not mutate the original oracle object", () => {
+    const oracle = makeOracle([makeSnap(5.5)], [makeSetup("NASDAQ 100", 25000, 24900)]);
+    filterNonCompliantSetups(oracle);
+    expect(oracle.setups).toHaveLength(1); // original unchanged
+  });
+
+  it("uses absolute changePercent so negative moves also trigger filter", () => {
+    const oracle = makeOracle([makeSnap(-5.5)], [makeSetup("NASDAQ 100", 25000, 24900, "bearish")]); // bearish: stop above entry
+    // Bearish: stop 25100 vs entry 25000 = 0.4% — should be removed
+    const bearishOracle = makeOracle([makeSnap(-5.5)], [{
+      ...makeSetup("NASDAQ 100", 25000, 25100, "bearish"),
+      target: 24000,
+    } as any]);
+    const { removed } = filterNonCompliantSetups(bearishOracle);
+    expect(removed).toHaveLength(1);
+  });
+});
+
+// ── detectAxiomRumination ────────────────────────────────────
+
+describe("detectAxiomRumination", () => {
+  it("returns warning when whatFailed mentions compliance violation with no actions taken", () => {
+    const parsed = {
+      whatFailed: "Critical compliance failure on r029 — stop distances violated minimum requirements",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    };
+    const warning = detectAxiomRumination(parsed);
+    expect(warning).not.toBeNull();
+  });
+
+  it("returns warning when 'execution gap' language is present with no actions", () => {
+    const parsed = {
+      whatFailed: "This represents a systematic execution gap in stop distance compliance",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    };
+    expect(detectAxiomRumination(parsed)).not.toBeNull();
+  });
+
+  it("returns null when a rule update is present alongside violation text", () => {
+    const parsed = {
+      whatFailed: "Compliance failure on r029",
+      ruleUpdates: [{ ruleId: "r029", type: "modify", after: "new text", reason: "fix stops" }],
+      newRules: [], newSelfTasks: [],
+    };
+    expect(detectAxiomRumination(parsed)).toBeNull();
+  });
+
+  it("returns null when a new rule is present", () => {
+    const parsed = {
+      whatFailed: "Compliance violation on stop distances",
+      ruleUpdates: [],
+      newRules: [{ id: "r038", description: "enforce stops", category: "risk", weight: 9 }],
+      newSelfTasks: [],
+    };
+    expect(detectAxiomRumination(parsed)).toBeNull();
+  });
+
+  it("returns null when a self-task is present", () => {
+    const parsed = {
+      whatFailed: "Compliance violation on stop distances",
+      ruleUpdates: [], newRules: [],
+      newSelfTasks: [{ title: "Fix stop enforcement", body: "...", category: "rule-gap", priority: "high" }],
+    };
+    expect(detectAxiomRumination(parsed)).toBeNull();
+  });
+
+  it("returns null when whatFailed has no violation language", () => {
+    const parsed = {
+      whatFailed: "Analysis could use more cross-asset context in future sessions",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    };
+    expect(detectAxiomRumination(parsed)).toBeNull();
+  });
+
+  it("returns null when whatFailed is empty", () => {
+    const parsed = { whatFailed: "", ruleUpdates: [], newRules: [], newSelfTasks: [] };
+    expect(detectAxiomRumination(parsed)).toBeNull();
+  });
+});
+
+// ── validateAxiomOutput rumination integration ───────────────
+
+describe("validateAxiomOutput rumination detection", () => {
+  function makeAxiom(overrides: Record<string, any> = {}) {
+    return {
+      whatWorked: "Good analysis structure",
+      whatFailed: "Missed some correlations",
+      evolutionSummary: "Improved this session",
+      cognitiveBiases: [],
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+      ...overrides,
+    };
+  }
+
+  it("warns when axiom acknowledges compliance failure without any action", () => {
+    const result = validateAxiomOutput(
+      makeAxiom({
+        whatFailed: "Critical compliance failure on r029 stop distances violated minimum requirements",
+        ruleUpdates: [], newRules: [], newSelfTasks: [],
+      }),
+      5, []
+    );
+    expect(result.warnings.some((w) => w.includes("acknowledged failure without action"))).toBe(true);
+  });
+
+  it("does not warn when rule update accompanies the failure text", () => {
+    const result = validateAxiomOutput(
+      makeAxiom({
+        whatFailed: "Compliance failure on r029",
+        ruleUpdates: [{ ruleId: "r029", type: "modify", after: "fixed", reason: "stop enforcement" }],
+      }),
+      5, []
+    );
+    expect(result.warnings.some((w) => w.includes("acknowledged failure without action"))).toBe(false);
   });
 });

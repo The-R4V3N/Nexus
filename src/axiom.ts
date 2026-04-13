@@ -6,7 +6,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
-import { validateAxiomOutput, logFailure, extractConfidenceFromText, calculateTextSimilarity } from "./validate";
+import { validateAxiomOutput, logFailure, extractConfidenceFromText, calculateTextSimilarity, detectAxiomRumination } from "./validate";
 import { loadAllJournalEntries } from "./journal";
 import {
   salvageJSON, stripSurrogates, extractJSONFromResponse,
@@ -385,6 +385,33 @@ export function parseAxiomResponse(
     newSelfTasks:      secResult.newSelfTasks,
     resolvedSelfTasks: secResult.resolvedTasks,
   };
+
+  // Inject a forced self-task when AXIOM acknowledged a compliance violation
+  // but took no action (no rule update, new rule, or self-task). This closes
+  // the rumination blind spot where verbal acknowledgement replaces action.
+  const ruminationWarning = detectAxiomRumination({
+    whatFailed:   rawParsed.whatFailed,
+    ruleUpdates:  parsed.ruleUpdates,
+    newRules:     parsed.newRules,
+    newSelfTasks: parsed.newSelfTasks,
+  });
+  if (ruminationWarning) {
+    const alreadyHasRuleGap = (parsed.newSelfTasks ?? []).some(
+      (t: any) => t.category === "rule-gap"
+    );
+    if (!alreadyHasRuleGap) {
+      console.warn("  ⚠ Axiom: compliance violation acknowledged without action — injecting forced self-task");
+      parsed.newSelfTasks = [
+        ...(parsed.newSelfTasks ?? []),
+        {
+          title: "Enforce stop distance validation at ORACLE output layer (r029)",
+          body: "AXIOM acknowledged a compliance violation but created no rule update or self-task to address it. Add hard filtering in validate.ts to remove setups that violate r029 minimum stop distance requirements during elevated volatility sessions, rather than just warning.",
+          category: "rule-gap",
+          priority: "high",
+        },
+      ];
+    }
+  }
 
   return parsed;
 }

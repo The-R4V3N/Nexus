@@ -374,6 +374,96 @@ export function validateOracleOutput(
   };
 }
 
+// ── r029 Stop Distance Filter ────────────────────────────
+// Hard-removes setups that violate minimum stop distance requirements
+// during elevated volatility. This replaces the warn-only behaviour so
+// ORACLE cannot silently produce non-compliant setups.
+//
+// Thresholds (mirrors r029 wording exactly):
+//   extreme   : any snapshot |changePercent| ≥ 5  → stop must be ≥ 1.5% from entry
+//   moderate  : any snapshot |changePercent| ≥ 3  → stop must be ≥ 1.0% from entry
+//   normal    : no filter applied
+
+export interface SetupRemovalRecord {
+  instrument: string;
+  reason: string;
+}
+
+export function filterNonCompliantSetups(oracle: OracleAnalysis): {
+  oracle: OracleAnalysis;
+  removed: SetupRemovalRecord[];
+} {
+  const snapshots = oracle.marketSnapshots ?? [];
+  const maxMove = snapshots.reduce((max, s) => Math.max(max, Math.abs(s.changePercent)), 0);
+
+  const extremeVolatility = maxMove >= 5;
+  const moderateVolatility = maxMove >= 3;
+
+  if (!extremeVolatility && !moderateVolatility) {
+    return { oracle, removed: [] };
+  }
+
+  const minStopPct = extremeVolatility ? 1.5 : 1.0;
+  const volatilityLabel = extremeVolatility ? "extreme" : "moderate";
+
+  const removed: SetupRemovalRecord[] = [];
+  const compliantSetups: typeof oracle.setups = [];
+
+  for (const s of oracle.setups) {
+    if (
+      typeof s.entry === "number" && s.entry > 0 &&
+      typeof s.stop  === "number" && s.stop  > 0
+    ) {
+      const stopPct = (Math.abs(s.entry - s.stop) / s.entry) * 100;
+      if (stopPct < minStopPct) {
+        removed.push({
+          instrument: s.instrument ?? "unknown",
+          reason: `r029: stop is ${stopPct.toFixed(2)}% from entry — requires ≥${minStopPct}% during ${volatilityLabel} volatility (session move ${maxMove.toFixed(1)}%)`,
+        });
+        continue;
+      }
+    }
+    compliantSetups.push(s);
+  }
+
+  return {
+    oracle: { ...oracle, setups: compliantSetups },
+    removed,
+  };
+}
+
+// ── AXIOM Rumination Detector ─────────────────────────────
+// Detects when AXIOM acknowledges a compliance failure in text but
+// takes zero concrete action (no rule update, new rule, or self-task).
+// Returns a warning string to surface this, or null if no issue.
+
+const VIOLATION_KEYWORDS = [
+  "compliance failure", "compliance violation", "execution gap",
+  "systematic failure", "failed to implement", "failed to comply",
+  "failed to apply", "violation", "non-compliant",
+];
+
+export function detectAxiomRumination(parsed: {
+  whatFailed?: string;
+  ruleUpdates?: any[];
+  newRules?: any[];
+  newSelfTasks?: any[];
+}): string | null {
+  const failText = (parsed.whatFailed ?? "").toLowerCase();
+  if (!failText) return null;
+
+  const hasViolationLanguage = VIOLATION_KEYWORDS.some(kw => failText.includes(kw));
+  if (!hasViolationLanguage) return null;
+
+  const hasRuleUpdate  = (parsed.ruleUpdates  ?? []).length > 0;
+  const hasNewRule     = (parsed.newRules      ?? []).length > 0;
+  const hasSelfTask    = (parsed.newSelfTasks  ?? []).length > 0;
+
+  if (hasRuleUpdate || hasNewRule || hasSelfTask) return null;
+
+  return "AXIOM acknowledged failure without action: compliance failure identified in whatFailed but no rule updates, new rules, or self-tasks were created — a forced self-task will be injected";
+}
+
 // ── Bias-to-Rule Mapping Checker ─────────────────────────
 // Detects when AXIOM identifies cognitive biases but produces no rule updates
 // that address them. Warns so the feedback reaches AXIOM's next context.
@@ -537,6 +627,10 @@ export function validateAxiomOutput(
 
   // Check that detected cognitive biases are addressed by rule changes
   warnings.push(...checkBiasRuleMapping(parsed));
+
+  // Detect unacted compliance violations (rumination blind spot)
+  const ruminationWarning = detectAxiomRumination(parsed);
+  if (ruminationWarning) warnings.push(ruminationWarning);
 
   return {
     valid: errors.length === 0,

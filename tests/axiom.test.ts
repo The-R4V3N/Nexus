@@ -312,3 +312,56 @@ describe("handleSelfTasks", () => {
     await handleSelfTasks({}, [], 1);
   });
 });
+
+// ── parseAxiomResponse — forced self-task injection ──────────
+
+describe("parseAxiomResponse forced self-task injection", () => {
+  const rules = makeRules();
+
+  it("injects a forced self-task when axiom acknowledges compliance violation without any action", () => {
+    const json = JSON.stringify({
+      whatWorked: "Good cross-asset analysis structure",
+      whatFailed: "Critical compliance failure on r029 stop distances violated minimum requirements during extreme volatility",
+      cognitiveBiases: ["implementation bias"],
+      evolutionSummary: "Identified stop distance execution gap that needs systematic enforcement",
+      ruleUpdates: [], newRules: [],
+      systemPromptAdditions: "",
+      newSelfTasks: [], resolvedSelfTasks: [], codeChanges: [],
+    });
+    const result = parseAxiomResponse(json, 150, rules);
+    expect(Array.isArray(result.newSelfTasks)).toBe(true);
+    expect(result.newSelfTasks.length).toBeGreaterThan(0);
+    expect(result.newSelfTasks.some((t: any) => t.category === "rule-gap")).toBe(true);
+  });
+
+  it("does not inject self-task when rule update accompanies the violation acknowledgement", () => {
+    const json = JSON.stringify({
+      whatWorked: "Good analysis",
+      whatFailed: "Compliance failure on r029 stop distances were too narrow",
+      cognitiveBiases: [],
+      evolutionSummary: "Updated stop rule to enforce wider distances",
+      ruleUpdates: [{ ruleId: "r029", type: "modify", before: "old text", after: "new text", reason: "enforce stop distance" }],
+      newRules: [], systemPromptAdditions: "",
+      newSelfTasks: [], resolvedSelfTasks: [], codeChanges: [],
+    });
+    const result = parseAxiomResponse(json, 150, rules);
+    // No forced injection since a rule update is present
+    const forcedCount = (result.newSelfTasks ?? []).filter((t: any) => t.category === "rule-gap" && /stop|r029/i.test(t.title ?? "")).length;
+    expect(forcedCount).toBe(0);
+  });
+
+  it("does not inject duplicate when axiom already created a rule-gap self-task", () => {
+    const json = JSON.stringify({
+      whatWorked: "Good analysis",
+      whatFailed: "Compliance violation on stop distances",
+      cognitiveBiases: [],
+      evolutionSummary: "Need to enforce stops at generation layer",
+      ruleUpdates: [], newRules: [], systemPromptAdditions: "",
+      newSelfTasks: [{ title: "Enforce stop validation", body: "Fix stop enforcement", category: "rule-gap", priority: "high" }],
+      resolvedSelfTasks: [], codeChanges: [],
+    });
+    const result = parseAxiomResponse(json, 150, rules);
+    const ruleGapCount = (result.newSelfTasks ?? []).filter((t: any) => t.category === "rule-gap").length;
+    expect(ruleGapCount).toBe(1); // only the one AXIOM already created, not a duplicate
+  });
+});

@@ -26,7 +26,7 @@ import {
   loadAllJournalEntries,
   saveJournalEntry,
 } from "./journal";
-import { validateOracleOutput, validateWeekendCryptoScreening, logFailure, loadRecentFailures } from "./validate";
+import { validateOracleOutput, validateWeekendCryptoScreening, filterNonCompliantSetups, logFailure, loadRecentFailures } from "./validate";
 import { buildAnalyticsSummary }                                    from "./analytics";
 import { fetchRSSNews, formatRSSForPrompt }                          from "./rss";
 import { notifySessionComplete }                                     from "./notifications";
@@ -525,6 +525,15 @@ export async function runAndValidateOracle(
     const err = new Error("ORACLE validation failed");
     (err as any).oracleValidationFailure = true;
     throw err;
+  }
+
+  // Filter setups that violate r029 stop distance requirements
+  const { oracle: filteredOracle, removed: removedSetups } = filterNonCompliantSetups(oracle);
+  if (removedSetups.length > 0) {
+    for (const r of removedSetups) {
+      console.warn(`  ⚠ r029: removed setup [${r.instrument}] — ${r.reason}`);
+    }
+    oracle = filteredOracle;
   }
 
   // Print brief summary
