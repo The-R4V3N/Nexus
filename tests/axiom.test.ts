@@ -365,3 +365,28 @@ describe("parseAxiomResponse forced self-task injection", () => {
     expect(ruleGapCount).toBe(1); // only the one AXIOM already created, not a duplicate
   });
 });
+
+// ── buildAxiomPrompt — session type context ───────────────
+
+describe("buildAxiomPrompt session type", () => {
+  it("includes WEEKDAY context when isWeekend=false", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 1, "", "", "", 0, "", makeRules(), "", false);
+    expect(userMessage.toLowerCase()).toContain("weekday");
+  });
+
+  it("includes WEEKEND context when isWeekend=true", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 1, "", "", "", 0, "", makeRules(), "", true);
+    expect(userMessage.toLowerCase()).toContain("weekend");
+  });
+
+  it("weekday message notes that weekend crypto rules do not apply", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 1, "", "", "", 0, "", makeRules(), "", false);
+    expect(userMessage).toMatch(/weekday|weekend.*not apply|r030.*not apply/i);
+  });
+
+  it("defaults to weekday (false) when isWeekend not provided", () => {
+    // Old 9-arg call still compiles and defaults to weekday
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 1, "", "", "", 0, "", makeRules(), "");
+    expect(userMessage.toLowerCase()).toContain("weekday");
+  });
+});

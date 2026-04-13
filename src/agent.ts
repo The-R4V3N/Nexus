@@ -663,7 +663,7 @@ System prompt additions about this same topic do NOT count as action.`;
     const noChangeStreak = getNoChangeStreak();
     const setupOutcomes  = buildSetupOutcomes(snapshots);
     const closeableNumbers = [...selfTaskNumbers, ...issueNumbers];
-    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, closeableNumbers, noChangeStreak, setupOutcomes);
+    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, closeableNumbers, noChangeStreak, setupOutcomes, weekendMode);
     reflection = axiomResult.reflection;
 
     // Block system prompt additions when AXIOM is ruminating without real action,
