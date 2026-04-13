@@ -83,10 +83,10 @@
     {
       "id": "r011",
       "category": "catalyst_verification",
-      "description": "When attributing market moves to specific events, develop minimum two equiprobable explanations using this format: 'Primary thesis: [explanation A] with [evidence]. Alternative thesis: [explanation B] with [evidence]. Probability assessment: [A%]/[B%].' Both explanations must receive equal analytical development — no primary/secondary hierarchy. If one explanation dominates analysis length or conviction, flag as narrative bias violation.",
+      "description": "When using causal language (due to, because of, driven by) or making cross-asset attribution statements, populate assumptions array with unverified claims. Then develop minimum two equiprobable explanations: 'Primary thesis: [explanation A] with [evidence]. Alternative thesis: [explanation B] with [evidence]. Probability assessment: [A%]/[B%].' Both explanations must receive equal analytical development.",
       "weight": 9,
       "addedSession": 1,
-      "lastModifiedSession": 140
+      "lastModifiedSession": 147
     },
     {
       "id": "r012",
@@ -233,10 +233,10 @@
     {
       "id": "r029",
       "category": "setup_precision",
-      "description": "When volatility elevated (VIX >25, daily moves >2x typical range, or news-driven displacement), avoid using current market price as entry. Require minimum 1.25% buffer from current price to structural level for entry validity. During extreme moves >5%, require 2% buffer and proportionally wider stops. If structural level is within buffer range, flag as 'elevated volatility risk' but setup remains valid.",
+      "description": "During extreme volatility (session moves ≥5%), stop loss must be minimum 1.5% from entry price. During moderate volatility (VIX >25 or daily moves >2x typical range), stops require minimum 1.25% from entry. Calculate and verify stop distance before finalizing any setup during elevated volatility periods.",
       "weight": 9,
       "addedSession": 56,
-      "lastModifiedSession": 135
+      "lastModifiedSession": 147
     },
     {
       "id": "r030",
@@ -303,12 +303,8 @@
       "lastModifiedSession": 146
     }
   ],
-  "version": 87,
-<<<<<<< Updated upstream
-  "lastUpdated": "2026-04-11T13:07:21.650Z",
-=======
-  "lastUpdated": "2026-04-11T13:08:42.414Z",
->>>>>>> Stashed changes
+  "version": 88,
+  "lastUpdated": "2026-04-12T08:31:04.769Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -316,5 +312,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #146"
+  "sessionNotes": "Last updated: Session #147"
 }

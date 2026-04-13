@@ -55,3 +55,7 @@ During extreme coordinated moves (>2x typical ranges across 3+ asset classes) or
 ## Evolved — Session #139
 
 When analyzing coordinated market moves with extreme magnitude (>2x typical ranges), prioritize setup identification over narrative analysis. Market intelligence requires converting structural insights into actionable levels, not just explaining price action. High confidence without specific entry/stop/target levels represents analytical failure regardless of explanation quality.
+
+## Evolved — Session #147
+
+When crypto shows sector divergence >1.5% during weekend sessions, infrastructure tokens (BNB, SOL) typically demonstrate relative defensive characteristics while utility tokens (ADA, DOT, LINK) show amplified volatility. This creates systematic rotation patterns independent of broader market correlations, warranting mixed bias classification and comprehensive screening across all crypto instruments for uncorrelated opportunities.
