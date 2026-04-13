@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate } from "../src/oracle";
 import type { MarketSnapshot } from "../src/types";
 
 function makeSnap(changePercent: number): MarketSnapshot {
@@ -977,5 +977,56 @@ describe("buildMinSetupNote", () => {
 
   it("triggers at exactly 50", () => {
     expect(buildMinSetupNote(50)).not.toBe("");
+  });
+});
+
+// ── buildWeekdayScreeningTemplate ────────────────────────
+
+describe("buildWeekdayScreeningTemplate", () => {
+  const snaps: MarketSnapshot[] = [
+    { symbol: "EURUSD=X", name: "EUR/USD", category: "forex", price: 1.10, previousClose: 1.08, change: 0.02, changePercent: 1.92, high: 1.11, low: 1.09, timestamp: new Date() },
+    { symbol: "GC=F",     name: "Gold",    category: "commodities", price: 3300, previousClose: 3290, change: 10, changePercent: 0.30, high: 3310, low: 3285, timestamp: new Date() },
+    { symbol: "BTC-USD",  name: "Bitcoin", category: "crypto", price: 82000, previousClose: 80000, change: 2000, changePercent: 2.5, high: 82500, low: 79000, timestamp: new Date() },
+  ];
+
+  it("returns empty string when confidence < 50", () => {
+    expect(buildWeekdayScreeningTemplate(snaps, 45)).toBe("");
+  });
+
+  it("returns empty string at exactly 49", () => {
+    expect(buildWeekdayScreeningTemplate(snaps, 49)).toBe("");
+  });
+
+  it("returns a template string at confidence 50", () => {
+    expect(buildWeekdayScreeningTemplate(snaps, 50)).not.toBe("");
+  });
+
+  it("template contains all instrument names", () => {
+    const tmpl = buildWeekdayScreeningTemplate(snaps, 60);
+    expect(tmpl).toContain("EUR/USD");
+    expect(tmpl).toContain("Gold");
+    expect(tmpl).toContain("Bitcoin");
+  });
+
+  it("template is valid JSON with a slot per instrument", () => {
+    const tmpl = buildWeekdayScreeningTemplate(snaps, 60);
+    const parsed = JSON.parse(tmpl);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.length).toBe(snaps.length);
+  });
+
+  it("each slot has null entry/stop/target and neutral direction", () => {
+    const tmpl = buildWeekdayScreeningTemplate(snaps, 60);
+    const parsed = JSON.parse(tmpl);
+    for (const slot of parsed) {
+      expect(slot.entry).toBeNull();
+      expect(slot.stop).toBeNull();
+      expect(slot.target).toBeNull();
+      expect(slot.direction).toBe("neutral");
+    }
+  });
+
+  it("returns empty string for empty snapshots regardless of confidence", () => {
+    expect(buildWeekdayScreeningTemplate([], 80)).toBe("");
   });
 });
