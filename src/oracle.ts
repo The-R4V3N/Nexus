@@ -271,8 +271,23 @@ ${weekendTemplate}
   const r029Note = buildR029StopNote(snapshots);
   const minSetupNote = buildMinSetupNote(parsed.confidence ?? 50);
 
+  const rawConf = parsed.confidence ?? 50;
+  const weekdayTemplate = !isWeekend ? buildWeekdayScreeningTemplate(snapshots, rawConf) : "";
+  const weekdayScreeningNote = weekdayTemplate
+    ? `\nSYSTEMATIC SCREENING REQUIRED (your confidence is ${rawConf}%):
+You MUST fill in EVERY slot in the JSON template below. Do NOT add or remove slots.
+For each instrument:
+  - If a valid structural level exists aligned with your bias → fill in entry, stop, target, RR, timeframe, set direction to "bullish" or "bearish"
+  - If no valid setup exists → leave entry/stop/target/RR/timeframe as null, set direction to "neutral", explain briefly in description
+All ${snapshots.length} instruments must be accounted for. Returning fewer slots is a rule violation (r034).
+
+START WITH THIS TEMPLATE (fill in every slot):
+${weekdayTemplate}
+\n`
+    : "";
+
   const setupsUserMessage = `You are NEXUS ORACLE's setup construction engine. You have just completed market analysis.
-${weekendSetupNote}
+${weekendSetupNote}${weekdayScreeningNote}
 
 YOUR ANALYSIS:
 ${parsed.analysis ?? ""}
@@ -595,6 +610,28 @@ Every stop MUST be at least 1.0% from entry. Verify before finalising: |entry - 
 Do NOT include any setup where the stop is closer than 1.0% from entry.\n`;
   }
   return "";
+}
+
+// ── Weekday instrument screening template ─────────────────
+// When confidence >= 50 on weekday sessions, returns a pre-filled JSON template
+// (same pattern as the weekend template) forcing ORACLE to evaluate every
+// instrument instead of cherry-picking the most dramatic one.
+// Empty string when confidence < 50 or no snapshots.
+export function buildWeekdayScreeningTemplate(snapshots: MarketSnapshot[], confidence: number): string {
+  if (confidence < 50 || !snapshots.length) return "";
+  const slots = snapshots.map(s => ({
+    instrument:   s.name,
+    type:         "Other",
+    direction:    "neutral",
+    description:  "",
+    invalidation: "",
+    entry:        null,
+    stop:         null,
+    target:       null,
+    RR:           null,
+    timeframe:    null,
+  }));
+  return JSON.stringify(slots, null, 2);
 }
 
 // ── Minimum setup count enforcement ───────────────────────
