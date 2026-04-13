@@ -1024,3 +1024,25 @@ describe("validateAxiomOutput rumination detection", () => {
     expect(result.warnings.some((w) => w.includes("acknowledged failure without action"))).toBe(false);
   });
 });
+
+// ── detectAxiomRumination — "failed to execute" keyword ──────
+
+describe("detectAxiomRumination — failed to execute keyword", () => {
+  it("triggers when whatFailed contains 'failed to execute'", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "I failed to execute comprehensive screening despite having the analytical framework for it.",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    });
+    expect(result).not.toBeNull();
+    expect(result).toContain("acknowledged failure without action");
+  });
+
+  it("does not trigger 'failed to execute' when a rule update accompanies it", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "I failed to execute systematic screening per r034.",
+      ruleUpdates: [{ ruleId: "r034", type: "modify", before: "old", after: "new", reason: "enforce" }],
+      newRules: [], newSelfTasks: [],
+    });
+    expect(result).toBeNull();
+  });
+});

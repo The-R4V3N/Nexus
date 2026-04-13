@@ -939,3 +939,43 @@ describe("runOracleAnalysis assumptions field", () => {
     expect(result.assumptions!.length).toBe(0);
   });
 });
+
+// ── buildMinSetupNote ─────────────────────────────────────
+
+import { buildMinSetupNote } from "../src/oracle";
+
+describe("buildMinSetupNote", () => {
+  it("returns empty string when confidence < 50", () => {
+    expect(buildMinSetupNote(45)).toBe("");
+  });
+
+  it("requires at least 3 setups when confidence 50-59", () => {
+    const note = buildMinSetupNote(55);
+    expect(note).toContain("3");
+    expect(note.toLowerCase()).toContain("mandatory");
+  });
+
+  it("requires at least 4 setups when confidence 60-69", () => {
+    const note = buildMinSetupNote(65);
+    expect(note).toContain("4");
+    expect(note.toLowerCase()).toContain("mandatory");
+  });
+
+  it("requires at least 4 setups when confidence >= 70", () => {
+    const note = buildMinSetupNote(80);
+    expect(note).toContain("4");
+  });
+
+  it("includes confidence value in the note", () => {
+    const note = buildMinSetupNote(72);
+    expect(note).toContain("72");
+  });
+
+  it("returns empty string at exactly 49", () => {
+    expect(buildMinSetupNote(49)).toBe("");
+  });
+
+  it("triggers at exactly 50", () => {
+    expect(buildMinSetupNote(50)).not.toBe("");
+  });
+});
