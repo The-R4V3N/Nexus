@@ -1,4 +1,59 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { buildR029StopNote } from "../src/oracle";
+import type { MarketSnapshot } from "../src/types";
+
+function makeSnap(changePercent: number): MarketSnapshot {
+  return { symbol: "EUR=X", name: "EUR/USD", category: "forex", price: 1.10, previousClose: 1.0, change: 0, changePercent, high: 1.11, low: 1.09, timestamp: new Date() };
+}
+
+// ── buildR029StopNote ─────────────────────────────────────
+
+describe("buildR029StopNote", () => {
+  it("returns empty string when no volatility (all moves < 3%)", () => {
+    const snaps = [makeSnap(1.5), makeSnap(-2.0), makeSnap(0.5)];
+    expect(buildR029StopNote(snaps)).toBe("");
+  });
+
+  it("returns extreme volatility note when any move >= 5%", () => {
+    const snaps = [makeSnap(1.0), makeSnap(5.2), makeSnap(-2.0)];
+    const note = buildR029StopNote(snaps);
+    expect(note).toContain("1.5%");
+    expect(note).toContain("extreme volatility");
+    expect(note).toContain("5.2%");
+  });
+
+  it("returns moderate volatility note when max move >= 3% but < 5%", () => {
+    const snaps = [makeSnap(1.0), makeSnap(3.8), makeSnap(-1.0)];
+    const note = buildR029StopNote(snaps);
+    expect(note).toContain("1.0%");
+    expect(note).toContain("moderate volatility");
+    expect(note).not.toContain("1.5%");
+  });
+
+  it("uses absolute value of negative moves", () => {
+    const snaps = [makeSnap(-6.0), makeSnap(1.0)];
+    const note = buildR029StopNote(snaps);
+    expect(note).toContain("1.5%");
+    expect(note).toContain("extreme volatility");
+  });
+
+  it("returns empty string for empty snapshots array", () => {
+    expect(buildR029StopNote([])).toBe("");
+  });
+
+  it("includes r029 rule reference", () => {
+    const snaps = [makeSnap(5.0)];
+    const note = buildR029StopNote(snaps);
+    expect(note).toContain("r029");
+  });
+
+  it("includes a stop calculation example", () => {
+    const snaps = [makeSnap(5.0)];
+    const note = buildR029StopNote(snaps);
+    // Should tell ORACLE HOW to verify: |entry - stop| / entry
+    expect(note.toLowerCase()).toMatch(/entry.*stop|stop.*entry/);
+  });
+});
 
 // ── Export presence tests ──────────────────────────────────
 

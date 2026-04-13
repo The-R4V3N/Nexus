@@ -268,6 +268,8 @@ START WITH THIS TEMPLATE (fill in every slot):
 ${weekendTemplate}
 \n` : "";
 
+  const r029Note = buildR029StopNote(snapshots);
+
   const setupsUserMessage = `You are NEXUS ORACLE's setup construction engine. You have just completed market analysis.
 ${weekendSetupNote}
 
@@ -293,7 +295,7 @@ RULES:
 - Weekend crypto sessions: at least 2 setups from available crypto instruments regardless of confidence
 - Every setup MUST have: entry, stop, target, RR, timeframe
 - ENTRY: nearest support/resistance, session high/low, or key level
-- STOP: beyond the next structural level, or 1x ATR from entry
+- STOP: beyond the next structural level, or 1x ATR from entry${r029Note}
 - TARGET: next liquidity level, psychological number, or swing point
 - RR must be > 1.3 \u2014 do not include setups with risk exceeding reward
 - Include instrument, type, direction, description, and invalidation
@@ -573,6 +575,25 @@ export function warnPoorRiskReward(setups: any[]): void {
       console.warn(`  ⚠ Setup ${s.instrument ?? "unknown"} has poor risk/reward (RR=${s.RR.toFixed(2)}) — minimum 1.3 required`);
     }
   }
+}
+
+// ── r029 stop distance enforcement ────────────────────────
+// Returns a prompt block telling ORACLE the minimum stop distance required
+// for this session based on live market volatility. Empty string = no constraint.
+export function buildR029StopNote(snapshots: MarketSnapshot[]): string {
+  if (!snapshots.length) return "";
+  const maxMove = Math.max(...snapshots.map(s => Math.abs(s.changePercent ?? 0)));
+  if (maxMove >= 5) {
+    return `\nMANDATORY STOP REQUIREMENT (r029 — extreme volatility detected: max session move ${maxMove.toFixed(1)}%):
+Every stop MUST be at least 1.5% from entry. Verify before finalising: |entry - stop| / entry ≥ 0.015.
+Do NOT include any setup where the stop is closer than 1.5% from entry.\n`;
+  }
+  if (maxMove >= 3) {
+    return `\nMANDATORY STOP REQUIREMENT (r029 — moderate volatility detected: max session move ${maxMove.toFixed(1)}%):
+Every stop MUST be at least 1.0% from entry. Verify before finalising: |entry - stop| / entry ≥ 0.010.
+Do NOT include any setup where the stop is closer than 1.0% from entry.\n`;
+  }
+  return "";
 }
 
 // ── Formatters ─────────────────────────────────────────────
