@@ -269,6 +269,7 @@ ${weekendTemplate}
 \n` : "";
 
   const r029Note = buildR029StopNote(snapshots);
+  const minSetupNote = buildMinSetupNote(parsed.confidence ?? 50);
 
   const setupsUserMessage = `You are NEXUS ORACLE's setup construction engine. You have just completed market analysis.
 ${weekendSetupNote}
@@ -291,7 +292,7 @@ RULES:
 - You MUST systematically evaluate EVERY instrument in the price data for potential setups
 - For each instrument, either include a setup OR briefly note why none exists (no structural level nearby, no alignment with theme)
 - When a clear macro theme is present (USD strength, risk-off, forced liquidation, correlation breakdown), you MUST screen all asset classes: forex majors, indices, crypto, metals, energy
-- Minimum setups: at least 3 when confidence > 50%, at least 4 when confidence > 60%
+- Minimum setups: at least 3 when confidence > 50%, at least 4 when confidence > 60%${minSetupNote}
 - Weekend crypto sessions: at least 2 setups from available crypto instruments regardless of confidence
 - Every setup MUST have: entry, stop, target, RR, timeframe
 - ENTRY: nearest support/resistance, session high/low, or key level
@@ -594,6 +595,15 @@ Every stop MUST be at least 1.0% from entry. Verify before finalising: |entry - 
 Do NOT include any setup where the stop is closer than 1.0% from entry.\n`;
   }
   return "";
+}
+
+// ── Minimum setup count enforcement ───────────────────────
+// Returns a prompt block telling ORACLE how many setups are MANDATORY
+// based on its reported confidence. Empty string when confidence < 50.
+export function buildMinSetupNote(confidence: number): string {
+  if (confidence < 50) return "";
+  const minSetups = confidence >= 60 ? 4 : 3;
+  return `\nMANDATORY SETUP COUNT (your confidence is ${confidence}%): You MUST provide at least ${minSetups} setups. Returning fewer is a rule violation (r034). Systematically screen ALL instruments — forex majors, indices, crypto, commodities — before concluding no setup exists.\n`;
 }
 
 // ── Formatters ─────────────────────────────────────────────

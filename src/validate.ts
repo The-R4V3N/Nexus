@@ -440,7 +440,7 @@ export function filterNonCompliantSetups(oracle: OracleAnalysis): {
 const VIOLATION_KEYWORDS = [
   "compliance failure", "compliance violation", "execution gap",
   "systematic failure", "failed to implement", "failed to comply",
-  "failed to apply", "violation", "non-compliant",
+  "failed to apply", "failed to execute", "violation", "non-compliant",
 ];
 
 export function detectAxiomRumination(parsed: {
