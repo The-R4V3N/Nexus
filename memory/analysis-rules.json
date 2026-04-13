@@ -241,10 +241,10 @@
     {
       "id": "r030",
       "category": "weekend",
-      "description": "Weekend sessions: systematically screen all 10 crypto instruments for structural levels. Each instrument mentioned in analysis MUST produce either (a) complete setup with entry/stop/target/RR/TF, or (b) explicit key level with rationale why no setup viable ('poor RR', 'conflicting timeframes', 'insufficient confluence'). Text mention without setup/level = immediate compliance violation. If sector divergence <3%, flag as 'routine positioning' but screening requirement unchanged.",
+      "description": "Weekend sessions: ALL 10 crypto instruments (BTC, ETH, BNB, XRP, SOL, DOGE, ADA, LINK, DOT, AVAX) require evaluation. Each must produce either (a) complete setup with entry/stop/target/RR/TF, or (b) explicit key level with reasoning ('poor RR', 'conflicting timeframes', 'insufficient confluence'). Instruments showing >0.5% moves or mentioned in analysis text without corresponding setup/level constitute validation failures requiring immediate correction.",
       "weight": 9,
       "addedSession": 91,
-      "lastModifiedSession": 146
+      "lastModifiedSession": 153
     },
     {
       "id": "r031",
@@ -303,8 +303,8 @@
       "lastModifiedSession": 146
     }
   ],
-  "version": 88,
-  "lastUpdated": "2026-04-12T08:31:04.769Z",
+  "version": 89,
+  "lastUpdated": "2026-04-13T20:16:57.491Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -312,5 +312,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #147"
+  "sessionNotes": "Last updated: Session #153"
 }
