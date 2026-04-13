@@ -4,7 +4,7 @@ on:
   schedule:
     # Weekday sessions (Mon-Fri)
     - cron: '0 0 * * 1-5'   # 00:00 UTC (01:00 CET) — Asia session open
-    - cron: '0 8 * * 1-5'   # 08:00 UTC (09:00 CET) — London open
+    - cron: '0 9 * * 1-5'   # 09:00 UTC (10:00 CET) — London open (2h into session)
     - cron: '0 13 * * 1-5'  # 13:00 UTC (14:00 CET) — NY open
     # Weekend sessions (Sat-Sun) — crypto only
     - cron: '0 0 * * 0,6'   # 00:00 UTC — weekend crypto session 1
