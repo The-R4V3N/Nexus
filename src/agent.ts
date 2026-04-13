@@ -854,7 +854,7 @@ export async function runSession(force = false): Promise<void> {
     process.exit(1);
   }
 
-  const client = new Anthropic({ apiKey });
+  const client = new Anthropic({ apiKey, maxRetries: 6 });
 
   // Capture git HEAD for session-level rollback on failure
   let sessionStartSha = "";

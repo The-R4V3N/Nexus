@@ -61,11 +61,11 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
-      - name: Retry session after 2 minutes
+      - name: Retry session after 5 minutes
         if: steps.attempt1.outcome == 'failure'
         run: |
-          echo "First attempt failed, retrying after 2 minutes..."
-          sleep 120
+          echo "First attempt failed, retrying after 5 minutes..."
+          sleep 300
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             npm run run:session -- --force
           else
