@@ -441,6 +441,7 @@ const VIOLATION_KEYWORDS = [
   "compliance failure", "compliance violation", "execution gap",
   "systematic failure", "failed to implement", "failed to comply",
   "failed to apply", "failed to execute", "violation", "non-compliant",
+  "enforcement mechanisms are inadequate", "need validation logic", "need enforcement mechanism",
 ];
 
 export function detectAxiomRumination(parsed: {

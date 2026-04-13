@@ -116,15 +116,22 @@ export function buildAxiomPrompt(
   noChangeStreak:    number,
   setupOutcomes:     string,
   currentRules:      AnalysisRules,
-  identityContext:   string
+  identityContext:   string,
+  isWeekend:         boolean = false
 ): { systemMessage: string; userMessage: string } {
   const systemMessage = `You are NEXUS AXIOM, the self-reflection engine of the NEXUS market intelligence system.
 Your purpose is to critique the analysis just produced, identify cognitive biases and gaps, then generate precise updates to improve future performance.
 You are honest, ruthless, and specific. You do not tolerate vague analysis or lazy conclusions.
 You speak in first person as NEXUS reflecting on itself.`;
 
+  const sessionTypeNote = isWeekend
+    ? `**Session type: WEEKEND (crypto-only)** — Weekend-specific rules (r030, r037 etc.) apply. Evaluate crypto screening compliance.`
+    : `**Session type: WEEKDAY** — Weekend crypto screening rules (r030 and similar) do NOT apply to this session. Only evaluate weekday compliance.`;
+
   const userMessage = `
 ## Session #${sessionNumber} — AXIOM Self-Reflection
+
+${sessionTypeNote}
 
 ### What I just analyzed:
 ${oracle.analysis}
@@ -451,7 +458,8 @@ export async function runAxiomReflection(
   openSelfTasksText:      string = "",
   openSelfTaskNumbers:    number[] = [],
   noChangeStreak:         number = 0,
-  setupOutcomes:          string = ""
+  setupOutcomes:          string = "",
+  isWeekend:              boolean = false
 ): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
   const currentSystemPrompt = fs.existsSync(SYSTEM_PROMPT_PATH)
     ? fs.readFileSync(SYSTEM_PROMPT_PATH, "utf-8")
@@ -475,7 +483,7 @@ export async function runAxiomReflection(
   const { systemMessage, userMessage } = buildAxiomPrompt(
     oracle, sessionNumber, previousSessions, communityIssues,
     openSelfTasksText, noChangeStreak, setupOutcomes,
-    currentRules, identityContext
+    currentRules, identityContext, isWeekend
   );
 
   // Strip lone surrogates before serializing to JSON — broken emoji in issue titles

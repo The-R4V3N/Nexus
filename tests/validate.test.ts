@@ -1046,3 +1046,32 @@ describe("detectAxiomRumination — failed to execute keyword", () => {
     expect(result).toBeNull();
   });
 });
+
+// ── detectAxiomRumination — "enforcement mechanisms" keywords ──
+
+describe("detectAxiomRumination — enforcement mechanism language", () => {
+  it("triggers when whatFailed says enforcement mechanisms are inadequate with no action", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "enforcement mechanisms are inadequate for systematic screening compliance.",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    });
+    expect(result).not.toBeNull();
+  });
+
+  it("triggers when whatFailed says need validation logic with no action", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "I need validation logic that blocks session completion when requirements are not met.",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    });
+    expect(result).not.toBeNull();
+  });
+
+  it("does not trigger when a rule update accompanies enforcement complaint", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "enforcement mechanisms are inadequate",
+      ruleUpdates: [{ ruleId: "r030", type: "modify", before: "old", after: "new", reason: "fix" }],
+      newRules: [], newSelfTasks: [],
+    });
+    expect(result).toBeNull();
+  });
+});
