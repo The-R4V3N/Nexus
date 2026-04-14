@@ -28,7 +28,7 @@ import type {
 // AXIOM can write precise codeChanges instructions.
 
 const MAX_FILE_INJECT_CHARS = 3000; // per file
-const ALWAYS_INJECT = ["journal.ts", "agent.ts"]; // always show these to AXIOM
+const ALWAYS_INJECT = ["journal.ts", "agent.ts", "validate.ts"]; // always show these to AXIOM
 
 function buildCodebaseContext(openSelfTasksText: string): string {
   const srcDir      = path.join(process.cwd(), "src");

@@ -372,6 +372,75 @@ describe("validateOracleOutput", () => {
   });
 });
 
+// ── r034: zero-setup screening documentation check ──────────────
+
+describe("validateOracleOutput r034 zero-setup check", () => {
+  function makeZeroSetupOracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
+    return {
+      sessionId: "test",
+      timestamp: new Date().toISOString(),
+      analysis: "Major coordinated rally across all asset classes. USD weakness confirmed across multiple pairs.",
+      bias: { overall: "bullish", notes: "Coordinated risk-on" },
+      confidence: 50,
+      setups: [],
+      keyLevels: [],
+      marketSnapshots: [],
+      assumptions: [],
+      ...overrides,
+    };
+  }
+
+  it("warns when confidence >= 50 with bullish bias and zero setups and no rejection doc", () => {
+    const result = validateOracleOutput(makeZeroSetupOracle(), []);
+    expect(result.warnings.some((w) => w.includes("r034"))).toBe(true);
+  });
+
+  it("warns when confidence >= 50 with mixed bias and zero setups and no rejection doc", () => {
+    const result = validateOracleOutput(
+      makeZeroSetupOracle({ bias: { overall: "mixed", notes: "divergence" } }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r034"))).toBe(true);
+  });
+
+  it("does not warn when analysis documents rejection reasoning (poor RR)", () => {
+    const result = validateOracleOutput(
+      makeZeroSetupOracle({ analysis: "Evaluated EUR/USD at 1.18 resistance — poor RR at this level given current volatility." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r034"))).toBe(false);
+  });
+
+  it("does not warn when analysis documents rejection reasoning (conflicting timeframe)", () => {
+    const result = validateOracleOutput(
+      makeZeroSetupOracle({ analysis: "Screened all forex majors — conflicting timeframe signals on 1H vs 4H prevented setup identification." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r034"))).toBe(false);
+  });
+
+  it("does not warn when confidence < 50 with zero setups", () => {
+    const result = validateOracleOutput(makeZeroSetupOracle({ confidence: 49 }), []);
+    expect(result.warnings.some((w) => w.includes("r034"))).toBe(false);
+  });
+
+  it("does not warn when bias is neutral with zero setups", () => {
+    const result = validateOracleOutput(
+      makeZeroSetupOracle({ confidence: 55, bias: { overall: "neutral", notes: "" } }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r034"))).toBe(false);
+  });
+
+  it("does not warn when zero setups but setups exist (sanity)", () => {
+    const result = validateOracleOutput(
+      makeZeroSetupOracle({ setups: [{ instrument: "EUR/USD", type: "FVG", direction: "bullish", entry: 1.18, stop: 1.17, target: 1.20, RR: 2, timeframe: "1H" }] }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r034"))).toBe(false);
+  });
+});
+
 // ── extractConfidenceFromText ────────────────────────────────
 
 describe("extractConfidenceFromText", () => {
