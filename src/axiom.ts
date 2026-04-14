@@ -201,9 +201,7 @@ ${setupOutcomes ? "### Setup outcome tracking:\n" + setupOutcomes : ""}
 
 ${noChangeStreak >= 3 ? `### STAGNATION ALERT
 You have not modified any rules in ${noChangeStreak} consecutive sessions.
-Your self-critiques are repeating without action. This session, you MUST propose
-at least ONE concrete change — a rule weight adjustment, wording refinement,
-new rule, system prompt addition, or code change. Reflection without action is not evolution.
+Your self-critiques are repeating without action.${openSelfTasksText ? ` You have open self-tasks listed above that you have not acted on — generating codeChanges or resolvedSelfTasks for those tasks IS the required concrete action this session. Do not add system prompt text. Do not open new tasks. Act on the existing ones.` : ` This session, you MUST propose at least ONE concrete change — a rule weight adjustment, wording refinement, new rule, or code change.`} Reflection without action is not evolution.
 ` : ""}### Codebase context (so you can write precise codeChanges):
 ${buildCodebaseContext(openSelfTasksText)}
 

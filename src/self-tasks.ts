@@ -212,7 +212,7 @@ export function formatSelfTasksForPrompt(tasks: OpenSelfTask[]): string {
 
   const lines = [
     "=== MY OPEN SELF-TASKS ===",
-    `I filed ${tasks.length} task(s) for myself in previous sessions. I should address them if I have enough information this session.\n`,
+    `I filed ${tasks.length} task(s) for myself in previous sessions. For EACH task below, I MUST output either (a) a codeChange entry targeting it, or (b) a resolvedSelfTask entry explaining how it was addressed. Leaving any task without a codeChange or resolvedSelfTask response is a compliance violation.\n`,
   ];
 
   for (const t of tasks) {
