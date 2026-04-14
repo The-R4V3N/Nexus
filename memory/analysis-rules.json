@@ -201,10 +201,10 @@
     {
       "id": "r025",
       "category": "setup_construction",
-      "description": "When confidence exceeds 70% with clear directional bias, identify minimum one setup using closest structural level (recent break, liquidity zone, or fair value gap) as entry reference. High confidence without setups indicates analytical failure.",
+      "description": "When confidence exceeds 65% with clear directional bias, systematically identify and evaluate minimum 3 structural levels across different instruments, documenting specific price levels and rejection rationale. Must produce minimum 1 setup unless all 3 levels explicitly rejected for quantified reasons (poor RR <1.3, stop distance >2%, conflicting timeframes). High confidence without documented level evaluation indicates systematic failure.",
       "weight": 9,
       "addedSession": 45,
-      "lastModifiedSession": 45
+      "lastModifiedSession": 160
     },
     {
       "id": "r026",
@@ -301,10 +301,18 @@
       "weight": 9,
       "addedSession": 146,
       "lastModifiedSession": 146
+    },
+    {
+      "id": "r038",
+      "category": "execution_accountability",
+      "description": "High-conviction validation: when confidence exceeds 60% with identified directional bias, final output must contain either (1) minimum 2 setups across different asset classes, or (2) documented evaluation of specific structural levels in minimum 5 instruments with explicit rejection reasons. Sessions failing this validation require immediate rule review and execution process enhancement.",
+      "weight": 9,
+      "addedSession": 160,
+      "lastModifiedSession": 160
     }
   ],
-  "version": 90,
-  "lastUpdated": "2026-04-13T20:36:45.356Z",
+  "version": 91,
+  "lastUpdated": "2026-04-14T17:10:12.643Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -312,5 +320,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #154"
+  "sessionNotes": "Last updated: Session #160"
 }
