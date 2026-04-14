@@ -302,26 +302,32 @@ export function validateOracleOutput(
     }
   }
 
+  // Use the higher of calibrated confidence or raw text-extracted confidence for threshold
+  // checks. Calibration can reduce 69% → 49%, silently bypassing checks that should fire.
+  // Raw confidence is extracted from the analysis text (e.g. "Confidence: 69%").
+  const rawConfidence = extractConfidenceFromText(oracle.analysis ?? "") ?? oracle.confidence;
+  const effectiveConfidence = Math.max(
+    typeof oracle.confidence === "number" ? oracle.confidence : 0,
+    rawConfidence
+  );
+
   // r026: high confidence must produce broad setup coverage
-  // When confidence > 55%, fewer than 3 setups indicates incomplete screening.
+  // When effective confidence > 55%, fewer than 3 setups indicates incomplete screening.
   // Analytics show this is the most common cause of hit rate underperformance
   // in the 50-85% confidence bands.
-  if (typeof oracle.confidence === "number" && oracle.confidence > 55) {
+  if (effectiveConfidence > 55) {
     const setupCount = oracle.setups?.length ?? 0;
     if (setupCount < 3) {
       warnings.push(
-        `r026: confidence ${oracle.confidence}% with only ${setupCount} setup(s) — high-confidence sessions require systematic screening across all available instruments (minimum 3 setups)`
+        `r026: confidence ${effectiveConfidence}% with only ${setupCount} setup(s) — high-confidence sessions require systematic screening across all available instruments (minimum 3 setups)`
       );
     }
   }
 
   // r034: zero setups with directional/mixed confidence requires level rejection documentation.
-  // When confidence ≥50% and bias is not neutral, producing zero setups is only acceptable
-  // if the analysis explicitly documents which levels were evaluated and why each was rejected.
-  // Without that documentation, zero setups = undetectable screening failure.
+  // Uses effective (raw) confidence so calibration cannot bypass this check.
   if (
-    typeof oracle.confidence === "number" &&
-    oracle.confidence >= 50 &&
+    effectiveConfidence >= 50 &&
     oracle.bias?.overall !== "neutral" &&
     (oracle.setups?.length ?? 0) === 0
   ) {
@@ -334,10 +340,39 @@ export function validateOracleOutput(
     const hasRejectionDoc = rejectionMarkers.some(p => analysisLower.includes(p));
     if (!hasRejectionDoc) {
       warnings.push(
-        `r034: ${oracle.confidence}% confidence with ${oracle.bias?.overall} bias produced zero setups ` +
+        `r034: ${effectiveConfidence}% confidence with ${oracle.bias?.overall} bias produced zero setups ` +
         `but analysis contains no structural level evaluation or rejection reasoning — ` +
         `document which levels were screened and why each was rejected (poor RR, conflicting timeframe, insufficient confluence)`
       );
+    }
+  }
+
+  // r038: high-conviction sessions require proportional output or documented evaluation.
+  // When effective confidence ≥60% with directional/mixed bias, must produce either
+  // (1) minimum 2 setups across different asset classes, or (2) evidence in the analysis
+  // text that at least 5 specific instruments were evaluated.
+  // Uses effective confidence so post-calibration capping cannot bypass this check.
+  if (
+    effectiveConfidence >= 60 &&
+    oracle.bias?.overall !== "neutral"
+  ) {
+    const setupCount = oracle.setups?.length ?? 0;
+    if (setupCount < 2) {
+      // Check if analysis documents evaluation of ≥5 instruments by name
+      // (instrument names typically appear as ticker or common name patterns)
+      const instrumentMentions = (oracle.marketSnapshots ?? []).filter(snap => {
+        const name   = snap.name.toLowerCase();
+        const symbol = snap.symbol.toLowerCase().replace(/[^a-z]/g, "");
+        const text   = (oracle.analysis ?? "").toLowerCase();
+        return text.includes(name) || text.includes(symbol);
+      }).length;
+      if (instrumentMentions < 5) {
+        warnings.push(
+          `r038: ${effectiveConfidence}% confidence with ${oracle.bias?.overall} bias produced only ${setupCount} setup(s) ` +
+          `and analysis references only ${instrumentMentions} instrument(s) — ` +
+          `high-conviction sessions require minimum 2 setups or documented evaluation of ≥5 instruments`
+        );
+      }
     }
   }
 

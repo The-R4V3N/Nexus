@@ -439,6 +439,80 @@ describe("validateOracleOutput r034 zero-setup check", () => {
     );
     expect(result.warnings.some((w) => w.includes("r034"))).toBe(false);
   });
+
+  it("fires when calibrated confidence is 49 but raw text confidence is 69 (session #160 scenario)", () => {
+    const result = validateOracleOutput(
+      makeZeroSetupOracle({
+        confidence: 49,
+        analysis: "Confidence: 69% — TC (65%), MA (75%), RR (70%). Major coordinated rally.",
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r034"))).toBe(true);
+  });
+});
+
+// ── r038: high-conviction proportional output check ─────────────
+
+describe("validateOracleOutput r038 high-conviction check", () => {
+  function makeHighConfOracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
+    return {
+      sessionId: "test",
+      timestamp: new Date().toISOString(),
+      analysis: "Confidence: 69% — TC (65%), MA (75%), RR (70%). NASDAQ surged. EUR/USD rallied. GBP/USD up. Bitcoin strong.",
+      bias: { overall: "bullish", notes: "risk-on" },
+      confidence: 49, // calibrated down from 69
+      setups: [],
+      keyLevels: [],
+      marketSnapshots: [
+        { symbol: "NQ=F", name: "nasdaq", category: "indices", price: 20000, previousClose: 19000, change: 1000, changePercent: 5.26, high: 20100, low: 19000, timestamp: "" },
+        { symbol: "EURUSD=X", name: "eur/usd", category: "forex", price: 1.18, previousClose: 1.17, change: 0.01, changePercent: 0.85, high: 1.18, low: 1.17, timestamp: "" },
+        { symbol: "GBPUSD=X", name: "gbp/usd", category: "forex", price: 1.36, previousClose: 1.35, change: 0.01, changePercent: 0.74, high: 1.36, low: 1.35, timestamp: "" },
+        { symbol: "BTC-USD", name: "bitcoin", category: "crypto", price: 75000, previousClose: 73000, change: 2000, changePercent: 2.74, high: 75500, low: 73000, timestamp: "" },
+      ],
+      assumptions: [],
+      ...overrides,
+    };
+  }
+
+  it("warns when raw confidence >= 60 and only 1 setup and fewer than 5 instruments mentioned", () => {
+    const result = validateOracleOutput(
+      makeHighConfOracle({
+        setups: [{ instrument: "EUR/USD", type: "FVG", direction: "bullish", entry: 1.18, stop: 1.17, target: 1.20, RR: 2, timeframe: "1H" }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r038"))).toBe(true);
+  });
+
+  it("does not warn when 2+ setups present", () => {
+    const result = validateOracleOutput(
+      makeHighConfOracle({
+        setups: [
+          { instrument: "EUR/USD", type: "FVG", direction: "bullish", entry: 1.18, stop: 1.17, target: 1.20, RR: 2, timeframe: "1H" },
+          { instrument: "Bitcoin", type: "MSS", direction: "bullish", entry: 75000, stop: 73000, target: 78000, RR: 1.5, timeframe: "4H" },
+        ],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r038"))).toBe(false);
+  });
+
+  it("does not warn when bias is neutral", () => {
+    const result = validateOracleOutput(
+      makeHighConfOracle({ bias: { overall: "neutral", notes: "" } }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r038"))).toBe(false);
+  });
+
+  it("does not warn when raw confidence < 60", () => {
+    const result = validateOracleOutput(
+      makeHighConfOracle({ confidence: 45, analysis: "Confidence: 58% — TC (55%), MA (60%), RR (60%). Some analysis." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r038"))).toBe(false);
+  });
 });
 
 // ── extractConfidenceFromText ────────────────────────────────
