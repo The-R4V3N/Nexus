@@ -406,11 +406,16 @@ export function parseAxiomResponse(
     );
     if (!alreadyHasRuleGap) {
       console.warn("  ⚠ Axiom: compliance violation acknowledged without action — injecting forced self-task");
+      // Build title from first sentence of whatFailed so the task describes the actual gap,
+      // not a stale hardcoded r029 label that may already be resolved.
+      const failText = (rawParsed.whatFailed ?? "").trim();
+      const firstSentence = failText.split(/[.!?]/)[0].trim().slice(0, 80);
+      const taskTitle = firstSentence || "Recurring execution gap: compliance violation acknowledged without action";
       parsed.newSelfTasks = [
         ...(parsed.newSelfTasks ?? []),
         {
-          title: "Enforce stop distance validation at ORACLE output layer (r029)",
-          body: "AXIOM acknowledged a compliance violation but created no rule update or self-task to address it. Add hard filtering in validate.ts to remove setups that violate r029 minimum stop distance requirements during elevated volatility sessions, rather than just warning.",
+          title: taskTitle,
+          body: `AXIOM acknowledged a compliance violation but created no rule update, new rule, or self-task to address it.\n\nSpecific failure identified:\n> "${failText.slice(0, 500)}"\n\nResolve by: (1) adding a code-level validation gate in validate.ts or agent.ts, (2) writing a rule that can be mechanically checked, or (3) explicitly accepting this as a known limitation and closing this issue.`,
           category: "rule-gap",
           priority: "high",
         },

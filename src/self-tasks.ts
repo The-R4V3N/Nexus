@@ -75,13 +75,53 @@ export function setCachedOpenTasks(tasks: OpenSelfTask[]): void {
   _cachedOpenTasks = tasks;
 }
 
+// ── Fetch recently-closed self-tasks for dedup ─────────────
+// Prevents re-opening issues that were closed in the last N days.
+// Called only during createSelfTask so the extra API hit is rare.
+
+async function fetchRecentlyClosedSelfTasks(days = 30): Promise<OpenSelfTask[]> {
+  const repo    = getRepo();
+  const headers = getHeaders();
+  const since   = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${repo}/issues?labels=nexus-self-task&state=closed&since=${since}&per_page=20`,
+      { headers, signal: AbortSignal.timeout(20000) }
+    );
+    if (!res.ok) return [];
+
+    const data = await res.json() as any[];
+    return data
+      .filter((i: any) => !i.pull_request)
+      .map((i: any) => {
+        const categoryLabel = i.labels
+          .map((l: any) => l.name)
+          .find((n: string) => ["blind-spot","bias","rule-gap","new-concept","correlation"].includes(n)) ?? "unknown";
+        return {
+          number:        i.number,
+          title:         sanitizeUnicode(i.title.replace(/[\u{1F300}-\u{1FFFF}][\uFE0F]?\s?\[SELF-TASK\]\s?/u, "")),
+          body:          sanitizeUnicode((i.body ?? "").slice(0, 1500)),
+          category:      categoryLabel,
+          sessionOpened: 0,
+          url:           i.html_url,
+        };
+      });
+  } catch (err) {
+    console.warn(`  ⚠ Could not fetch recently closed self-tasks: ${err}`);
+    return [];
+  }
+}
+
 export async function createSelfTask(
   task: SelfTask,
   sessionNumber: number
 ): Promise<number | null> {
-  // Dedup: skip if a similar task already exists
-  const existing = _cachedOpenTasks ?? await fetchOpenSelfTasks();
-  if (isDuplicate(task.title, existing)) {
+  // Dedup: skip if a similar open OR recently-closed task exists.
+  // Checking closed tasks prevents re-opening issues that were just resolved.
+  const open         = _cachedOpenTasks ?? await fetchOpenSelfTasks();
+  const recentClosed = await fetchRecentlyClosedSelfTasks();
+  if (isDuplicate(task.title, [...open, ...recentClosed])) {
     console.log(`    ⏭ Skipped duplicate self-task: "${task.title}"`);
     return null;
   }
