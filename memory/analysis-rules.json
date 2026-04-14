@@ -309,10 +309,18 @@
       "weight": 9,
       "addedSession": 160,
       "lastModifiedSession": 160
+    },
+    {
+      "id": "r039",
+      "category": "screening",
+      "description": "When confidence exceeds 55% during coordinated market moves (3+ asset classes moving >2%), screening validation requires either (1) minimum 2 setups across different asset classes, or (2) explicit documented rejection of specific structural levels in minimum 3 asset classes with quantified reasoning (poor RR <1.3, stop distance >2%, conflicting timeframes).",
+      "weight": 9,
+      "addedSession": 161,
+      "lastModifiedSession": 161
     }
   ],
-  "version": 91,
-  "lastUpdated": "2026-04-14T17:10:12.643Z",
+  "version": 92,
+  "lastUpdated": "2026-04-14T17:54:50.620Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -320,5 +328,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #160"
+  "sessionNotes": "Last updated: Session #161"
 }
