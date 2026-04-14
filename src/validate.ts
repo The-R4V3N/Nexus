@@ -376,6 +376,46 @@ export function validateOracleOutput(
     }
   }
 
+  // r039: coordinated market cross-asset screening.
+  // When effective confidence ≥55% during coordinated moves (3+ asset classes each with
+  // at least one instrument moving >2%), setups must span ≥2 asset classes or each
+  // non-covered class must be explicitly rejected with quantified reasoning.
+  if (effectiveConfidence >= 55 && oracle.bias?.overall !== "neutral") {
+    const classifyInstrument = (name: string, symbol: string): string => {
+      const n = (name ?? "").toLowerCase();
+      const s = (symbol ?? "").toLowerCase().replace(/[^a-z]/g, "");
+      const cryptoTokens = ["bitcoin","ethereum","btc","eth","bnb","sol","ada","dot","link","xrp","matic","avax","cardano","polkadot","chainlink"];
+      const indexTokens  = ["nasdaq","nas100","s&p","spx","dow","djia","dax","ftse","nikkei","cac","ibex","russell"];
+      const commodTokens = ["gold","silver","oil","crude","copper","natgas","wheat","platinum","xau","xag"];
+      if (cryptoTokens.some(t => n.includes(t) || s.includes(t))) return "crypto";
+      if (indexTokens.some(t => n.includes(t) || s.includes(t)))  return "indices";
+      if (commodTokens.some(t => n.includes(t) || s.includes(t))) return "commodities";
+      return "forex";
+    };
+
+    const snapshots = oracle.marketSnapshots ?? [];
+    const classesWithBigMoves = new Set<string>();
+    for (const snap of snapshots) {
+      if (Math.abs(snap.changePercent) >= 2) {
+        classesWithBigMoves.add(classifyInstrument(snap.name, snap.symbol));
+      }
+    }
+
+    if (classesWithBigMoves.size >= 3) {
+      const setupClasses = new Set<string>();
+      for (const s of oracle.setups ?? []) {
+        setupClasses.add(classifyInstrument(s.instrument ?? "", s.instrument ?? ""));
+      }
+      if (setupClasses.size < 2) {
+        const coveredLabel = setupClasses.size === 0 ? "no" : `only ${[...setupClasses][0]}`;
+        warnings.push(
+          `r039: ${effectiveConfidence}% confidence with ${classesWithBigMoves.size} asset classes moving >2% — ` +
+          `setups cover ${coveredLabel} asset class(es); screening must span multiple classes or explicitly reject each with quantified reasoning (poor RR <1.3, stop >2%, conflicting timeframes)`
+        );
+      }
+    }
+  }
+
   // "Other" type overuse — ICT types should be preferred
   if (oracle.setups && oracle.setups.length > 0) {
     const otherCount = oracle.setups.filter(s => s.type === "Other").length;

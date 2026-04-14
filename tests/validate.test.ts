@@ -515,6 +515,89 @@ describe("validateOracleOutput r038 high-conviction check", () => {
   });
 });
 
+// ── r039: coordinated market cross-asset screening check ─────
+
+describe("validateOracleOutput r039 cross-asset screening check", () => {
+  const coordinatedSnapshots = [
+    { name: "EUR/USD",     symbol: "EURUSD",  price: 1.18,   changePercent: 2.5,  volume: 1000 },
+    { name: "GBP/USD",     symbol: "GBPUSD",  price: 1.35,   changePercent: 3.1,  volume: 1000 },
+    { name: "NASDAQ 100",  symbol: "NAS100",  price: 19000,  changePercent: 6.6,  volume: 5000 },
+    { name: "S&P 500",     symbol: "SPX",     price: 5500,   changePercent: 5.2,  volume: 5000 },
+    { name: "Gold",        symbol: "XAUUSD",  price: 4860,   changePercent: 2.1,  volume: 2000 },
+    { name: "Bitcoin",     symbol: "BTCUSD",  price: 74695,  changePercent: 2.35, volume: 8000 },
+    { name: "Ethereum",    symbol: "ETHUSD",  price: 2336,   changePercent: 4.06, volume: 6000 },
+  ];
+
+  function makeR039Oracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
+    return {
+      sessionId: "test",
+      timestamp: new Date().toISOString(),
+      analysis: "Confidence: 58% — TC (60%), MA (55%), RR (60%). Broad USD weakness with indices surging.",
+      bias: { overall: "mixed", notes: "coordinated risk-on across 4 asset classes" },
+      confidence: 38, // calibrated down from 58
+      setups: [
+        { instrument: "Bitcoin", type: "MSS", direction: "bullish", entry: 74695, stop: 73500, target: 76500, RR: 1.51, timeframe: "4H" },
+        { instrument: "Ethereum", type: "MSS", direction: "bullish", entry: 2336, stop: 2280, target: 2420, RR: 1.5, timeframe: "4H" },
+      ],
+      marketSnapshots: coordinatedSnapshots,
+      keyLevels: [],
+      assumptions: ["USD weakness attribution unconfirmed"],
+      ...overrides,
+    } as OracleAnalysis;
+  }
+
+  it("warns when raw confidence >=55, 3+ classes moving >2%, and setups cover only one asset class", () => {
+    const result = validateOracleOutput(makeR039Oracle(), []);
+    expect(result.warnings.some((w) => w.includes("r039"))).toBe(true);
+  });
+
+  it("does not warn when setups span 2+ asset classes", () => {
+    const result = validateOracleOutput(
+      makeR039Oracle({
+        setups: [
+          { instrument: "Bitcoin", type: "MSS", direction: "bullish", entry: 74695, stop: 73500, target: 76500, RR: 1.51, timeframe: "4H" },
+          { instrument: "EUR/USD", type: "FVG", direction: "bullish", entry: 1.18, stop: 1.17, target: 1.20, RR: 2, timeframe: "1H" },
+        ],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r039"))).toBe(false);
+  });
+
+  it("does not warn when fewer than 3 asset classes have moves >2%", () => {
+    const fewClassSnapshots = [
+      { name: "EUR/USD", symbol: "EURUSD", price: 1.18,  changePercent: 2.5,  volume: 1000 },
+      { name: "Bitcoin", symbol: "BTCUSD", price: 74695, changePercent: 2.35, volume: 8000 },
+      { name: "Gold",    symbol: "XAUUSD", price: 4860,  changePercent: 0.5,  volume: 2000 }, // flat
+      { name: "NASDAQ",  symbol: "NAS100", price: 19000, changePercent: 0.8,  volume: 5000 }, // flat
+    ];
+    const result = validateOracleOutput(
+      makeR039Oracle({ marketSnapshots: fewClassSnapshots }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r039"))).toBe(false);
+  });
+
+  it("does not warn when effective confidence is below 55", () => {
+    const result = validateOracleOutput(
+      makeR039Oracle({
+        confidence: 38,
+        analysis: "Confidence: 53% — TC (50%), MA (55%), RR (55%). Broad USD weakness.",
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r039"))).toBe(false);
+  });
+
+  it("does not warn when bias is neutral", () => {
+    const result = validateOracleOutput(
+      makeR039Oracle({ bias: { overall: "neutral", notes: "" } }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r039"))).toBe(false);
+  });
+});
+
 // ── extractConfidenceFromText ────────────────────────────────
 
 describe("extractConfidenceFromText", () => {
