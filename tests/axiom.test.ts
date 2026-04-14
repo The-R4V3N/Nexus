@@ -334,6 +334,23 @@ describe("parseAxiomResponse forced self-task injection", () => {
     expect(result.newSelfTasks.some((t: any) => t.category === "rule-gap")).toBe(true);
   });
 
+  it("uses first sentence of whatFailed as the injected task title", () => {
+    const json = JSON.stringify({
+      whatWorked: "Good analysis",
+      whatFailed: "Systematic failure to screen commodities asset class. Oil was mentioned but no structural level evaluation documented.",
+      cognitiveBiases: ["anchoring bias"],
+      evolutionSummary: "Execution gap on commodities screening",
+      ruleUpdates: [], newRules: [], systemPromptAdditions: "",
+      newSelfTasks: [], resolvedSelfTasks: [], codeChanges: [],
+    });
+    const result = parseAxiomResponse(json, 150, rules);
+    const injected = (result.newSelfTasks ?? []).find((t: any) => t.category === "rule-gap");
+    expect(injected).toBeDefined();
+    expect(injected.title).toContain("Systematic failure to screen commodities");
+    expect(injected.title).not.toContain("r029");
+    expect(injected.body).toContain("Oil was mentioned");
+  });
+
   it("does not inject self-task when rule update accompanies the violation acknowledgement", () => {
     const json = JSON.stringify({
       whatWorked: "Good analysis",
@@ -346,7 +363,7 @@ describe("parseAxiomResponse forced self-task injection", () => {
     });
     const result = parseAxiomResponse(json, 150, rules);
     // No forced injection since a rule update is present
-    const forcedCount = (result.newSelfTasks ?? []).filter((t: any) => t.category === "rule-gap" && /stop|r029/i.test(t.title ?? "")).length;
+    const forcedCount = (result.newSelfTasks ?? []).filter((t: any) => t.category === "rule-gap").length;
     expect(forcedCount).toBe(0);
   });
 
