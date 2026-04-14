@@ -157,6 +157,20 @@ export function validateWeekendCryptoScreening(
   return { covered, mentionedOnly, missing };
 }
 
+// ── Asset class classifier (shared by r039 and r040) ─────
+
+function classifyInstrument(name: string, symbol: string): string {
+  const n = (name ?? "").toLowerCase();
+  const s = (symbol ?? "").toLowerCase().replace(/[^a-z]/g, "");
+  const cryptoTokens = ["bitcoin","ethereum","btc","eth","bnb","sol","ada","dot","link","xrp","matic","avax","cardano","polkadot","chainlink"];
+  const indexTokens  = ["nasdaq","nas100","s&p","spx","dow","djia","dax","ftse","nikkei","cac","ibex","russell"];
+  const commodTokens = ["gold","silver","oil","crude","copper","natgas","wheat","platinum","xau","xag"];
+  if (cryptoTokens.some(t => n.includes(t) || s.includes(t))) return "crypto";
+  if (indexTokens.some(t => n.includes(t) || s.includes(t)))  return "indices";
+  if (commodTokens.some(t => n.includes(t) || s.includes(t))) return "commodities";
+  return "forex";
+}
+
 // ── ORACLE Validator ──────────────────────────────────────
 
 export function validateOracleOutput(
@@ -344,17 +358,6 @@ export function validateOracleOutput(
   // at least one instrument moving >2%), setups must span ≥2 asset classes or each
   // non-covered class must be explicitly rejected with quantified reasoning.
   if (effectiveConfidence >= 55 && oracle.bias?.overall !== "neutral") {
-    const classifyInstrument = (name: string, symbol: string): string => {
-      const n = (name ?? "").toLowerCase();
-      const s = (symbol ?? "").toLowerCase().replace(/[^a-z]/g, "");
-      const cryptoTokens = ["bitcoin","ethereum","btc","eth","bnb","sol","ada","dot","link","xrp","matic","avax","cardano","polkadot","chainlink"];
-      const indexTokens  = ["nasdaq","nas100","s&p","spx","dow","djia","dax","ftse","nikkei","cac","ibex","russell"];
-      const commodTokens = ["gold","silver","oil","crude","copper","natgas","wheat","platinum","xau","xag"];
-      if (cryptoTokens.some(t => n.includes(t) || s.includes(t))) return "crypto";
-      if (indexTokens.some(t => n.includes(t) || s.includes(t)))  return "indices";
-      if (commodTokens.some(t => n.includes(t) || s.includes(t))) return "commodities";
-      return "forex";
-    };
 
     const snapshots = oracle.marketSnapshots ?? [];
     const classesWithBigMoves = new Set<string>();
@@ -374,6 +377,38 @@ export function validateOracleOutput(
         warnings.push(
           `r039: ${effectiveConfidence}% confidence with ${classesWithBigMoves.size} asset classes moving >2% — ` +
           `setups cover ${coveredLabel} asset class(es); screening must span multiple classes or explicitly reject each with quantified reasoning (poor RR <1.3, stop >2%, conflicting timeframes)`
+        );
+      }
+    }
+  }
+
+  // r040: validation accountability — high-confidence sessions require cross-asset setup
+  // diversity OR documented price-level rejection with quantified reasons.
+  // Distinct from r038: r040 requires setups from DIFFERENT asset classes (not just any 2),
+  // and requires quantified rejection reasons (not just instrument mentions).
+  if (effectiveConfidence >= 60 && oracle.bias?.overall !== "neutral") {
+    const setupClasses = new Set<string>();
+    for (const s of oracle.setups ?? []) {
+      setupClasses.add(classifyInstrument(s.instrument ?? "", s.instrument ?? ""));
+    }
+    const crossAssetCoverage = setupClasses.size >= 2;
+
+    if (!crossAssetCoverage) {
+      const analysisLower = (oracle.analysis ?? "").toLowerCase();
+      const quantifiedRejectionKeywords = [
+        "poor rr", "rr <1.3", "rr<1.3", "stop distance", "stop >2%",
+        "conflicting higher timeframe", "conflicting timeframe", "rejected at",
+        "no viable entry", "insufficient confluence",
+      ];
+      const matchedKeywords = quantifiedRejectionKeywords.filter(kw => analysisLower.includes(kw));
+      const hasQuantifiedRejection = matchedKeywords.length >= 2;
+
+      if (!hasQuantifiedRejection) {
+        const setupClassLabel = setupClasses.size === 0 ? "no" : `only ${[...setupClasses].join("/")}`;
+        warnings.push(
+          `r040: ${effectiveConfidence}% confidence with ${oracle.bias?.overall} bias — setups cover ${setupClassLabel} asset class(es); ` +
+          `requires either (1) ≥2 setups across different asset classes, or (2) documented rejection of ≥5 specific price levels ` +
+          `with quantified reasons (poor RR <1.3, stop >2%, conflicting timeframe) across forex/indices/crypto`
         );
       }
     }

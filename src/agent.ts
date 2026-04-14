@@ -26,7 +26,7 @@ import {
   loadAllJournalEntries,
   saveJournalEntry,
 } from "./journal";
-import { validateOracleOutput, validateWeekendCryptoScreening, filterNonCompliantSetups, logFailure, loadRecentFailures } from "./validate";
+import { validateOracleOutput, validateWeekendCryptoScreening, filterNonCompliantSetups, logFailure, loadRecentFailures, resolveConfidence } from "./validate";
 import { buildAnalyticsSummary }                                    from "./analytics";
 import { fetchRSSNews, formatRSSForPrompt }                          from "./rss";
 import { notifySessionComplete }                                     from "./notifications";
@@ -534,6 +534,15 @@ export async function runAndValidateOracle(
       console.warn(`  ⚠ r029: removed setup [${r.instrument}] — ${r.reason}`);
     }
     oracle = filteredOracle;
+  }
+
+  // Resolve confidence discrepancy: if the analysis text states a higher confidence than
+  // the JSON field, use the text value so the journal records the correct number.
+  // This corrects cases where ORACLE writes inconsistent values (e.g. session #163: JSON=45, text=61).
+  const resolvedConfidence = resolveConfidence(oracle.analysis, oracle.confidence);
+  if (resolvedConfidence !== oracle.confidence) {
+    console.log(chalk.dim(`  ↳ Confidence resolved: ${oracle.confidence}% → ${resolvedConfidence}% (text-extracted value)`));
+    oracle = { ...oracle, confidence: resolvedConfidence };
   }
 
   // Print brief summary
