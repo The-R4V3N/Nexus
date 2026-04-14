@@ -315,6 +315,32 @@ export function validateOracleOutput(
     }
   }
 
+  // r034: zero setups with directional/mixed confidence requires level rejection documentation.
+  // When confidence ≥50% and bias is not neutral, producing zero setups is only acceptable
+  // if the analysis explicitly documents which levels were evaluated and why each was rejected.
+  // Without that documentation, zero setups = undetectable screening failure.
+  if (
+    typeof oracle.confidence === "number" &&
+    oracle.confidence >= 50 &&
+    oracle.bias?.overall !== "neutral" &&
+    (oracle.setups?.length ?? 0) === 0
+  ) {
+    const rejectionMarkers = [
+      "poor rr", "poor r:r", "conflicting timeframe", "insufficient confluence",
+      "no viable", "rejected", "evaluated", "screened",
+      "level evaluated", "structural level", "key level identified",
+    ];
+    const analysisLower = (oracle.analysis ?? "").toLowerCase();
+    const hasRejectionDoc = rejectionMarkers.some(p => analysisLower.includes(p));
+    if (!hasRejectionDoc) {
+      warnings.push(
+        `r034: ${oracle.confidence}% confidence with ${oracle.bias?.overall} bias produced zero setups ` +
+        `but analysis contains no structural level evaluation or rejection reasoning — ` +
+        `document which levels were screened and why each was rejected (poor RR, conflicting timeframe, insufficient confluence)`
+      );
+    }
+  }
+
   // "Other" type overuse — ICT types should be preferred
   if (oracle.setups && oracle.setups.length > 0) {
     const otherCount = oracle.setups.filter(s => s.type === "Other").length;
