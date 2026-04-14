@@ -598,6 +598,100 @@ describe("validateOracleOutput r039 cross-asset screening check", () => {
   });
 });
 
+// ── r040: validation accountability — cross-asset setup diversity ─────────
+
+describe("validateOracleOutput r040 cross-asset validation accountability", () => {
+  const coordinatedSnapshots = [
+    { name: "EUR/USD",    symbol: "EURUSD",  price: 1.18,   changePercent: 0.94,  volume: 1000 },
+    { name: "GBP/USD",    symbol: "GBPUSD",  price: 1.36,   changePercent: 1.20,  volume: 1000 },
+    { name: "NASDAQ 100", symbol: "NAS100",  price: 25800,  changePercent: 6.39,  volume: 5000 },
+    { name: "S&P 500",    symbol: "SPX",     price: 5700,   changePercent: 5.04,  volume: 5000 },
+    { name: "Gold",       symbol: "XAUUSD",  price: 4867,   changePercent: 1.40,  volume: 2000 },
+    { name: "Bitcoin",    symbol: "BTCUSD",  price: 75886,  changePercent: 1.52,  volume: 8000 },
+    { name: "Polkadot",   symbol: "DOTUSD",  price: 1.15,   changePercent: -11.68, volume: 3000 },
+  ];
+
+  function makeR040Oracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
+    return {
+      sessionId: "test",
+      timestamp: new Date().toISOString(),
+      // Session #163 scenario: 61% raw confidence, analysis mentions many instruments but no quantified rejection
+      analysis: "Confidence: 61% — TC (65%), MA (55%), RR (60%). Risk assets showing exceptional coordinated rally with NASDAQ +6.39%, S&P 500 +5.04%, EUR/USD +0.94%, GBP/USD +1.20%. Gold +1.40% alongside equity rally. Bitcoin +1.52%, ADA -5.31%, DOT -11.68%.",
+      bias: { overall: "mixed", notes: "risk asset rally with USD weakness but oil collapse and crypto divergence" },
+      confidence: 45, // calibrated down from 61
+      setups: [
+        { instrument: "Polkadot", type: "MSS", direction: "bearish", entry: 1.15, stop: 1.23, target: 1.045, RR: 1.31, timeframe: "4H" },
+      ],
+      marketSnapshots: coordinatedSnapshots,
+      keyLevels: [],
+      assumptions: ["Inflation data triggered USD weakness - unconfirmed"],
+      ...overrides,
+    } as OracleAnalysis;
+  }
+
+  it("warns when confidence >=60, non-neutral bias, single-asset-class setups, no quantified rejection docs", () => {
+    // Session #163 scenario: 1 crypto setup, 61% effective confidence, no rejection language
+    const result = validateOracleOutput(makeR040Oracle(), []);
+    expect(result.warnings.some((w) => w.includes("r040"))).toBe(true);
+  });
+
+  it("does not warn when setups span 2+ different asset classes", () => {
+    const result = validateOracleOutput(
+      makeR040Oracle({
+        setups: [
+          { instrument: "Polkadot", type: "MSS", direction: "bearish", entry: 1.15, stop: 1.23, target: 1.045, RR: 1.31, timeframe: "4H" },
+          { instrument: "EUR/USD",  type: "FVG", direction: "bullish", entry: 1.18, stop: 1.17, target: 1.20, RR: 2, timeframe: "1H" },
+        ],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r040"))).toBe(false);
+  });
+
+  it("does not warn when analysis contains quantified rejection reasoning", () => {
+    const result = validateOracleOutput(
+      makeR040Oracle({
+        analysis:
+          "Confidence: 61% — TC (65%), MA (55%), RR (60%). EUR/USD at 1.18 rejected — poor RR <1.3 with wide spread. GBP/USD at 1.36 rejected — conflicting timeframe on daily. NASDAQ at 25800 rejected — stop >2% required. Gold at 4867 rejected — insufficient confluence. S&P at 5700 rejected — poor RR <1.3. Only DOT viable.",
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r040"))).toBe(false);
+  });
+
+  it("does not warn when effective confidence is below 60", () => {
+    const result = validateOracleOutput(
+      makeR040Oracle({
+        confidence: 45,
+        analysis: "Confidence: 58% — TC (55%), MA (60%), RR (60%). Some analysis text here.",
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r040"))).toBe(false);
+  });
+
+  it("does not warn when bias is neutral", () => {
+    const result = validateOracleOutput(
+      makeR040Oracle({ bias: { overall: "neutral", notes: "" } }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r040"))).toBe(false);
+  });
+
+  it("still warns when 2 setups exist but both are in same asset class (crypto)", () => {
+    const result = validateOracleOutput(
+      makeR040Oracle({
+        setups: [
+          { instrument: "Polkadot", type: "MSS", direction: "bearish", entry: 1.15, stop: 1.23, target: 1.045, RR: 1.31, timeframe: "4H" },
+          { instrument: "Bitcoin",  type: "FVG", direction: "bullish", entry: 75000, stop: 73000, target: 78000, RR: 1.5, timeframe: "4H" },
+        ],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r040"))).toBe(true);
+  });
+});
+
 // ── extractConfidenceFromText ────────────────────────────────
 
 describe("extractConfidenceFromText", () => {

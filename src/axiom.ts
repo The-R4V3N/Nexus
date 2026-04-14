@@ -296,7 +296,7 @@ RULE POLICY — CRITICAL:
 - DO NOT create "meta-rules" that just enforce other rules. This includes: rules that reference another rule by ID (e.g. "deploy r012", "per r016"), rules that say "verify/check/ensure rule X is followed", and rules whose only purpose is to add process around an existing rule. That is validation logic, not an analysis rule. If you want validation, use codeChanges instead.
 - DO NOT create rules with words like MANDATORY, BLOCKING, INVALID, or MUST RESTART. Rules are guidelines, not kill switches.
 - DO NOT duplicate existing rules in different words. Before adding a rule, check your current rules list above.
-- If you have 25+ rules already, prefer modifying existing rules over adding new ones.
+- If you have 30+ rules already, you MUST modify an existing rule in the same category instead of adding a new one, unless the new rule covers a genuinely different enforcement mechanism not present in ANY existing rule. Before adding a rule, check: does any active rule already have the same "category" value (e.g. "setup_construction", "screening", "execution_accountability")? If yes, strengthen that rule rather than creating a near-duplicate. Categories with 2+ existing rules are saturated — adding more rules in the same category without code enforcement is rule bloat, not improvement.
 - COOLDOWN: You cannot modify a rule that was modified within the last 3 sessions. If you try, it will be blocked. Focus on other improvements instead.
 - Max rule length is 500 characters. Keep rules concise — one clear idea per rule.
 - Be surgical. Quality over quantity.`;
