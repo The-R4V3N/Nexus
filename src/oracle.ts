@@ -14,7 +14,7 @@ import {
   salvageJSON, stripSurrogates, extractJSONFromResponse, groupBy,
   MEMORY_DIR, SYSTEM_PROMPT_PATH, ANALYSIS_RULES_PATH,
 } from "./utils";
-import { resolveConfidence, applyCalibrationAdjustment } from "./validate";
+import { resolveConfidence } from "./validate";
 import { loadAllJournalEntries } from "./journal";
 import { buildCalibrationContext } from "./analytics";
 import type {
@@ -484,13 +484,6 @@ Only respond with the JSON array, no other text.`;
 
   // Resolve text vs JSON confidence mismatch
   let finalConfidence = resolveConfidence(parsed.analysis ?? "", parsed.confidence ?? 50);
-
-  // Apply programmatic calibration based on historical hit rate data
-  const preCalibration = finalConfidence;
-  finalConfidence = applyCalibrationAdjustment(finalConfidence, biasOverall);
-  if (finalConfidence !== preCalibration) {
-    console.log(`  📊 Calibration adjustment: ${preCalibration}% → ${finalConfidence}% (bias: ${biasOverall})`);
-  }
 
   // Enforce: high confidence with zero setups is contradictory
   if (finalConfidence > 60 && validSetups.length === 0) {
