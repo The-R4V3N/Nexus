@@ -209,10 +209,10 @@
     {
       "id": "r026",
       "category": "setup_construction",
-      "description": "When market analysis identifies directional bias (confidence >50%), systematically evaluate instruments by asset class priority: (1) forex majors during USD moves, (2) indices during broad risk sentiment, (3) crypto during correlation breakdown, (4) metals during inflation signals, (5) commodities during sector-specific moves. Document specific price levels evaluated, not just instruments reviewed. Confidence >60% without at least one structural level identification indicates screening failure.",
+      "description": "When confidence exceeds 60%, screening validation requires documented evaluation of minimum 3 structural levels across different asset classes with specific price targets: forex majors during USD moves (EUR/USD, GBP/USD key levels), indices during risk sentiment shifts (support/resistance zones), metals during inflation signals (psychological levels). Sessions exceeding 60% confidence with fewer than 2 setups across different asset classes indicate systematic screening failure requiring immediat",
       "weight": 9,
       "addedSession": 46,
-      "lastModifiedSession": 139
+      "lastModifiedSession": 163
     },
     {
       "id": "r027",
@@ -317,10 +317,18 @@
       "weight": 9,
       "addedSession": 161,
       "lastModifiedSession": 161
+    },
+    {
+      "id": "r040",
+      "category": "screening_enforcement",
+      "description": "Validation accountability: when confidence exceeds 60% with clear directional bias, must produce either (1) minimum 2 setups across different asset classes, or (2) explicit rejection documentation for minimum 5 specific price levels across forex/indices/crypto with quantified reasons (poor RR <1.3, stop distance >2%, conflicting higher timeframe). Single-setup sessions above 60% confidence constitute systematic screening violations.",
+      "weight": 9,
+      "addedSession": 163,
+      "lastModifiedSession": 163
     }
   ],
-  "version": 92,
-  "lastUpdated": "2026-04-14T17:54:50.620Z",
+  "version": 93,
+  "lastUpdated": "2026-04-14T18:56:32.979Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -328,5 +336,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #161"
+  "sessionNotes": "Last updated: Session #163"
 }
