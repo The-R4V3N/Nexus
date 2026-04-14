@@ -29,6 +29,17 @@ describe("formatSelfTasksForPrompt", () => {
     expect(result).not.toContain("Filed by NEXUS");
   });
 
+  it("uses mandatory action language, not optional", () => {
+    const tasks: OpenSelfTask[] = [{
+      number: 1, title: "Task A", body: "Body A",
+      category: "rule-gap", sessionOpened: 1, url: "https://example.com/1",
+    }];
+    const result = formatSelfTasksForPrompt(tasks);
+    expect(result).toContain("MUST output either");
+    expect(result).toContain("compliance violation");
+    expect(result).not.toContain("I should address them if I have enough information");
+  });
+
   it("formats multiple tasks", () => {
     const tasks: OpenSelfTask[] = [
       {
