@@ -120,4 +120,44 @@ describe("mergeAnalysisRules", () => {
     const merged = mergeAnalysisRules(remote, local);
     expect(() => JSON.parse(JSON.stringify(merged))).not.toThrow();
   });
+
+  // ── Edge-case robustness (backlog #5) ────────────────────
+  // These document guarantees needed for the concurrent-session conflict handler.
+
+  it("preserves disabled and disabledReason fields when local rule wins by lastModifiedSession", () => {
+    const remote = {
+      rules: [{ ...baseRule("r016", 0), disabled: false }],
+      version: 10, lastUpdated: "2026-04-11T13:07:00.000Z", sessionNotes: "", focusInstruments: [],
+    };
+    const local = {
+      rules: [{ ...baseRule("r016", 170), disabled: true, disabledReason: "replaced by code enforcement" }],
+      version: 11, lastUpdated: "2026-04-11T13:08:00.000Z", sessionNotes: "", focusInstruments: [],
+    };
+    const merged = mergeAnalysisRules(remote, local);
+    const r = merged.rules.find((x: any) => x.id === "r016");
+    expect(r.disabled).toBe(true);
+    expect(r.disabledReason).toBe("replaced by code enforcement");
+  });
+
+  it("falls back to remote sessionNotes when local higherVersion has undefined sessionNotes", () => {
+    const remote = { rules: [], version: 10, lastUpdated: "2026-04-11T13:07:00.000Z", sessionNotes: "Remote notes", focusInstruments: [] };
+    const local  = { rules: [], version: 10, lastUpdated: "2026-04-11T13:08:00.000Z", sessionNotes: undefined as any, focusInstruments: [] };
+    // Same version → local wins higherVersion check; its sessionNotes is undefined → falls back to remote's
+    const merged = mergeAnalysisRules(remote, local);
+    expect(merged.sessionNotes).toBe("Remote notes");
+  });
+
+  it("handles missing lastUpdated in remote by taking local timestamp", () => {
+    const remote = { rules: [], version: 10, lastUpdated: undefined as any, sessionNotes: "", focusInstruments: [] };
+    const local  = { rules: [], version: 11, lastUpdated: "2026-04-11T13:08:00.000Z", sessionNotes: "", focusInstruments: [] };
+    expect(mergeAnalysisRules(remote, local).lastUpdated).toBe("2026-04-11T13:08:00.000Z");
+  });
+
+  it("handles missing focusInstruments in local higherVersion by falling back to remote", () => {
+    const remote = { rules: [], version: 10, lastUpdated: "2026-04-11T13:07:00.000Z", sessionNotes: "", focusInstruments: ["BTC", "ETH"] };
+    const local  = { rules: [], version: 10, lastUpdated: "2026-04-11T13:08:00.000Z", sessionNotes: "", focusInstruments: undefined as any };
+    // Same version → local is higherVersion; its focusInstruments is undefined → falls back to remote
+    const merged = mergeAnalysisRules(remote, local);
+    expect(merged.focusInstruments).toEqual(["BTC", "ETH"]);
+  });
 });

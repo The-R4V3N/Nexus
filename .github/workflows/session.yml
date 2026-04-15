@@ -149,12 +149,35 @@ jobs:
             # analysis-rules.json: merge remote + local using the dedicated script.
             # Remote is taken as the base; local rule changes are applied on top
             # (new rules added, rules with higher lastModifiedSession win).
+            # Fallback: if the merge script fails or produces invalid JSON, restore
+            # the pre-conflict local version (saved above before the pull) which is
+            # always valid JSON and contains the current session's changes.
             if grep -ql "^<<<<<<" memory/analysis-rules.json 2>/dev/null; then
-              git show origin/main:memory/analysis-rules.json > /tmp/nexus-remote-rules.json 2>/dev/null
-              node scripts/merge-analysis-rules.js /tmp/nexus-remote-rules.json /tmp/nexus-local-rules.json > /tmp/nexus-merged-rules.json
-              cp /tmp/nexus-merged-rules.json memory/analysis-rules.json
-              echo "Merged analysis-rules.json (concurrent session conflict resolved)"
+              git show origin/main:memory/analysis-rules.json > /tmp/nexus-remote-rules.json 2>/dev/null || true
+              if node scripts/merge-analysis-rules.js /tmp/nexus-remote-rules.json /tmp/nexus-local-rules.json > /tmp/nexus-merged-rules.json 2>/dev/null \
+                 && node -e "JSON.parse(require('fs').readFileSync('/tmp/nexus-merged-rules.json','utf8'))" 2>/dev/null; then
+                cp /tmp/nexus-merged-rules.json memory/analysis-rules.json
+                echo "Merged analysis-rules.json (concurrent session conflict resolved)"
+              else
+                cp /tmp/nexus-local-rules.json memory/analysis-rules.json
+                echo "Merge script failed — restored local analysis-rules.json as fallback"
+              fi
               git add memory/analysis-rules.json
+            fi
+
+            # memory/system-prompt.md: both sessions appended a new evolved section.
+            # Keep content from both halves by stripping git conflict markers.
+            # This preserves both sessions' analytical insights in the prompt history.
+            if grep -ql "^<<<<<<" memory/system-prompt.md 2>/dev/null; then
+              grep -v "^<<<<<<<\|^=======\|^>>>>>>>" memory/system-prompt.md > /tmp/nexus-merged-prompt.md || true
+              if [ -s /tmp/nexus-merged-prompt.md ]; then
+                cp /tmp/nexus-merged-prompt.md memory/system-prompt.md
+                echo "Merged system-prompt.md (kept both evolved sections)"
+              else
+                git checkout --ours memory/system-prompt.md 2>/dev/null || true
+                echo "system-prompt.md merge fallback — took ours"
+              fi
+              git add memory/system-prompt.md
             fi
 
             # docs/index.html: take theirs — we always rebuild it below anyway
