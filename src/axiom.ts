@@ -6,7 +6,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
-import { validateAxiomOutput, logFailure, extractConfidenceFromText, calculateTextSimilarity, detectAxiomRumination } from "./validate";
+import { validateAxiomOutput, logFailure, extractConfidenceFromText, calculateTextSimilarity, detectAxiomRumination, detectAcknowledgedGap } from "./validate";
 import { loadAllJournalEntries } from "./journal";
 import {
   salvageJSON, stripSurrogates, extractJSONFromResponse,
@@ -407,6 +407,19 @@ export function parseAxiomResponse(
     newRules:     parsed.newRules,
     newSelfTasks: parsed.newSelfTasks,
   });
+  // Second half (backlog #6): log a soft warning when AXIOM uses explicit deferral
+  // language ("known gap", "requires enforcement") and modifies rules but omits a
+  // self-task — leaving the deferred gap untracked. Log-only; no forced injection.
+  const gapAcknowledgementWarning = detectAcknowledgedGap({
+    whatFailed:   rawParsed.whatFailed,
+    ruleUpdates:  parsed.ruleUpdates,
+    newRules:     parsed.newRules,
+    newSelfTasks: parsed.newSelfTasks,
+  });
+  if (gapAcknowledgementWarning) {
+    console.warn(`  ⚠ Axiom: ${gapAcknowledgementWarning}`);
+  }
+
   if (ruminationWarning) {
     const alreadyHasRuleGap = (parsed.newSelfTasks ?? []).some(
       (t: any) => t.category === "rule-gap"
