@@ -27,7 +27,7 @@
     {
       "id": "r004",
       "category": "liquidity",
-      "description": "Equal highs/lows are liquidity targets — price is drawn to them before reversing",
+      "description": "Equal highs/lows are liquidity targets \u00e2\u20ac\u201d price is drawn to them before reversing",
       "weight": 8,
       "addedSession": 0,
       "lastModifiedSession": 0
@@ -35,7 +35,7 @@
     {
       "id": "r005",
       "category": "correlation",
-      "description": "Check DXY direction when analyzing forex pairs — risk assets (indices, crypto) typically inversely correlate with DXY",
+      "description": "Check DXY direction when analyzing forex pairs \u00e2\u20ac\u201d risk assets (indices, crypto) typically inversely correlate with DXY",
       "weight": 8,
       "addedSession": 0,
       "lastModifiedSession": 0
@@ -43,7 +43,7 @@
     {
       "id": "r006",
       "category": "sessions",
-      "description": "Asian range defines liquidity for London session — London often sweeps Asian highs or lows before the true move",
+      "description": "Asian range defines liquidity for London session \u00e2\u20ac\u201d London often sweeps Asian highs or lows before the true move",
       "weight": 7,
       "addedSession": 0,
       "lastModifiedSession": 0
@@ -67,7 +67,7 @@
     {
       "id": "r009",
       "category": "crypto",
-      "description": "Bitcoin dominance matters — if BTC rises while altcoins fall, sentiment is defensive within crypto",
+      "description": "Bitcoin dominance matters \u00e2\u20ac\u201d if BTC rises while altcoins fall, sentiment is defensive within crypto",
       "weight": 6,
       "addedSession": 0,
       "lastModifiedSession": 0
@@ -107,7 +107,7 @@
     {
       "id": "r014",
       "category": "confidence_methodology",
-      "description": "Confidence methodology: (1) Technical confluence: 1=20%, 2=35%, 3=45%, 4+=55%. (2) Macro alignment: 40-60% for strong correlation, 20-40% for weak correlation, 0-20% for breakdown. (3) RR clarity: +10% for RR>2.5, +5% for 1.5-2.5, -5% for <1.5. (4) Volatility adjustment: reduce by 10% during VIX>25. (5) Hard cap: maximum confidence 50% regardless of calculation. Analytics show 30-50% range well-calibrated (45% hit rate) while 50-70% range severely overconfident (21% hit rate). NOTE: displayed confidence is system-calibrated — do not modify this rule to compensate for calibration adjustments.",
+      "description": "Confidence methodology: (1) Technical confluence: 1=20%, 2=35%, 3=45%, 4+=55%. (2) Macro alignment: 40-60% for strong correlation, 20-40% for weak correlation, 0-20% for breakdown. (3) RR clarity: +10% for RR>2.5, +5% for 1.5-2.5, -5% for <1.5. (4) Volatility adjustment: reduce by 10% during VIX>25. (5) Hard cap: maximum confidence 50% regardless of calculation. Analytics show 30-50% range well-calibrated (45% hit rate) while 50-70% range severely overconfident (21% hit rate). NOTE: displayed confidence is system-calibrated \u00e2\u20ac\u201d do not modify this rule to compensate for calibration adjustments.",
       "weight": 8,
       "addedSession": 2,
       "lastModifiedSession": 108
@@ -128,7 +128,7 @@
       "addedSession": 4,
       "lastModifiedSession": 7,
       "disabled": true,
-      "disabledReason": "Requires historical candle data (Phase 1 of roadmap) — re-enable when OHLCV data is available"
+      "disabledReason": "Requires historical candle data (Phase 1 of roadmap) \u00e2\u20ac\u201d re-enable when OHLCV data is available"
     },
     {
       "id": "r017",
@@ -154,7 +154,7 @@
       "addedSession": 18,
       "lastModifiedSession": 18,
       "disabled": true,
-      "disabledReason": "Meta-rule that just references r012 — creates self-criticism loops without adding value"
+      "disabledReason": "Meta-rule that just references r012 \u00e2\u20ac\u201d creates self-criticism loops without adding value"
     },
     {
       "id": "r020",
@@ -164,7 +164,7 @@
       "addedSession": 20,
       "lastModifiedSession": 20,
       "disabled": true,
-      "disabledReason": "Depends on r016 which requires historical candle data — re-enable when Phase 1 is implemented"
+      "disabledReason": "Depends on r016 which requires historical candle data \u00e2\u20ac\u201d re-enable when Phase 1 is implemented"
     },
     {
       "id": "r021",
@@ -233,7 +233,7 @@
     {
       "id": "r029",
       "category": "setup_precision",
-      "description": "During extreme volatility (session moves ≥5%), stop loss must be minimum 1.5% from entry price. During moderate volatility (VIX >25 or daily moves >2x typical range), stops require minimum 1.25% from entry. Calculate and verify stop distance before finalizing any setup during elevated volatility periods.",
+      "description": "During extreme volatility (session moves \u00e2\u2030\u00a55%), stop loss must be minimum 1.5% from entry price. During moderate volatility (VIX >25 or daily moves >2x typical range), stops require minimum 1.25% from entry. Calculate and verify stop distance before finalizing any setup during elevated volatility periods.",
       "weight": 9,
       "addedSession": 56,
       "lastModifiedSession": 147
@@ -340,7 +340,9 @@
       "description": "Before finalizing any session, verify confidence score in analysis text matches JSON confidence field within 5 points. If mismatch detected, use analysis text value as authoritative and document discrepancy reason.",
       "weight": 9,
       "addedSession": 166,
-      "lastModifiedSession": 166
+      "lastModifiedSession": 166,
+      "disabled": true,
+      "disabledReason": "Superseded by resolveConfidence() in validate.ts (PR #63) which programmatically corrects text/JSON confidence mismatch"
     },
     {
       "id": "r043",
@@ -348,7 +350,9 @@
       "description": "Setup pre-validation gate: before constructing any bearish risk asset setup (indices, crypto), verify EUR/USD and GBP/USD are not both +1% or higher. If both exceed +1%, skip bearish risk asset construction regardless of technical levels. Document skipped levels with reason 'USD weakness constraint per r036'.",
       "weight": 9,
       "addedSession": 168,
-      "lastModifiedSession": 168
+      "lastModifiedSession": 168,
+      "disabled": true,
+      "disabledReason": "Superseded by filterR036Setups() in validate.ts (PR #64) which hard-removes bearish risk asset setups during DXY weakness"
     }
   ],
   "version": 97,
