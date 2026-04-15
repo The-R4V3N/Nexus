@@ -209,10 +209,10 @@
     {
       "id": "r026",
       "category": "setup_construction",
-      "description": "When confidence exceeds 60%, screening validation requires documented evaluation of minimum 3 structural levels across different asset classes with specific price targets: forex majors during USD moves (EUR/USD, GBP/USD key levels), indices during risk sentiment shifts (support/resistance zones), metals during inflation signals (psychological levels). Sessions exceeding 60% confidence with fewer than 2 setups across different asset classes indicate systematic screening failure requiring immediat",
+      "description": "When confidence exceeds 60%, must systematically document structural level evaluation for minimum 8 instruments: EUR/USD, GBP/USD, AUD/USD (forex), NASDAQ, S&P (indices), BTC, ETH (crypto), Gold (metals). For each instrument, specify current price, key structural level (support/resistance), and setup viability decision with reason. Only after completing 8-instrument evaluation may setup construction begin.",
       "weight": 9,
       "addedSession": 46,
-      "lastModifiedSession": 163
+      "lastModifiedSession": 169
     },
     {
       "id": "r027",
@@ -351,8 +351,8 @@
       "lastModifiedSession": 168
     }
   ],
-  "version": 96,
-  "lastUpdated": "2026-04-15T16:52:59.599Z",
+  "version": 97,
+  "lastUpdated": "2026-04-15T17:39:23.969Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -360,5 +360,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #168"
+  "sessionNotes": "Last updated: Session #169"
 }
