@@ -67,6 +67,13 @@ export function calculateTextSimilarity(text1: string, text2: string): number {
 // ── Confidence extraction from analysis text ─────────────
 
 export function extractConfidenceFromText(text: string): number | null {
+  // Pattern 0: explicit cap notation — ORACLE may calculate 70% but state "capped at 65%".
+  // Prefer the capped (final) value over the raw calculated value.
+  const capMatch = text.match(/capped\s+(?:at|to)\s*(\d+)%/i);
+  if (capMatch) {
+    return parseInt(capMatch[1], 10);
+  }
+
   // Pattern 1: "Confidence: X%" or "Confidence: X% —"
   const directMatch = text.match(/Confidence:\s*(\d+)%/i);
   if (directMatch) {
@@ -88,6 +95,16 @@ export function extractConfidenceFromText(text: string): number | null {
 // ── Confidence resolution ────────────────────────────────
 
 export function resolveConfidence(analysis: string, jsonConfidence: number): number {
+  // Honor explicit cap notation regardless of the 10-point threshold.
+  // When ORACLE says "capped at 65%" but returns 70 in JSON, the cap wins.
+  const capMatch = analysis.match(/capped\s+(?:at|to)\s*(\d+)%/i);
+  if (capMatch) {
+    const cappedValue = parseInt(capMatch[1], 10);
+    if (cappedValue < jsonConfidence) {
+      return cappedValue;
+    }
+  }
+
   const textConfidence = extractConfidenceFromText(analysis);
   if (textConfidence !== null && Math.abs(textConfidence - jsonConfidence) > 10) {
     return textConfidence;
@@ -470,12 +487,13 @@ export function validateOracleOutput(
     }
   }
 
-  // r031: confidence > 65% requires cap notation in analysis text
+  // r031: confidence > 65% requires cap notation in analysis text.
+  // Accepts "capped from X%", "capped at X%", or "capped to X%" — all valid forms.
   if (effectiveConfidence > 65) {
-    const hasCapNotation = /capped from \d+%/i.test(oracle.analysis ?? "");
+    const hasCapNotation = /capped\s+(?:from|at|to)\s*\d+%/i.test(oracle.analysis ?? "");
     if (!hasCapNotation) {
       warnings.push(
-        `r031: confidence ${effectiveConfidence}% exceeds 65% cap — analysis must include "capped from X% due to calibration discipline" notation per r031`
+        `r031: confidence ${effectiveConfidence}% exceeds 65% cap — analysis must include cap notation e.g. "capped from X%" or "capped at X%" per r031`
       );
     }
   }
