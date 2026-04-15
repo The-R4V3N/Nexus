@@ -341,10 +341,18 @@
       "weight": 9,
       "addedSession": 166,
       "lastModifiedSession": 166
+    },
+    {
+      "id": "r043",
+      "category": "setup_validation",
+      "description": "Setup pre-validation gate: before constructing any bearish risk asset setup (indices, crypto), verify EUR/USD and GBP/USD are not both +1% or higher. If both exceed +1%, skip bearish risk asset construction regardless of technical levels. Document skipped levels with reason 'USD weakness constraint per r036'.",
+      "weight": 9,
+      "addedSession": 168,
+      "lastModifiedSession": 168
     }
   ],
-  "version": 95,
-  "lastUpdated": "2026-04-15T09:38:54.000Z",
+  "version": 96,
+  "lastUpdated": "2026-04-15T16:52:59.599Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -352,5 +360,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #166"
+  "sessionNotes": "Last updated: Session #168"
 }
