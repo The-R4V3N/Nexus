@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening, filterNonCompliantSetups, detectAxiomRumination } from "../src/validate";
+import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening, filterNonCompliantSetups, detectAxiomRumination, applySetupCountPenalty } from "../src/validate";
 import type { OracleAnalysis, JournalEntry } from "../src/types";
 
 // ── calculateTextSimilarity ─────────────────────────────────
@@ -1344,5 +1344,307 @@ describe("detectAxiomRumination — enforcement mechanism language", () => {
       newRules: [], newSelfTasks: [],
     });
     expect(result).toBeNull();
+  });
+
+  // ── Extended gap-acknowledgment patterns (backlog #6) ──────
+
+  it("detects 'remains a known gap' without action (session #167 pattern)", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "The screening accountability remains a known gap requiring enforcement rather than additional rules.",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    });
+    expect(result).not.toBeNull();
+  });
+
+  it("detects 'requires enforcement' without action", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "This gap requires enforcement at the code level rather than more rules.",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    });
+    expect(result).not.toBeNull();
+  });
+
+  it("detects 'known gap' phrase without action", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "This is a known gap that has persisted across multiple sessions.",
+      ruleUpdates: [], newRules: [], newSelfTasks: [],
+    });
+    expect(result).not.toBeNull();
+  });
+
+  it("does not flag 'known gap' when a self-task is created", () => {
+    const result = detectAxiomRumination({
+      whatFailed: "The screening gap remains a known gap requiring enforcement.",
+      ruleUpdates: [], newRules: [],
+      newSelfTasks: [{ title: "Fix screening enforcement", category: "rule-gap", priority: "high" }],
+    });
+    expect(result).toBeNull();
+  });
+});
+
+// ── applySetupCountPenalty (backlog #13) ─────────────────────
+
+describe("applySetupCountPenalty", () => {
+  it("returns unchanged confidence when setups meet the threshold for 51-70% confidence", () => {
+    // 67% confidence: threshold is 3 (>50 but <=70), has 3 setups → no penalty
+    const result = applySetupCountPenalty(67, 3, false);
+    expect(result.penalized).toBe(67);
+    expect(result.reason).toBeNull();
+  });
+
+  it("does NOT hard-cap to 45% — regression for sessions #166 and #167", () => {
+    // Under old code: 67% confidence, 3 setups → Math.min(67, 45) = 45. Must NOT happen.
+    const result = applySetupCountPenalty(67, 3, false);
+    expect(result.penalized).not.toBe(45);
+  });
+
+  it("returns unchanged confidence when confidence is 50 or below", () => {
+    const result = applySetupCountPenalty(45, 0, false);
+    expect(result.penalized).toBe(45);
+    expect(result.reason).toBeNull();
+  });
+
+  it("applies proportional penalty for 1 missing setup at >70% confidence", () => {
+    // 75% confidence needs 4 setups, has 3 → shortfall 1 → 75 - 10 = 65
+    const result = applySetupCountPenalty(75, 3, false);
+    expect(result.penalized).toBe(65);
+    expect(result.reason).not.toBeNull();
+  });
+
+  it("applies proportional penalty for 2 missing setups at >70% confidence", () => {
+    // 75% needs 4, has 2 → shortfall 2 → 75 - 20 = 55
+    const result = applySetupCountPenalty(75, 2, false);
+    expect(result.penalized).toBe(55);
+  });
+
+  it("does not reduce below 35%", () => {
+    // 75% needs 4, has 0 → shortfall 4 → Math.max(35, 75-40) = 35
+    const result = applySetupCountPenalty(75, 0, false);
+    expect(result.penalized).toBe(35);
+  });
+
+  it("weekend sessions require minimum 2 setups", () => {
+    // Weekend, 65% confidence, 1 setup → shortfall 1 → 65 - 10 = 55
+    const result = applySetupCountPenalty(65, 1, true);
+    expect(result.penalized).toBe(55);
+    expect(result.reason).not.toBeNull();
+  });
+
+  it("weekend sessions with 2 setups have no penalty", () => {
+    const result = applySetupCountPenalty(65, 2, true);
+    expect(result.penalized).toBe(65);
+    expect(result.reason).toBeNull();
+  });
+
+  it("weekend sessions with 0 required setups below threshold have no penalty", () => {
+    const result = applySetupCountPenalty(45, 0, true);
+    // Weekend min is always 2, so 0 setups at 45% → shortfall 2 → 45-20=25 → floor 35
+    // Actually weekend always requires 2, so this should penalize
+    expect(result.penalized).toBe(35);
+  });
+});
+
+// ── r031: confidence cap enforcement ─────────────────────────
+
+describe("validateOracleOutput r031 cap enforcement", () => {
+  function makeOracle31(confidence: number, analysis: string): OracleAnalysis {
+    return {
+      sessionId: "test", timestamp: new Date(),
+      analysis: analysis.padEnd(300, " "),
+      bias: { overall: "bullish", notes: "risk-on" },
+      confidence, setups: [], keyLevels: [], marketSnapshots: [], assumptions: [],
+    };
+  }
+
+  it("warns when confidence exceeds 65 with no cap notation", () => {
+    const result = validateOracleOutput(
+      makeOracle31(67, "Confidence: 67% — TC (70%), MA (65%), RR (60%). Strong bullish move."),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r031"))).toBe(true);
+  });
+
+  it("does not warn when confidence is exactly 65", () => {
+    const result = validateOracleOutput(
+      makeOracle31(65, "Confidence: 65% — TC (65%), MA (65%), RR (65%). Analysis here."),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r031"))).toBe(false);
+  });
+
+  it("does not warn when analysis contains cap notation", () => {
+    const result = validateOracleOutput(
+      makeOracle31(67, "Confidence: 70% — TC (70%), MA (70%), RR (70%). capped from 72% due to calibration discipline."),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r031"))).toBe(false);
+  });
+
+  it("does not warn when raw text confidence is also <= 65 (JSON field mismatch harmless)", () => {
+    const result = validateOracleOutput(
+      makeOracle31(45, "Confidence: 58% — TC (55%), MA (60%), RR (60%). Analysis."),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r031"))).toBe(false);
+  });
+});
+
+// ── r036: bearish risk asset during DXY weakness ─────────────
+
+describe("validateOracleOutput r036 DXY weakness check", () => {
+  function makeSnap(name: string, symbol: string, cat: string, changePercent: number) {
+    return { symbol, name, category: cat, price: 1.18, previousClose: 1.17, change: 0.01, changePercent, high: 1.19, low: 1.17, timestamp: new Date() };
+  }
+
+  const dxyWeaknessSnaps = [
+    makeSnap("EUR/USD", "EURUSD=X", "forex", 1.06),
+    makeSnap("GBP/USD", "GBPUSD=X", "forex", 1.20),
+    makeSnap("NASDAQ 100", "NQ=F", "indices", 5.3),
+  ];
+
+  function makeSetup(instrument: string, direction: "bullish" | "bearish") {
+    return {
+      instrument, type: "MSS" as const, direction, description: "test", invalidation: "test",
+      entry: direction === "bearish" ? 25000 : 1.18,
+      stop:  direction === "bearish" ? 25500 : 1.17,
+      target: direction === "bearish" ? 24000 : 1.20,
+      RR: 2, timeframe: "4H",
+    };
+  }
+
+  it("warns on bearish index setup during active DXY weakness (EUR + GBP both >1%)", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "USD weakness confirmed. NASDAQ extended at highs.".padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 58,
+      setups: [makeSetup("NASDAQ 100", "bearish")],
+      keyLevels: [], marketSnapshots: dxyWeaknessSnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r036"))).toBe(true);
+  });
+
+  it("warns on bearish crypto setup during active DXY weakness", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "DXY weakness. Bitcoin extended.".padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 58,
+      setups: [makeSetup("Bitcoin", "bearish")],
+      keyLevels: [], marketSnapshots: dxyWeaknessSnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r036"))).toBe(true);
+  });
+
+  it("does not warn on bullish risk asset setup during DXY weakness", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "DXY weakness confirmed, risk-on bias.".padEnd(300, " "),
+      bias: { overall: "bullish", notes: "risk-on" }, confidence: 58,
+      setups: [makeSetup("NASDAQ 100", "bullish")],
+      keyLevels: [], marketSnapshots: dxyWeaknessSnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r036"))).toBe(false);
+  });
+
+  it("does not warn when only EUR/USD is up >1% but GBP/USD is not", () => {
+    const partialSnaps = [
+      makeSnap("EUR/USD", "EURUSD=X", "forex", 1.10),
+      makeSnap("GBP/USD", "GBPUSD=X", "forex", 0.80),
+      makeSnap("NASDAQ 100", "NQ=F", "indices", 5.3),
+    ];
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "Mixed signals.".padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 58,
+      setups: [makeSetup("NASDAQ 100", "bearish")],
+      keyLevels: [], marketSnapshots: partialSnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r036"))).toBe(false);
+  });
+
+  it("does not warn on bearish forex setup during DXY weakness (forex is not a risk asset)", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "USD/CHF bearish on DXY weakness.".padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 58,
+      setups: [{
+        instrument: "USD/CHF", type: "MSS" as const, direction: "bearish" as const,
+        description: "test", invalidation: "test",
+        entry: 0.81, stop: 0.82, target: 0.79, RR: 2, timeframe: "4H",
+      }],
+      keyLevels: [], marketSnapshots: dxyWeaknessSnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r036"))).toBe(false);
+  });
+});
+
+// ── r041: pre-commitment instrument screening check ───────────
+
+describe("validateOracleOutput r041 pre-commitment check", () => {
+  const weekdaySnaps = [
+    { symbol: "EURUSD=X", name: "EUR/USD",     category: "forex",       price: 1.18,  previousClose: 1.17, change: 0.01, changePercent: 1.06, high: 1.19, low: 1.17, timestamp: new Date() },
+    { symbol: "GBPUSD=X", name: "GBP/USD",     category: "forex",       price: 1.35,  previousClose: 1.34, change: 0.01, changePercent: 1.20, high: 1.36, low: 1.34, timestamp: new Date() },
+    { symbol: "NQ=F",     name: "NASDAQ 100",  category: "indices",     price: 25000, previousClose: 24000, change: 1000, changePercent: 5.30, high: 25200, low: 24000, timestamp: new Date() },
+    { symbol: "ES=F",     name: "S&P 500",     category: "indices",     price: 5500,  previousClose: 5300, change: 200,  changePercent: 3.77, high: 5520, low: 5300, timestamp: new Date() },
+    { symbol: "BTC-USD",  name: "Bitcoin",     category: "crypto",      price: 74000, previousClose: 73000, change: 1000, changePercent: 1.37, high: 75000, low: 73000, timestamp: new Date() },
+    { symbol: "ETH-USD",  name: "Ethereum",    category: "crypto",      price: 3000,  previousClose: 2950, change: 50,   changePercent: 1.69, high: 3050, low: 2950, timestamp: new Date() },
+    { symbol: "GC=F",     name: "Gold",        category: "commodities", price: 3300,  previousClose: 3250, change: 50,   changePercent: 1.54, high: 3310, low: 3250, timestamp: new Date() },
+    { symbol: "CL=F",     name: "Crude Oil",   category: "commodities", price: 90,    previousClose: 95,   change: -5,   changePercent: -5.26, high: 95, low: 89, timestamp: new Date() },
+  ];
+
+  const fullAnalysis = [
+    "EUR/USD breaking above 1.18 resistance.",
+    "GBP/USD at 1.35 session high.",
+    "NASDAQ 100 surged +5% above 25000.",
+    "S&P 500 at session highs near 5500.",
+    "Bitcoin holding above 74000 support.",
+    "Ethereum showing strength at 3000.",
+    "Gold at 3300 resistance after rally.",
+    "Crude Oil crashed to 90 support on supply shock.",
+  ].join(" ");
+
+  it("warns when confidence >55 and analysis omits required instruments", () => {
+    const analysis = "EUR/USD and NASDAQ surged. Bitcoin holding support. Gold rallied.";
+    // Missing: GBP/USD, S&P, Ethereum, Crude Oil
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: analysis.padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 60,
+      setups: [], keyLevels: [], marketSnapshots: weekdaySnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r041"))).toBe(true);
+  });
+
+  it("does not warn when analysis mentions all 8 required instruments", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: fullAnalysis.padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 60,
+      setups: [], keyLevels: [], marketSnapshots: weekdaySnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r041"))).toBe(false);
+  });
+
+  it("does not warn when confidence is exactly 55 (threshold is >55)", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "EUR/USD only.".padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 55,
+      setups: [], keyLevels: [], marketSnapshots: weekdaySnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r041"))).toBe(false);
+  });
+
+  it("does not fire on weekend-style sessions with only 2 crypto snapshots", () => {
+    const cryptoOnlySnaps = [
+      { symbol: "BTC-USD", name: "Bitcoin",  category: "crypto", price: 74000, previousClose: 73000, change: 1000, changePercent: 1.37, high: 75000, low: 73000, timestamp: new Date() },
+      { symbol: "ETH-USD", name: "Ethereum", category: "crypto", price: 3000,  previousClose: 2950, change: 50,   changePercent: 1.69, high: 3050, low: 2950, timestamp: new Date() },
+    ];
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "Bitcoin and Ethereum showing strength today.".padEnd(300, " "),
+      bias: { overall: "bullish", notes: "crypto strength" }, confidence: 60,
+      setups: [], keyLevels: [], marketSnapshots: cryptoOnlySnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r041"))).toBe(false);
   });
 });
