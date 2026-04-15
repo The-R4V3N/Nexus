@@ -18,6 +18,7 @@ import type {
   OracleAnalysis,
   AxiomReflection,
   AnalysisRules,
+  Rule,
   RuleUpdate,
   ForgeRequest,
 } from "./types";
@@ -570,6 +571,32 @@ function extractTopicWords(text: string): Set<string> {
   );
 }
 
+// ── Encoding sanitization ──────────────────────────────────────────────────
+
+// Repairs em-dash mojibake introduced by Windows-1252 misinterpretation of
+// UTF-8 em-dash bytes (E2 80 94 → â€" as 3 separate chars U+00E2 U+20AC U+201D).
+// Called before every writeFileSync on analysis-rules.json to prevent the
+// corruption from compounding across sessions.
+const MOJO_EM_DASH = "\u00e2\u20ac\u201d";
+const PROPER_EM_DASH = "\u2014";
+
+function fixMojibake(s: string): string {
+  return s.split(MOJO_EM_DASH).join(PROPER_EM_DASH);
+}
+
+export function sanitizeRulesText(rules: AnalysisRules): AnalysisRules {
+  return {
+    ...rules,
+    rules: rules.rules.map(r => {
+      const rule: any = { ...r, description: fixMojibake(r.description ?? "") };
+      if (typeof rule.disabledReason === "string") {
+        rule.disabledReason = fixMojibake(rule.disabledReason);
+      }
+      return rule as Rule;
+    }),
+  };
+}
+
 export function isThemeDuplicate(
   newText: string,
   existingSections: string[]
@@ -655,7 +682,7 @@ async function evolveMemory(
     updatedRules.sessionNotes= `Last updated: Session #${sessionNumber}`;
   }
 
-  fs.writeFileSync(ANALYSIS_RULES_PATH, JSON.stringify(updatedRules, null, 2));
+  fs.writeFileSync(ANALYSIS_RULES_PATH, JSON.stringify(sanitizeRulesText(updatedRules), null, 2), "utf-8");
 
   // ── Update system prompt (capped to prevent unbounded growth) ──
   let newSystemPrompt = currentSystemPrompt;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { buildAxiomPrompt, parseAxiomResponse, handleSelfTasks, isThemeDuplicate } from "../src/axiom";
+import { buildAxiomPrompt, parseAxiomResponse, handleSelfTasks, isThemeDuplicate, sanitizeRulesText } from "../src/axiom";
 import type { OracleAnalysis, AnalysisRules } from "../src/types";
 
 function makeOracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
@@ -405,5 +405,56 @@ describe("buildAxiomPrompt session type", () => {
     // Old 9-arg call still compiles and defaults to weekday
     const { userMessage } = buildAxiomPrompt(makeOracle(), 1, "", "", "", 0, "", makeRules(), "");
     expect(userMessage.toLowerCase()).toContain("weekday");
+  });
+});
+
+// ── sanitizeRulesText — encoding corruption repair ────────────
+
+describe("sanitizeRulesText", () => {
+  // The mojibake sequence: Windows-1252 bytes of em-dash (E2 80 94)
+  // decoded as individual chars U+00E2, U+20AC, U+201D → "â€""
+  const MOJO = "\u00e2\u20ac\u201d";
+  const EM   = "\u2014"; // proper em-dash —
+
+  function makeRulesWithMojo(): AnalysisRules {
+    return {
+      rules: [
+        { id: "r004", category: "liquidity", description: `Equal highs/lows are liquidity targets ${MOJO} price is drawn to them`, weight: 8, addedSession: 1, lastModifiedSession: 1 },
+        { id: "r016", category: "structure", description: "Normal rule no dash", weight: 5, addedSession: 1, lastModifiedSession: 1, disabled: true, disabledReason: `Requires candle data ${MOJO} re-enable later` },
+        { id: "r099", category: "misc",      description: "No corruption here",  weight: 5, addedSession: 1, lastModifiedSession: 1 },
+      ],
+      version: 5,
+      lastUpdated: "2026-04-15T00:00:00Z",
+      focusInstruments: [],
+      sessionNotes: "test",
+    } as any;
+  }
+
+  it("replaces mojibake em-dash sequence with proper em-dash in description", () => {
+    const result = sanitizeRulesText(makeRulesWithMojo());
+    const r004 = result.rules.find(r => r.id === "r004")!;
+    expect(r004.description).not.toContain(MOJO);
+    expect(r004.description).toContain(EM);
+  });
+
+  it("replaces mojibake in disabledReason field", () => {
+    const result = sanitizeRulesText(makeRulesWithMojo());
+    const r016 = result.rules.find(r => r.id === "r016")!;
+    expect((r016 as any).disabledReason).not.toContain(MOJO);
+    expect((r016 as any).disabledReason).toContain(EM);
+  });
+
+  it("leaves clean rules untouched", () => {
+    const result = sanitizeRulesText(makeRulesWithMojo());
+    const r099 = result.rules.find(r => r.id === "r099")!;
+    expect(r099.description).toBe("No corruption here");
+  });
+
+  it("handles multiple occurrences in one description", () => {
+    const rules = makeRulesWithMojo();
+    rules.rules[0].description = `A ${MOJO} B ${MOJO} C`;
+    const result = sanitizeRulesText(rules);
+    expect(result.rules[0].description).toBe(`A ${EM} B ${EM} C`);
+    expect(result.rules[0].description).not.toContain(MOJO);
   });
 });
