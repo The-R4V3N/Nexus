@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening, filterNonCompliantSetups, filterR036Setups, detectAxiomRumination, applySetupCountPenalty } from "../src/validate";
+import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening, filterNonCompliantSetups, filterR036Setups, detectAxiomRumination, detectAcknowledgedGap, applySetupCountPenalty } from "../src/validate";
 import type { OracleAnalysis, JournalEntry } from "../src/types";
 
 // ── calculateTextSimilarity ─────────────────────────────────
@@ -1532,6 +1532,73 @@ describe("detectAxiomRumination — enforcement mechanism language", () => {
       whatFailed: "The screening gap remains a known gap requiring enforcement.",
       ruleUpdates: [], newRules: [],
       newSelfTasks: [{ title: "Fix screening enforcement", category: "rule-gap", priority: "high" }],
+    });
+    expect(result).toBeNull();
+  });
+});
+
+// ── detectAcknowledgedGap (backlog #6 second half) ────────────
+// Fires when AXIOM uses explicit deferral language ("known gap", "requires
+// enforcement") AND takes rule-change action, but omits a self-task —
+// meaning the gap gets deferred again with no tracking mechanism.
+
+describe("detectAcknowledgedGap", () => {
+  it("returns warning when deferral language + rule update + no self-task", () => {
+    const result = detectAcknowledgedGap({
+      whatFailed: "The screening accountability remains a known gap requiring enforcement.",
+      ruleUpdates: [{ ruleId: "r041", type: "modify", before: "old", after: "updated screening", reason: "improve weekend logic" }],
+      newRules: [],
+      newSelfTasks: [],
+    });
+    expect(result).not.toBeNull();
+  });
+
+  it("returns warning when 'requires enforcement' language + new rule + no self-task", () => {
+    const result = detectAcknowledgedGap({
+      whatFailed: "This gap requires code enforcement to be resolved systematically.",
+      ruleUpdates: [],
+      newRules: [{ id: "r045", description: "enforce new check", category: "execution", weight: 8 }],
+      newSelfTasks: [],
+    });
+    expect(result).not.toBeNull();
+  });
+
+  it("returns null when self-task is present — gap is tracked", () => {
+    const result = detectAcknowledgedGap({
+      whatFailed: "The screening gap remains a known gap requiring enforcement.",
+      ruleUpdates: [{ ruleId: "r041", type: "modify", before: "old", after: "new", reason: "improve" }],
+      newRules: [],
+      newSelfTasks: [{ title: "Track known enforcement gap", category: "rule-gap", priority: "high" }],
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null when no deferral language — generic compliance failure is handled by detectAxiomRumination", () => {
+    const result = detectAcknowledgedGap({
+      whatFailed: "Critical compliance failure on r029 — stop distances violated minimum requirements.",
+      ruleUpdates: [{ ruleId: "r029", type: "modify", before: "old", after: "wider stops", reason: "fix stops" }],
+      newRules: [],
+      newSelfTasks: [],
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null when no action taken — detectAxiomRumination handles the zero-action case", () => {
+    const result = detectAcknowledgedGap({
+      whatFailed: "This remains a known gap requiring enforcement.",
+      ruleUpdates: [],
+      newRules: [],
+      newSelfTasks: [],
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null when whatFailed is empty", () => {
+    const result = detectAcknowledgedGap({
+      whatFailed: "",
+      ruleUpdates: [{ ruleId: "r041", type: "modify", before: "x", after: "y", reason: "z" }],
+      newRules: [],
+      newSelfTasks: [],
     });
     expect(result).toBeNull();
   });

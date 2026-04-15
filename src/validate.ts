@@ -738,6 +738,47 @@ export function detectAxiomRumination(parsed: {
   return "AXIOM acknowledged failure without action: compliance failure identified in whatFailed but no rule updates, new rules, or self-tasks were created — a forced self-task will be injected";
 }
 
+// ── Acknowledged Gap Detector (backlog #6 second half) ────
+// Fires when AXIOM uses explicit DEFERRAL language ("known gap",
+// "requires enforcement") — meaning AXIOM is aware of the gap but
+// is not fixing it this session — AND takes rule-change action
+// (so detectAxiomRumination's force-inject is bypassed) but omits
+// a self-task. Without a self-task, the deferred gap has no tracking
+// mechanism and will silently repeat every session.
+
+const DEFERRAL_KEYWORDS = [
+  "remains a known gap", "known gap", "requires enforcement",
+  "gap requiring enforcement", "requires code enforcement",
+  "enforcement rather than", "need enforcement mechanism",
+  "need validation logic",
+];
+
+export function detectAcknowledgedGap(parsed: {
+  whatFailed?: string;
+  ruleUpdates?: any[];
+  newRules?: any[];
+  newSelfTasks?: any[];
+}): string | null {
+  const failText = (parsed.whatFailed ?? "").toLowerCase();
+  if (!failText) return null;
+
+  const hasDeferralLanguage = DEFERRAL_KEYWORDS.some(kw => failText.includes(kw));
+  if (!hasDeferralLanguage) return null;
+
+  const hasRuleUpdate = (parsed.ruleUpdates ?? []).length > 0;
+  const hasNewRule    = (parsed.newRules     ?? []).length > 0;
+  const hasSelfTask   = (parsed.newSelfTasks ?? []).length > 0;
+
+  // No action at all — detectAxiomRumination already handles this with a forced injection.
+  if (!hasRuleUpdate && !hasNewRule && !hasSelfTask) return null;
+
+  // A self-task exists: the gap is explicitly tracked across sessions.
+  if (hasSelfTask) return null;
+
+  // Rule changes were made but no self-task created — the deferred gap goes untracked.
+  return "AXIOM explicitly deferred a gap ('known gap'/'requires enforcement') and modified rules without a self-task — the gap will remain untracked across sessions";
+}
+
 // ── Bias-to-Rule Mapping Checker ─────────────────────────
 // Detects when AXIOM identifies cognitive biases but produces no rule updates
 // that address them. Warns so the feedback reaches AXIOM's next context.
@@ -905,6 +946,10 @@ export function validateAxiomOutput(
   // Detect unacted compliance violations (rumination blind spot)
   const ruminationWarning = detectAxiomRumination(parsed);
   if (ruminationWarning) warnings.push(ruminationWarning);
+
+  // Detect explicitly deferred gaps that lack a tracking self-task (backlog #6 second half)
+  const gapWarning = detectAcknowledgedGap(parsed);
+  if (gapWarning) warnings.push(gapWarning);
 
   return {
     valid: errors.length === 0,
