@@ -152,15 +152,21 @@ ${(() => {
   const raw = extractConfidenceFromText(oracle.analysis);
   if (raw !== null && raw !== oracle.confidence) {
     return `
-⚠️  CONFIDENCE CALIBRATION NOTICE — READ BEFORE REFLECTING ⚠️
-Your analysis text calculated ${raw}% confidence. The validation layer adjusted this to ${oracle.confidence}% based on historical hit-rate calibration. This adjustment is AUTOMATIC and CORRECT — it is not a rule execution failure on your part.
+⚠️  CONFIDENCE ADJUSTMENT NOTICE — READ BEFORE REFLECTING ⚠️
+Your analysis text calculated ${raw}% confidence. The pipeline adjusted this to ${oracle.confidence}%.
+
+This is an AUTOMATIC SYSTEM ENFORCEMENT — it is NOT a rule execution failure, output corruption, or evidence that your confidence methodology is broken.
+
+Possible reasons for the adjustment:
+1. Setup-count enforcement: you produced fewer setups than the minimum required for your confidence level (e.g. 3 setups at 67% confidence when 3 are required → no penalty; 3 setups at 75% when 4 are required → −10pts).
+2. Zero-setup contradiction: >60% confidence with 0 setups forces confidence to 35%.
 
 DO NOT:
-- Treat the ${raw}% → ${oracle.confidence}% difference as evidence that you "failed to apply r014 or r032"
-- Modify r014, r032, or any other confidence rules to "compensate" for this calibration
-- Write in whatFailed that your confidence methodology was inconsistently applied
+- Treat the ${raw}% → ${oracle.confidence}% difference as evidence that you "failed to apply r014 or r032" or that your "output mechanism is corrupted"
+- Modify r014, r032, or any other confidence rules to compensate for this adjustment
+- Write in whatFailed that your confidence methodology was inconsistently applied or that there is an "output mechanism failure"
 
-The calibration is working as designed. If you write about confidence in this reflection, acknowledge the calibration happened and move on.
+The pipeline enforcement is working as designed. Acknowledge it briefly and move on — focus your reflection on analytical quality, not on the number.
 `;
   }
   return "";
@@ -174,7 +180,7 @@ The calibration is working as designed. If you write about confidence in this re
 - Mixed bias justified: ${oracle.bias.overall !== "mixed" ? "N/A (bias is " + oracle.bias.overall + ")" : /conflict|divergen|breakdown/i.test(oracle.bias.notes) ? "YES" : "NO"}
 
 IMPORTANT ANTI-REPETITION RULES:
-- If a CONFIDENCE CALIBRATION NOTICE appeared above, you MUST NOT treat the calibration adjustment as a rule execution failure. Do not mention confidence methodology inconsistency in whatFailed. Do not modify r014 or r032.
+- If a CONFIDENCE ADJUSTMENT NOTICE appeared above, you MUST NOT treat the pipeline enforcement as a rule execution failure or "output mechanism corruption". Do not mention confidence methodology inconsistency in whatFailed. Do not modify r014 or r032.
 - Base your reflection on the compliance check above, not on assumptions from previous sessions.
 - If compliance says YES, acknowledge progress — do not repeat old criticisms.
 - BEFORE writing your reflection, review the "Recent session history" below. If your reflection would say the same thing as a previous session, you MUST either (a) find a genuinely NEW insight, or (b) say "No new insights this session — market conditions and analysis quality unchanged."

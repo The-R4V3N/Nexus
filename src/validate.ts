@@ -95,6 +95,39 @@ export function resolveConfidence(analysis: string, jsonConfidence: number): num
   return jsonConfidence;
 }
 
+// ── Setup count penalty (backlog #13) ────────────────────────
+// Applies a proportional confidence reduction when ORACLE produces fewer setups
+// than the minimum required for its stated confidence level.
+// Replaces the old hard-cap of Math.min(confidence, 45) which always produced
+// 45% regardless of how close to the threshold the session was.
+//
+// Thresholds (weekday):
+//   confidence > 70% → 4 setups required
+//   confidence > 50% → 3 setups required
+//   confidence ≤ 50% → no minimum
+// Weekend: always 2 setups minimum.
+// Penalty: 10 points per missing setup, floor at 35%.
+
+export function applySetupCountPenalty(
+  confidence: number,
+  setupCount: number,
+  isWeekend: boolean
+): { penalized: number; reason: string | null } {
+  const minSetups = isWeekend
+    ? 2
+    : confidence > 70 ? 4 : confidence > 50 ? 3 : 0;
+
+  if (minSetups > 0 && setupCount < minSetups) {
+    const shortfall = minSetups - setupCount;
+    const penalized = Math.max(35, confidence - shortfall * 10);
+    return {
+      penalized,
+      reason: `setup-count enforcement: ${setupCount}/${minSetups} required setups — confidence reduced from ${confidence}% by ${shortfall * 10}pts to ${penalized}%`,
+    };
+  }
+  return { penalized: confidence, reason: null };
+}
+
 // ── Weekend Crypto Screening Validator ───────────────────
 // Checks which available crypto instruments ORACLE actually covered
 // (mentioned in analysis text or produced a setup for). Weekend sessions
@@ -437,6 +470,78 @@ export function validateOracleOutput(
     }
   }
 
+  // r031: confidence > 65% requires cap notation in analysis text
+  if (effectiveConfidence > 65) {
+    const hasCapNotation = /capped from \d+%/i.test(oracle.analysis ?? "");
+    if (!hasCapNotation) {
+      warnings.push(
+        `r031: confidence ${effectiveConfidence}% exceeds 65% cap — analysis must include "capped from X% due to calibration discipline" notation per r031`
+      );
+    }
+  }
+
+  // r036: no bearish risk asset setups during active DXY weakness.
+  // DXY weakness = EUR/USD and GBP/USD both up >1% in the same session.
+  // Risk assets = indices and crypto (not forex, commodities).
+  {
+    const forexSnaps = (oracle.marketSnapshots ?? []).filter(s => {
+      const n = (s.name ?? "").toLowerCase().replace(/[^a-z/]/g, "");
+      const sym = (s.symbol ?? "").toLowerCase().replace(/[^a-z]/g, "");
+      return n.includes("eur") || n.includes("gbp") || sym.includes("eurusd") || sym.includes("gbpusd");
+    });
+    const eurUp  = forexSnaps.some(s => (s.name ?? "").toLowerCase().includes("eur") && (s.changePercent ?? 0) > 1);
+    const gbpUp  = forexSnaps.some(s => (s.name ?? "").toLowerCase().includes("gbp") && (s.changePercent ?? 0) > 1);
+    const dxyWeak = eurUp && gbpUp;
+
+    if (dxyWeak) {
+      const bearishRiskAssets = (oracle.setups ?? []).filter(s => {
+        const cls = classifyInstrument(s.instrument ?? "", s.instrument ?? "");
+        return s.direction === "bearish" && (cls === "indices" || cls === "crypto");
+      });
+      if (bearishRiskAssets.length > 0) {
+        warnings.push(
+          `r036: active DXY weakness (EUR/USD and GBP/USD both >+1%) — bearish risk asset setup(s) detected (${bearishRiskAssets.map(s => s.instrument).join(", ")}); r036 prohibits bearish risk asset setups when EUR/USD, GBP/USD, AUD/USD all up >1%`
+        );
+      }
+    }
+  }
+
+  // r041: when confidence >55%, analysis must mention all 8 mandatory screening instruments.
+  // Only fires on weekday sessions (detected by ≥4 of the 8 instruments in marketSnapshots).
+  if (effectiveConfidence > 55) {
+    const snapNames = new Set(
+      (oracle.marketSnapshots ?? []).flatMap(s => [
+        (s.name ?? "").toLowerCase(),
+        (s.symbol ?? "").toLowerCase().replace(/[^a-z]/g, ""),
+      ])
+    );
+    const r041Pairs: [string, string[]][] = [
+      ["EUR/USD",   ["eur/usd", "eurusd", "eur"]],
+      ["GBP/USD",   ["gbp/usd", "gbpusd", "gbp"]],
+      ["NASDAQ",    ["nasdaq", "nas100"]],
+      ["S&P",       ["s&p", "spx", "s&p500", "s&p 500"]],
+      ["BTC",       ["bitcoin", "btc"]],
+      ["ETH",       ["ethereum", "eth"]],
+      ["Gold",      ["gold", "xau"]],
+      ["Oil",       ["oil", "crude", "wti", "brent"]],
+    ];
+    // Only check pairs whose instruments are present in snapshots (weekday detection)
+    const presentPairs = r041Pairs.filter(([, aliases]) =>
+      aliases.some(a => [...snapNames].some(n => n.includes(a.replace("/", ""))))
+    );
+    if (presentPairs.length >= 4) {
+      const analysisLower = (oracle.analysis ?? "").toLowerCase();
+      const missing = presentPairs
+        .filter(([, aliases]) => !aliases.some(a => analysisLower.includes(a)))
+        .map(([name]) => name);
+      if (missing.length > 0) {
+        warnings.push(
+          `r041: ${effectiveConfidence}% confidence — pre-commitment screening requires mentioning all available instruments; missing from analysis: ${missing.join(", ")}`
+        );
+      }
+    }
+  }
+
   // r011 compliance: causal attribution language must be documented in assumptions[]
   // Catches both explicit causal phrases and softer attribution language ORACLE naturally uses
   const causalPattern = /\b(assuming|if confirmed|driven by|due to|because of|amid geopolit|escalation|de-escalation|suggests?|consistent with|appears? to|following\s+\w*day|amid\b|reflects?|indicates?)\b/i;
@@ -541,6 +646,9 @@ const VIOLATION_KEYWORDS = [
   "systematic failure", "failed to implement", "failed to comply",
   "failed to apply", "failed to execute", "violation", "non-compliant",
   "enforcement mechanisms are inadequate", "need validation logic", "need enforcement mechanism",
+  // Extended gap-acknowledgment patterns (backlog #6) — sessions #166-167
+  "remains a known gap", "known gap", "requires enforcement", "gap requiring enforcement",
+  "enforcement rather than", "requires code enforcement",
 ];
 
 export function detectAxiomRumination(parsed: {

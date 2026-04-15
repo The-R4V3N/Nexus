@@ -14,7 +14,7 @@ import {
   salvageJSON, stripSurrogates, extractJSONFromResponse, groupBy,
   MEMORY_DIR, SYSTEM_PROMPT_PATH, ANALYSIS_RULES_PATH,
 } from "./utils";
-import { resolveConfidence } from "./validate";
+import { resolveConfidence, applySetupCountPenalty } from "./validate";
 import { loadAllJournalEntries } from "./journal";
 import { buildCalibrationContext } from "./analytics";
 import type {
@@ -491,14 +491,12 @@ Only respond with the JSON array, no other text.`;
     finalConfidence = 35;
   }
 
-  // Enforce minimum setup counts based on confidence
-  const minSetups = isWeekend
-    ? 2
-    : finalConfidence > 60 ? 4 : finalConfidence > 50 ? 3 : 0;
-
-  if (minSetups > 0 && validSetups.length < minSetups) {
-    console.warn(`  \u26a0 ORACLE screening gap: ${validSetups.length} setups but minimum ${minSetups} required at ${finalConfidence}% confidence \u2014 reducing confidence to ${Math.min(finalConfidence, 45)}%`);
-    finalConfidence = Math.min(finalConfidence, 45);
+  // Enforce minimum setup counts based on confidence (proportional penalty, backlog #13)
+  const { penalized: penalizedConfidence, reason: penaltyReason } =
+    applySetupCountPenalty(finalConfidence, validSetups.length, isWeekend);
+  if (penaltyReason) {
+    console.warn(`  \u26a0 ORACLE ${penaltyReason}`);
+    finalConfidence = penalizedConfidence;
   }
 
   return {
