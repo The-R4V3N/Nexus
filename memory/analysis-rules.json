@@ -325,10 +325,18 @@
       "weight": 9,
       "addedSession": 163,
       "lastModifiedSession": 163
+    },
+    {
+      "id": "r041",
+      "category": "screening_enforcement",
+      "description": "When confidence exceeds 55%, pre-commit to screening minimum 8 specific instruments before setup generation: EUR/USD, GBP/USD (forex), NASDAQ, S&P (indices), BTC, ETH (crypto), Gold (metals), Oil (commodities). Document structural level (support/resistance) for each with price and reasoning. Only after documenting all 8 levels may setup construction begin.",
+      "weight": 9,
+      "addedSession": 165,
+      "lastModifiedSession": 165
     }
   ],
-  "version": 93,
-  "lastUpdated": "2026-04-14T18:56:32.979Z",
+  "version": 94,
+  "lastUpdated": "2026-04-15T00:59:50.433Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -336,5 +344,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #163"
+  "sessionNotes": "Last updated: Session #165"
 }
