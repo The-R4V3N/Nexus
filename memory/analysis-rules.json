@@ -333,10 +333,18 @@
       "weight": 9,
       "addedSession": 165,
       "lastModifiedSession": 165
+    },
+    {
+      "id": "r042",
+      "category": "output_integrity",
+      "description": "Before finalizing any session, verify confidence score in analysis text matches JSON confidence field within 5 points. If mismatch detected, use analysis text value as authoritative and document discrepancy reason.",
+      "weight": 9,
+      "addedSession": 166,
+      "lastModifiedSession": 166
     }
   ],
-  "version": 94,
-  "lastUpdated": "2026-04-15T00:59:50.433Z",
+  "version": 95,
+  "lastUpdated": "2026-04-15T09:38:54.000Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -344,5 +352,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #165"
+  "sessionNotes": "Last updated: Session #166"
 }
