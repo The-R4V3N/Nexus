@@ -298,6 +298,49 @@ describe("isThemeDuplicate", () => {
     const result = isThemeDuplicate(weekendSection, [narrativeSection134, narrativeSection135]);
     expect(result.isDuplicate).toBe(false);
   });
+
+  // ── Morphological variant tests (backlog #7) ──────────────
+  // These are the cases that slipped through: same theme, different word forms.
+  // "execution/setup generation failures" expressed across sessions using
+  // execute/executing/executed and generate/generating/generation etc.
+
+  const execGapSession1 =
+    "When systematic execution failures occur across multiple asset classes, " +
+    "document the analytical gap and generate actionable setups rather than " +
+    "simply noting the price action. Execution discipline requires converting " +
+    "observations into structured trade plans.";
+
+  const execGapSession2 =
+    "Systematic analysis of coordinated market moves must generate executable " +
+    "setups. Analytical observations without actionable structures indicate an " +
+    "execution gap — market intelligence requires conversion of insights into " +
+    "specific entry, stop, and target levels.";
+
+  const execGapSession3 =
+    "Setup generation failures during high-conviction sessions indicate executing " +
+    "discipline gaps. Converting analytical observations into structured setups is " +
+    "non-negotiable — generated intelligence without corresponding trade structures " +
+    "represents incomplete analysis regardless of narrative quality.";
+
+  it("detects morphological variants of execution/setup theme (session1 vs session2)", () => {
+    const result = isThemeDuplicate(execGapSession2, [execGapSession1]);
+    expect(result.isDuplicate).toBe(true);
+  });
+
+  it("detects morphological variants of execution/setup theme (session3 vs session1)", () => {
+    const result = isThemeDuplicate(execGapSession3, [execGapSession1]);
+    expect(result.isDuplicate).toBe(true);
+  });
+
+  it("does not flag execution-gap theme against narrative-dominance theme", () => {
+    const result = isThemeDuplicate(execGapSession1, [narrativeSection134, narrativeSection135]);
+    expect(result.isDuplicate).toBe(false);
+  });
+
+  it("does not flag oil-volatility theme against execution-gap theme", () => {
+    const result = isThemeDuplicate(oilSection, [execGapSession1, execGapSession2]);
+    expect(result.isDuplicate).toBe(false);
+  });
 });
 
 // ── handleSelfTasks ───────────────────────────────────────

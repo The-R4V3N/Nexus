@@ -557,9 +557,23 @@ export async function runAxiomReflection(
 // This extends it with a topic-keyword check to catch the same
 // theme expressed in different words across multiple sessions
 // (e.g. "resist narrative dominance" appearing 5 sessions in a row).
+//
+// Words are normalized to their 5-character prefix before comparison so
+// morphological variants converge: execution/executing/executed → "execu",
+// generate/generation/generating → "gener", analysis/analytical → "analy".
+//
+// DOMAIN_STOP_STEMS filters out 5-char stems that appear in virtually every
+// section regardless of theme, preventing incidental overlap from triggering
+// false-positive duplicate detection.
 
-const DOMAIN_STOP_WORDS = new Set([
-  "market", "markets", "session", "sessions",
+const DOMAIN_STOP_STEMS = new Set([
+  "marke", // market / markets
+  "sessi", // session / sessions
+  "analy", // analysis / analytical / analyzing
+  "syste", // systematic / system
+  "requi", // require / requires / required
+  "acros", // across (transitional — appears in most sections)
+  "actio", // action / actions / actionable (too generic across themes)
 ]);
 
 function extractTopicWords(text: string): Set<string> {
@@ -567,7 +581,9 @@ function extractTopicWords(text: string): Set<string> {
     text.toLowerCase()
       .split(/\s+/)
       .map(w => w.replace(/[^a-z]/g, ""))
-      .filter(w => w.length >= 6 && !DOMAIN_STOP_WORDS.has(w))
+      .filter(w => w.length >= 6)
+      .map(w => w.slice(0, 5))
+      .filter(stem => !DOMAIN_STOP_STEMS.has(stem))
   );
 }
 
