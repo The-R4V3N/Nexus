@@ -711,6 +711,21 @@ describe("extractConfidenceFromText", () => {
   it("is case insensitive", () => {
     expect(extractConfidenceFromText("confidence: 55%")).toBe(55);
   });
+
+  it("returns capped value when 'capped at X%' notation is present", () => {
+    // ORACLE calculates 70% but caps to 65% — should return the capped value
+    const text = "Confidence: 70% — TC (80%), MA (70%), RR (60%). applying calibration discipline, capped at 65%.";
+    expect(extractConfidenceFromText(text)).toBe(65);
+  });
+
+  it("returns capped value when 'capped to X%' notation is present", () => {
+    const text = "Confidence: 72% — TC (75%), MA (70%), RR (70%). Capped to 65% per r031.";
+    expect(extractConfidenceFromText(text)).toBe(65);
+  });
+
+  it("still extracts direct value when no cap notation present", () => {
+    expect(extractConfidenceFromText("Confidence: 73% — TC (80%), MA (60%), RR (70%).")).toBe(73);
+  });
 });
 
 // ── Confidence mismatch validation ──────────────────────────
@@ -961,6 +976,18 @@ describe("resolveConfidence", () => {
   it("returns extracted value when mismatch is 11 points (just over boundary)", () => {
     const analysis = "Confidence: 71%";
     expect(resolveConfidence(analysis, 60)).toBe(71);
+  });
+
+  it("returns capped value when 'capped at X%' is explicit, even within 10-point threshold", () => {
+    // ORACLE says "Confidence: 70% ... capped at 65%" and JSON has 70.
+    // Diff = 5 (within threshold), but the cap is EXPLICIT — must honor it.
+    const analysis = "Confidence: 70% — TC (80%), MA (70%), RR (60%). applying calibration, capped at 65%.";
+    expect(resolveConfidence(analysis, 70)).toBe(65);
+  });
+
+  it("returns capped value when cap is below JSON confidence", () => {
+    const analysis = "Confidence: 72% — strong setup. Capped to 65% per calibration discipline.";
+    expect(resolveConfidence(analysis, 72)).toBe(65);
   });
 });
 
@@ -1600,9 +1627,26 @@ describe("validateOracleOutput r031 cap enforcement", () => {
     expect(result.warnings.some((w) => w.includes("r031"))).toBe(false);
   });
 
-  it("does not warn when analysis contains cap notation", () => {
+  it("does not warn when analysis contains 'capped from X%' notation", () => {
     const result = validateOracleOutput(
       makeOracle31(67, "Confidence: 70% — TC (70%), MA (70%), RR (70%). capped from 72% due to calibration discipline."),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r031"))).toBe(false);
+  });
+
+  it("does not warn when analysis contains 'capped at X%' notation", () => {
+    // ORACLE writes "capped at 65%" — current regex misses this, must be fixed
+    const result = validateOracleOutput(
+      makeOracle31(67, "Confidence: 70% — TC (80%), MA (70%), RR (60%). applying calibration discipline, capped at 65%."),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r031"))).toBe(false);
+  });
+
+  it("does not warn when analysis contains 'Capped to X%' notation", () => {
+    const result = validateOracleOutput(
+      makeOracle31(67, "Confidence: 70% — TC (75%), MA (70%), RR (65%). Capped to 65% per r031."),
       []
     );
     expect(result.warnings.some((w) => w.includes("r031"))).toBe(false);
