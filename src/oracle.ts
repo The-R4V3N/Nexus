@@ -270,6 +270,7 @@ ${weekendTemplate}
 
   const r029Note = buildR029StopNote(snapshots);
   const minSetupNote = buildMinSetupNote(parsed.confidence ?? 50);
+  const rrSelfCheckNote = buildRRSelfCheckNote();
 
   const rawConf = parsed.confidence ?? 50;
   const weekdayTemplate = !isWeekend ? buildWeekdayScreeningTemplate(snapshots, rawConf) : "";
@@ -313,7 +314,7 @@ RULES:
 - ENTRY: nearest support/resistance, session high/low, or key level
 - STOP: beyond the next structural level, or 1x ATR from entry${r029Note}
 - TARGET: next liquidity level, psychological number, or swing point
-- RR must be > 1.3 \u2014 do not include setups with risk exceeding reward
+- RR must be > 1.3 \u2014 do not include setups with risk exceeding reward${rrSelfCheckNote}
 - Include instrument, type, direction, description, and invalidation
 - TYPE must be a specific ICT pattern: FVG, OB, Liquidity Sweep, MSS, CISD, or PDH/PDL. These apply to ALL markets including crypto. "Other" is only acceptable if the setup genuinely does not fit any ICT pattern — do not use "Other" as a default.
 
@@ -632,6 +633,23 @@ export function buildMinSetupNote(confidence: number): string {
   if (confidence < 50) return "";
   const minSetups = confidence >= 60 ? 4 : 3;
   return `\nMANDATORY SETUP COUNT (your confidence is ${confidence}%): You MUST provide at least ${minSetups} setups. Returning fewer is a rule violation (r034). Systematically screen ALL instruments — forex majors, indices, crypto, commodities — before concluding no setup exists.\n`;
+}
+
+// ── RR self-check enforcement ──────────────────────────────
+// Returns a prompt block with the explicit RR formula and a mandatory
+// self-verification step. Injected into every setup construction prompt
+// to prevent ORACLE from self-reporting RR without computing the formula.
+// Root cause of session #169: EUR/USD self-reported RR 1.53, actual 0.81.
+export function buildRRSelfCheckNote(): string {
+  return `
+MANDATORY RR VERIFICATION — compute before submitting each setup:
+  Bullish: RR = (target − entry) / (entry − stop)
+  Bearish: RR = (entry − target) / (stop − entry)
+Calculate this value explicitly for every setup. If RR < 1.3, either:
+  (a) adjust target to a further liquidity level to achieve RR ≥ 1.3, OR
+  (b) reject the setup and leave entry/stop/target as null.
+Do NOT submit a setup with self-reported RR that you have not verified with this formula.
+`;
 }
 
 // ── Formatters ─────────────────────────────────────────────
