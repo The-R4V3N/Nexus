@@ -636,6 +636,54 @@ export function filterNonCompliantSetups(oracle: OracleAnalysis): {
   };
 }
 
+// ── r036 Setup Filter ────────────────────────────────────
+// Hard-removes bearish risk asset setups when active DXY weakness is detected.
+// DXY weakness = EUR/USD and GBP/USD both up >1% in the same session.
+// Risk assets = indices and crypto (forex and commodities are not filtered).
+// Mirrors filterNonCompliantSetups pattern: returns new oracle + removal log.
+
+export function filterR036Setups(oracle: OracleAnalysis): {
+  oracle: OracleAnalysis;
+  removed: SetupRemovalRecord[];
+} {
+  const snapshots = oracle.marketSnapshots ?? [];
+
+  const eurUp = snapshots.some(s => {
+    const n = (s.name ?? "").toLowerCase();
+    const sym = (s.symbol ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    return (n.includes("eur") || sym.includes("eurusd")) && (s.changePercent ?? 0) > 1;
+  });
+  const gbpUp = snapshots.some(s => {
+    const n = (s.name ?? "").toLowerCase();
+    const sym = (s.symbol ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    return (n.includes("gbp") || sym.includes("gbpusd")) && (s.changePercent ?? 0) > 1;
+  });
+
+  if (!eurUp || !gbpUp) {
+    return { oracle, removed: [] };
+  }
+
+  const removed: SetupRemovalRecord[] = [];
+  const compliantSetups: typeof oracle.setups = [];
+
+  for (const s of oracle.setups) {
+    const cls = classifyInstrument(s.instrument ?? "", s.instrument ?? "");
+    if (s.direction === "bearish" && (cls === "indices" || cls === "crypto")) {
+      removed.push({
+        instrument: s.instrument ?? "unknown",
+        reason: `r036: bearish ${cls} setup removed — active DXY weakness (EUR/USD and GBP/USD both >+1%)`,
+      });
+    } else {
+      compliantSetups.push(s);
+    }
+  }
+
+  return {
+    oracle: { ...oracle, setups: compliantSetups },
+    removed,
+  };
+}
+
 // ── AXIOM Rumination Detector ─────────────────────────────
 // Detects when AXIOM acknowledges a compliance failure in text but
 // takes zero concrete action (no rule update, new rule, or self-task).

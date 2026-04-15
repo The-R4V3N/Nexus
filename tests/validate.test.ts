@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening, filterNonCompliantSetups, detectAxiomRumination, applySetupCountPenalty } from "../src/validate";
+import { calculateTextSimilarity, validateOracleOutput, validateAxiomOutput, extractConfidenceFromText, resolveConfidence, validateWeekendCryptoScreening, filterNonCompliantSetups, filterR036Setups, detectAxiomRumination, applySetupCountPenalty } from "../src/validate";
 import type { OracleAnalysis, JournalEntry } from "../src/types";
 
 // ── calculateTextSimilarity ─────────────────────────────────
@@ -1194,6 +1194,134 @@ describe("filterNonCompliantSetups", () => {
     } as any]);
     const { removed } = filterNonCompliantSetups(bearishOracle);
     expect(removed).toHaveLength(1);
+  });
+});
+
+// ── filterR036Setups ─────────────────────────────────────────
+
+describe("filterR036Setups", () => {
+  function makeSnap(name: string, symbol: string, changePercent: number) {
+    return {
+      symbol, name, category: "forex" as const,
+      price: 1.1, previousClose: 1.1 / (1 + changePercent / 100),
+      change: 1.1 * changePercent / 100, changePercent,
+      high: 1.11, low: 1.09, timestamp: new Date(),
+    };
+  }
+
+  function makeSetup(instrument: string, direction: "bullish" | "bearish", entry = 25000) {
+    const isBearish = direction === "bearish";
+    return {
+      instrument, type: "MSS" as const, direction,
+      description: "test", invalidation: "test",
+      entry,
+      stop: isBearish ? entry * 1.02 : entry * 0.98,
+      target: isBearish ? entry * 0.96 : entry * 1.04,
+      RR: 2, timeframe: "4H",
+    };
+  }
+
+  function makeOracle(snaps: any[], setups: any[]): OracleAnalysis {
+    return {
+      timestamp: new Date(), sessionId: "test", marketSnapshots: snaps,
+      analysis: "A".repeat(300), setups,
+      bias: { overall: "bullish", notes: "USD weakness" }, keyLevels: [], confidence: 55,
+    };
+  }
+
+  const eurUp   = makeSnap("EUR/USD", "EURUSD", 1.25);
+  const gbpUp   = makeSnap("GBP/USD", "GBPUSD", 1.34);
+  const eurFlat = makeSnap("EUR/USD", "EURUSD", 0.5);
+  const gbpFlat = makeSnap("GBP/USD", "GBPUSD", 0.3);
+
+  it("removes bearish index setup when EUR/USD and GBP/USD both >+1%", () => {
+    const oracle = makeOracle([eurUp, gbpUp], [makeSetup("NASDAQ 100", "bearish")]);
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(0);
+    expect(removed).toHaveLength(1);
+    expect(removed[0].instrument).toBe("NASDAQ 100");
+    expect(removed[0].reason).toMatch(/r036/);
+  });
+
+  it("removes bearish crypto setup when EUR/USD and GBP/USD both >+1%", () => {
+    const oracle = makeOracle([eurUp, gbpUp], [makeSetup("Bitcoin", "bearish", 80000)]);
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(0);
+    expect(removed).toHaveLength(1);
+    expect(removed[0].instrument).toBe("Bitcoin");
+  });
+
+  it("keeps bullish index/crypto setups even when EUR/USD and GBP/USD both >+1%", () => {
+    const oracle = makeOracle([eurUp, gbpUp], [makeSetup("NASDAQ 100", "bullish")]);
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("keeps bearish forex setups — r036 only blocks risk assets", () => {
+    const oracle = makeOracle([eurUp, gbpUp], [makeSetup("USD/JPY", "bearish", 150)]);
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("keeps bearish commodity setups — r036 only blocks risk assets", () => {
+    const oracle = makeOracle([eurUp, gbpUp], [makeSetup("Gold", "bearish", 3000)]);
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("does not filter when only EUR/USD is >+1% (GBP flat)", () => {
+    const oracle = makeOracle([eurUp, gbpFlat], [makeSetup("NASDAQ 100", "bearish")]);
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("does not filter when only GBP/USD is >+1% (EUR flat)", () => {
+    const oracle = makeOracle([eurFlat, gbpUp], [makeSetup("NASDAQ 100", "bearish")]);
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("does not filter when neither EUR/USD nor GBP/USD is >+1%", () => {
+    const oracle = makeOracle([eurFlat, gbpFlat], [makeSetup("NASDAQ 100", "bearish")]);
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("removes only violating setups in a mixed list", () => {
+    const oracle = makeOracle(
+      [eurUp, gbpUp],
+      [
+        makeSetup("NASDAQ 100", "bearish"),   // violates r036
+        makeSetup("EUR/USD", "bullish", 1.1), // OK — bullish
+        makeSetup("Bitcoin", "bearish", 80000), // violates r036
+      ]
+    );
+    const { oracle: filtered, removed } = filterR036Setups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect((filtered.setups as any)[0].instrument).toBe("EUR/USD");
+    expect(removed).toHaveLength(2);
+  });
+
+  it("does not mutate the original oracle object", () => {
+    const oracle = makeOracle([eurUp, gbpUp], [makeSetup("NASDAQ 100", "bearish")]);
+    filterR036Setups(oracle);
+    expect(oracle.setups).toHaveLength(1); // original unchanged
+  });
+
+  it("returns empty removed array when no setups present", () => {
+    const { removed } = filterR036Setups(makeOracle([eurUp, gbpUp], []));
+    expect(removed).toHaveLength(0);
+  });
+
+  it("returns empty removed array when no market snapshots present", () => {
+    const { removed } = filterR036Setups(makeOracle([], [makeSetup("NASDAQ 100", "bearish")]));
+    expect(removed).toHaveLength(0);
   });
 });
 
