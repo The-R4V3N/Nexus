@@ -26,7 +26,7 @@ import {
   loadAllJournalEntries,
   saveJournalEntry,
 } from "./journal";
-import { validateOracleOutput, validateWeekendCryptoScreening, filterNonCompliantSetups, logFailure, loadRecentFailures, resolveConfidence } from "./validate";
+import { validateOracleOutput, validateWeekendCryptoScreening, filterNonCompliantSetups, filterR036Setups, logFailure, loadRecentFailures, resolveConfidence } from "./validate";
 import { buildAnalyticsSummary }                                    from "./analytics";
 import { fetchRSSNews, formatRSSForPrompt }                          from "./rss";
 import { notifySessionComplete }                                     from "./notifications";
@@ -534,6 +534,15 @@ export async function runAndValidateOracle(
       console.warn(`  ⚠ r029: removed setup [${r.instrument}] — ${r.reason}`);
     }
     oracle = filteredOracle;
+  }
+
+  // Filter bearish risk asset setups that violate r036 (DXY weakness confirmation)
+  const { oracle: r036FilteredOracle, removed: r036RemovedSetups } = filterR036Setups(oracle);
+  if (r036RemovedSetups.length > 0) {
+    for (const r of r036RemovedSetups) {
+      console.warn(`  ⚠ r036: removed setup [${r.instrument}] — ${r.reason}`);
+    }
+    oracle = r036FilteredOracle;
   }
 
   // Resolve confidence discrepancy: if the analysis text states a higher confidence than
