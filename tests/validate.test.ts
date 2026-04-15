@@ -1742,10 +1742,31 @@ describe("validateOracleOutput r041 pre-commitment check", () => {
     expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r041"))).toBe(true);
   });
 
-  it("does not warn when analysis mentions all 8 required instruments", () => {
+  it("warns when all 8 instruments mentioned but 'Screening validation:' template absent", () => {
+    // fullAnalysis mentions all 8 instruments individually — old check would pass, new check must warn
     const oracle: OracleAnalysis = {
       sessionId: "test", timestamp: new Date(),
       analysis: fullAnalysis.padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 60,
+      setups: [], keyLevels: [], marketSnapshots: weekdaySnaps, assumptions: [],
+    };
+    expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r041"))).toBe(true);
+  });
+
+  it("does not warn when analysis contains 'Screening validation:' template with all 8 instruments", () => {
+    const templateAnalysis = [
+      "Screening validation: EUR/USD 1.18 resistance — viable long above 1.18.",
+      "GBP/USD 1.35 support — viable long on pullback.",
+      "NASDAQ 25000 resistance — no setup, extended.",
+      "S&P 5500 resistance — no setup, extended.",
+      "BTC 74000 support — viable long.",
+      "ETH 3000 support — no setup, low RR.",
+      "Gold 3300 resistance — viable long breakout.",
+      "Oil 90 support — no setup, conflicting bias.",
+    ].join(" ");
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: templateAnalysis.padEnd(300, " "),
       bias: { overall: "mixed", notes: "conflicting" }, confidence: 60,
       setups: [], keyLevels: [], marketSnapshots: weekdaySnaps, assumptions: [],
     };

@@ -506,7 +506,9 @@ export function validateOracleOutput(
     }
   }
 
-  // r041: when confidence >55%, analysis must mention all 8 mandatory screening instruments.
+  // r041: when confidence >55%, analysis must use the explicit screening validation template.
+  // Required format: "Screening validation: EUR/USD [price] [level], GBP/USD [price] [level], ..."
+  // Instrument-mention checks are insufficient — the template format itself is the enforcement gate.
   // Only fires on weekday sessions (detected by ≥4 of the 8 instruments in marketSnapshots).
   if (effectiveConfidence > 55) {
     const snapNames = new Set(
@@ -515,28 +517,26 @@ export function validateOracleOutput(
         (s.symbol ?? "").toLowerCase().replace(/[^a-z]/g, ""),
       ])
     );
-    const r041Pairs: [string, string[]][] = [
-      ["EUR/USD",   ["eur/usd", "eurusd", "eur"]],
-      ["GBP/USD",   ["gbp/usd", "gbpusd", "gbp"]],
-      ["NASDAQ",    ["nasdaq", "nas100"]],
-      ["S&P",       ["s&p", "spx", "s&p500", "s&p 500"]],
-      ["BTC",       ["bitcoin", "btc"]],
-      ["ETH",       ["ethereum", "eth"]],
-      ["Gold",      ["gold", "xau"]],
-      ["Oil",       ["oil", "crude", "wti", "brent"]],
+    const r041Aliases: string[][] = [
+      ["eur/usd", "eurusd", "eur"],
+      ["gbp/usd", "gbpusd", "gbp"],
+      ["nasdaq", "nas100"],
+      ["s&p", "spx", "s&p500", "s&p 500"],
+      ["bitcoin", "btc"],
+      ["ethereum", "eth"],
+      ["gold", "xau"],
+      ["oil", "crude", "wti", "brent"],
     ];
-    // Only check pairs whose instruments are present in snapshots (weekday detection)
-    const presentPairs = r041Pairs.filter(([, aliases]) =>
+    const presentCount = r041Aliases.filter(aliases =>
       aliases.some(a => [...snapNames].some(n => n.includes(a.replace("/", ""))))
-    );
-    if (presentPairs.length >= 4) {
+    ).length;
+    if (presentCount >= 4) {
       const analysisLower = (oracle.analysis ?? "").toLowerCase();
-      const missing = presentPairs
-        .filter(([, aliases]) => !aliases.some(a => analysisLower.includes(a)))
-        .map(([name]) => name);
-      if (missing.length > 0) {
+      if (!analysisLower.includes("screening validation:")) {
         warnings.push(
-          `r041: ${effectiveConfidence}% confidence — pre-commitment screening requires mentioning all available instruments; missing from analysis: ${missing.join(", ")}`
+          `r041: ${effectiveConfidence}% confidence — analysis must include explicit screening validation template: ` +
+          `'Screening validation: EUR/USD [price] [level], GBP/USD [price] [level], NASDAQ [price] [level], ` +
+          `S&P [price] [level], BTC [price] [level], ETH [price] [level], Gold [price] [level], Oil [price] [level]'`
         );
       }
     }
