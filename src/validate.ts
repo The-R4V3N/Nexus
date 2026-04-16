@@ -762,6 +762,37 @@ const VIOLATION_KEYWORDS = [
   "enforcement rather than", "requires code enforcement",
 ];
 
+// ── r029 False-Positive Detector ─────────────────────────
+// Returns the list of setup instruments that genuinely violate r029
+// under the per-instrument logic. An empty list means AXIOM's complaint
+// is a false positive — no setups actually failed r029.
+export function computeR029ActualViolations(oracle: {
+  marketSnapshots?: any[];
+  setups?: any[];
+}): string[] {
+  const snaps = oracle.marketSnapshots ?? [];
+  const setups = oracle.setups ?? [];
+
+  const volatilityMap = new Map<string, number>();
+  for (const s of snaps) {
+    const move = Math.abs(s.changePercent ?? 0);
+    volatilityMap.set((s.name ?? "").toLowerCase(), move);
+    volatilityMap.set((s.symbol ?? "").toLowerCase().replace(/[^a-z0-9]/g, ""), move);
+  }
+
+  const violations: string[] = [];
+  for (const setup of setups) {
+    if (typeof setup.entry !== "number" || typeof setup.stop !== "number") continue;
+    const instrKey = (setup.instrument ?? "").toLowerCase();
+    const instrKeyNorm = instrKey.replace(/[^a-z0-9]/g, "");
+    const instrMove = volatilityMap.get(instrKey) ?? volatilityMap.get(instrKeyNorm) ?? 0;
+    const stopPct = Math.abs(setup.entry - setup.stop) / setup.entry * 100;
+    if (instrMove >= 5 && stopPct < 1.5) violations.push(setup.instrument ?? "unknown");
+    else if (instrMove >= 3 && stopPct < 1.0) violations.push(setup.instrument ?? "unknown");
+  }
+  return violations;
+}
+
 export function detectAxiomRumination(parsed: {
   whatFailed?: string;
   ruleUpdates?: any[];
