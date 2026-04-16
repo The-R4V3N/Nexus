@@ -1169,9 +1169,9 @@ describe("validateWeekendCryptoScreening", () => {
 // ── filterNonCompliantSetups ─────────────────────────────────
 
 describe("filterNonCompliantSetups", () => {
-  function makeSnap(changePercent: number) {
+  function makeSnap(changePercent: number, name = "NASDAQ 100", symbol = "NAS100") {
     return {
-      symbol: "NAS100", name: "NASDAQ 100", category: "indices" as const,
+      symbol, name, category: "indices" as const,
       price: 25000, previousClose: 25000 / (1 + changePercent / 100),
       change: 25000 * changePercent / 100, changePercent,
       high: 25100, low: 24900, timestamp: new Date(),
@@ -1212,7 +1212,8 @@ describe("filterNonCompliantSetups", () => {
   });
 
   it("removes setup with stop < 1.0% during moderate volatility (3–4.9% session move)", () => {
-    const oracle = makeOracle([makeSnap(3.5)], [makeSetup("GBP/USD", 1.34, 1.333)]); // ~0.52% stop
+    // Snapshot must match setup instrument for per-instrument r029 to apply
+    const oracle = makeOracle([makeSnap(3.5, "GBP/USD", "GBPUSD")], [makeSetup("GBP/USD", 1.34, 1.333)]); // ~0.52% stop
     const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
     expect(filtered.setups).toHaveLength(0);
     expect(removed).toHaveLength(1);
@@ -1233,8 +1234,9 @@ describe("filterNonCompliantSetups", () => {
   });
 
   it("keeps compliant and removes non-compliant in mixed setup list during extreme day", () => {
+    // Both instruments must have snapshots for per-instrument r029 to apply to each
     const oracle = makeOracle(
-      [makeSnap(5.2)],
+      [makeSnap(5.2), makeSnap(5.1, "EUR/USD", "EURUSD")],
       [
         makeSetup("NASDAQ 100", 25000, 24600), // 1.6% stop — compliant
         makeSetup("EUR/USD", 1.17, 1.168),      // 0.17% stop — non-compliant
@@ -1275,6 +1277,71 @@ describe("filterNonCompliantSetups", () => {
     } as any]);
     const { removed } = filterNonCompliantSetups(bearishOracle);
     expect(removed).toHaveLength(1);
+  });
+
+  // ── per-instrument volatility (session #179 root cause) ──────
+  // Oil crashing 8.62% should NOT force EUR/USD to have a 177-pip stop.
+  // Each setup's stop requirement is based on THAT instrument's own move.
+
+  function makeNamedSnap(name: string, symbol: string, changePercent: number) {
+    return {
+      symbol, name, category: "forex" as const,
+      price: 100, previousClose: 100 / (1 + changePercent / 100),
+      change: 100 * changePercent / 100, changePercent,
+      high: 101, low: 99, timestamp: new Date(),
+    };
+  }
+
+  it("does NOT filter EUR/USD tight stop when only Oil moved 8.62% (session #179 pattern)", () => {
+    const snaps = [
+      makeNamedSnap("EUR/USD",   "EURUSD=X", 0.81),   // own move: 0.81% — no requirement
+      makeNamedSnap("Crude Oil", "CL=F",     -8.62),  // causes global max = 8.62%
+    ];
+    const oracle: OracleAnalysis = {
+      timestamp: new Date(), sessionId: "test", marketSnapshots: snaps as any,
+      analysis: "A".repeat(300), setups: [makeSetup("EUR/USD", 1.1786, 1.1750)] as any, // 0.31% stop — fine for 0.81% mover
+      bias: { overall: "bullish", notes: "risk-on" }, keyLevels: [], confidence: 61,
+    };
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect(removed).toHaveLength(0);
+  });
+
+  it("filters Oil setup with tight stop when Oil itself moved 8.62%", () => {
+    const snaps = [
+      makeNamedSnap("EUR/USD",   "EURUSD=X", 0.81),
+      makeNamedSnap("Crude Oil", "CL=F",     -8.62),
+    ];
+    const oracle: OracleAnalysis = {
+      timestamp: new Date(), sessionId: "test", marketSnapshots: snaps as any,
+      analysis: "A".repeat(300), setups: [makeSetup("Crude Oil", 90.0, 89.5)] as any, // 0.56% stop — not enough for 8.62% mover
+      bias: { overall: "bearish", notes: "oil crash" }, keyLevels: [], confidence: 61,
+    };
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(0);
+    expect(removed).toHaveLength(1);
+    expect(removed[0].instrument).toBe("Crude Oil");
+  });
+
+  it("keeps EUR/USD and filters Oil in same session when only Oil is extreme", () => {
+    const snaps = [
+      makeNamedSnap("EUR/USD",   "EURUSD=X", 0.81),
+      makeNamedSnap("Crude Oil", "CL=F",     -8.62),
+    ];
+    const oracle: OracleAnalysis = {
+      timestamp: new Date(), sessionId: "test", marketSnapshots: snaps as any,
+      analysis: "A".repeat(300),
+      setups: [
+        makeSetup("EUR/USD",   1.1786, 1.1750), // 0.31% stop — fine for 0.81% mover
+        makeSetup("Crude Oil", 90.0,   89.5),   // 0.56% stop — not enough for 8.62% mover
+      ] as any,
+      bias: { overall: "mixed", notes: "divergent" }, keyLevels: [], confidence: 61,
+    };
+    const { oracle: filtered, removed } = filterNonCompliantSetups(oracle);
+    expect(filtered.setups).toHaveLength(1);
+    expect((filtered.setups as any)[0].instrument).toBe("EUR/USD");
+    expect(removed).toHaveLength(1);
+    expect(removed[0].instrument).toBe("Crude Oil");
   });
 });
 

@@ -595,18 +595,23 @@ export function warnPoorRiskReward(setups: any[]): void {
 // for this session based on live market volatility. Empty string = no constraint.
 export function buildR029StopNote(snapshots: MarketSnapshot[]): string {
   if (!snapshots.length) return "";
-  const maxMove = Math.max(...snapshots.map(s => Math.abs(s.changePercent ?? 0)));
-  if (maxMove >= 5) {
-    return `\nMANDATORY STOP REQUIREMENT (r029 — extreme volatility detected: max session move ${maxMove.toFixed(1)}%):
-Every stop MUST be at least 1.5% from entry. Verify before finalising: |entry - stop| / entry ≥ 0.015.
-Do NOT include any setup where the stop is closer than 1.5% from entry.\n`;
+  const extremeInstruments = snapshots.filter(s => Math.abs(s.changePercent ?? 0) >= 5);
+  const moderateInstruments = snapshots.filter(s => {
+    const move = Math.abs(s.changePercent ?? 0);
+    return move >= 3 && move < 5;
+  });
+  if (!extremeInstruments.length && !moderateInstruments.length) return "";
+
+  const lines: string[] = ["\nMANDATORY STOP REQUIREMENT (r029 — per-instrument volatility):"];
+  for (const s of extremeInstruments) {
+    lines.push(`  • ${s.name} (moved ${Math.abs(s.changePercent ?? 0).toFixed(1)}%): stop MUST be ≥1.5% from entry`);
   }
-  if (maxMove >= 3) {
-    return `\nMANDATORY STOP REQUIREMENT (r029 — moderate volatility detected: max session move ${maxMove.toFixed(1)}%):
-Every stop MUST be at least 1.0% from entry. Verify before finalising: |entry - stop| / entry ≥ 0.010.
-Do NOT include any setup where the stop is closer than 1.0% from entry.\n`;
+  for (const s of moderateInstruments) {
+    lines.push(`  • ${s.name} (moved ${Math.abs(s.changePercent ?? 0).toFixed(1)}%): stop MUST be ≥1.0% from entry`);
   }
-  return "";
+  lines.push("Instruments NOT listed above have NO minimum stop requirement from r029.");
+  lines.push("Verify: |entry - stop| / entry meets the threshold for each listed instrument.\n");
+  return lines.join("\n");
 }
 
 // ── Weekday instrument screening template ─────────────────
