@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence } from "../src/oracle";
+import { resolveConfidence } from "../src/validate";
 import type { MarketSnapshot } from "../src/types";
 
 function makeSnap(changePercent: number): MarketSnapshot {
@@ -1100,5 +1101,65 @@ describe("buildR041ScreeningNote", () => {
     const note = buildR041ScreeningNote();
     expect(note).toMatch(/\[price\]/i);
     expect(note).toMatch(/\[level\]/i);
+  });
+});
+
+// ── computeOracleConfidence ───────────────────────────────
+// Encapsulates the three-step confidence computation in oracle.ts:
+// 1. resolveConfidence (text vs JSON reconciliation)
+// 2. Zero-setup contradiction floor (>60% + 0 setups → 35%)
+// 3. applySetupCountPenalty (proportional penalty)
+//
+// Having this as a named exported function:
+// (a) makes confidence flow unit-testable without mocking the Claude API
+// (b) allows agent.ts to avoid calling resolveConfidence a second time
+//     (which would undo any penalty oracle.ts applied — the latent bug in
+//     backlog #23: text says 65%, penalty reduces to 45%, second call sees
+//     diff=20>10 and silently restores 65%)
+
+describe("computeOracleConfidence", () => {
+  it("returns resolved text confidence when json diverges >10pts", () => {
+    // text=73, json=50 → resolveConfidence returns 73; 4 setups → no penalty
+    expect(computeOracleConfidence("Confidence: 73% — TC(80%), MA(60%), RR(70%)", 50, 4, false)).toBe(73);
+  });
+
+  it("returns 35 when confidence >60 with zero setups (contradiction floor)", () => {
+    expect(computeOracleConfidence("Confidence: 65%", 65, 0, false)).toBe(35);
+  });
+
+  it("applies setup count penalty when below weekday minimum", () => {
+    // 65% confidence, 1 setup, weekday: minSetups=3, shortfall=2, penalty=20pts → 45
+    expect(computeOracleConfidence("Confidence: 65%", 65, 1, false)).toBe(45);
+  });
+
+  it("no penalty when setup count meets minimum for confidence level", () => {
+    // 65% confidence, 3 setups, weekday: minSetups=3, shortfall=0 → no penalty
+    expect(computeOracleConfidence("Confidence: 65%", 65, 3, false)).toBe(65);
+  });
+
+  it("honors explicit cap notation over raw confidence", () => {
+    // text says 'capped at 65%', json=70 → resolveConfidence returns 65; 4 setups → no penalty
+    expect(computeOracleConfidence("Confidence: 70% — capped at 65%", 70, 4, false)).toBe(65);
+  });
+
+  it("penalty is stable — result must not be fed back into resolveConfidence", () => {
+    // This documents the agent.ts double-call bug (backlog #23):
+    // oracle.ts computes final=45 (penalized from 65). If agent.ts then calls
+    // resolveConfidence(analysis_with_65%, 45), diff=20>10 → returns 65 (bug!).
+    // Fix: computeOracleConfidence is called once in oracle.ts; agent.ts must not
+    // call resolveConfidence again.
+    const text = "Confidence: 65% — TC(65%), MA(70%), RR(60%)";
+    const penalized = computeOracleConfidence(text, 65, 1, false);
+    expect(penalized).toBe(45); // penalty applied
+    // If resolveConfidence were called again on the penalized value, it would undo it:
+    // (this was the bug — agent.ts used to do this; now removed)
+    expect(resolveConfidence(text, penalized)).toBe(65); // demonstrates the anti-pattern
+  });
+
+  it("weekend sessions apply minimum 2 setups instead of 3", () => {
+    // weekend, 65% confidence, 2 setups: minSetups=2, no shortfall
+    expect(computeOracleConfidence("Confidence: 65%", 65, 2, true)).toBe(65);
+    // weekend, 65% confidence, 1 setup: minSetups=2, shortfall=1, penalty=10 → 55
+    expect(computeOracleConfidence("Confidence: 65%", 65, 1, true)).toBe(55);
   });
 });
