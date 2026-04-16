@@ -179,6 +179,23 @@ The pipeline enforcement is working as designed. Acknowledge it briefly and move
 - Quantified moves (pips/points/%): ${/\d+(\.\d+)?\s*(pips?|points?|%)/i.test(oracle.analysis) ? "YES" : "NO"}
 - All setups complete (entry/stop/target/RR/TF): ${oracle.setups.every((s: any) => (s as any).entry != null && (s as any).stop != null && (s as any).target != null && (s as any).RR != null && (s as any).timeframe) ? "YES — all " + oracle.setups.length + " setups have required fields" : "NO — some setups missing fields"}
 - Mixed bias justified: ${oracle.bias.overall !== "mixed" ? "N/A (bias is " + oracle.bias.overall + ")" : /conflict|divergen|breakdown/i.test(oracle.bias.notes) ? "YES" : "NO"}
+${(() => {
+  const snaps = oracle.marketSnapshots ?? [];
+  const extreme  = snaps.filter(s => Math.abs(s.changePercent ?? 0) >= 5);
+  const moderate = snaps.filter(s => { const m = Math.abs(s.changePercent ?? 0); return m >= 3 && m < 5; });
+  const lowMove  = snaps.filter(s => Math.abs(s.changePercent ?? 0) < 3);
+  if (!extreme.length && !moderate.length) return "";
+  const lines: string[] = [
+    "",
+    "### r029 per-instrument stop requirement — THIS SESSION:",
+    "r029 applies only to instruments that individually moved ≥5% or ≥3% in this session.",
+  ];
+  if (extreme.length)  lines.push("  ≥5% (requires ≥1.5% stop): " + extreme.map(s => `${s.name} (${(s.changePercent ?? 0).toFixed(1)}%)`).join(", "));
+  if (moderate.length) lines.push("  ≥3% (requires ≥1.0% stop): " + moderate.map(s => `${s.name} (${(s.changePercent ?? 0).toFixed(1)}%)`).join(", "));
+  if (lowMove.length)  lines.push("  NOT subject to r029 (moved <3%): " + lowMove.map(s => s.name).join(", ") + " — tight stops on these instruments are NOT r029 violations.");
+  lines.push("Do NOT flag stops on instruments in the 'NOT subject' list as r029 violations.");
+  return lines.join("\n");
+})()}
 
 IMPORTANT ANTI-REPETITION RULES:
 - If a CONFIDENCE ADJUSTMENT NOTICE appeared above, you MUST NOT treat the pipeline enforcement as a rule execution failure or "output mechanism corruption". Do not mention confidence methodology inconsistency in whatFailed. Do not modify r014 or r032.
@@ -381,7 +398,7 @@ export function parseAxiomResponse(
   }
 
   // ── Security: sanitize AXIOM output before applying to memory ──
-  const secResult = sanitizeAxiomOutput(rawParsed, sessionNumber, currentRules.rules.length);
+  const secResult = sanitizeAxiomOutput(rawParsed, sessionNumber, currentRules.rules.length, currentRules.rules);
   if (secResult.warnings.length > 0) {
     for (const w of secResult.warnings) console.warn(`  🛡️  Security: ${w}`);
   }

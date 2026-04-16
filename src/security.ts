@@ -203,9 +203,10 @@ export interface AxiomSecurityResult {
 }
 
 export function sanitizeAxiomOutput(
-    parsed:           any,
-    sessionNumber:    number,
-    currentRuleCount: number = 10
+    parsed:                    any,
+    sessionNumber:             number,
+    currentRuleCount:          number = 10,
+    cooldownRulesOverride?:    any[]
 ): AxiomSecurityResult {
     const warnings:        string[] = [];
     let   blockedRules     = 0;
@@ -252,14 +253,16 @@ export function sanitizeAxiomOutput(
     const safeUpdates: any[] = [];
     let   removalCount = 0;
 
-    // Load current rules for cooldown check
+    // Load current rules for cooldown check (use override if provided — avoids disk reads in tests)
     const COOLDOWN_SESSIONS = 3;
-    let currentRulesForCooldown: any[] = [];
-    try {
-        const rulesPath = require("path").join(process.cwd(), "memory", "analysis-rules.json");
-        const rulesData = JSON.parse(require("fs").readFileSync(rulesPath, "utf-8"));
-        currentRulesForCooldown = rulesData.rules ?? [];
-    } catch { /* ignore */ }
+    let currentRulesForCooldown: any[] = cooldownRulesOverride ?? [];
+    if (!cooldownRulesOverride) {
+        try {
+            const rulesPath = require("path").join(process.cwd(), "memory", "analysis-rules.json");
+            const rulesData = JSON.parse(require("fs").readFileSync(rulesPath, "utf-8"));
+            currentRulesForCooldown = rulesData.rules ?? [];
+        } catch { /* ignore */ }
+    }
 
     for (const update of rawUpdates) {
         // Block re-modifying a rule that was changed within the last N sessions

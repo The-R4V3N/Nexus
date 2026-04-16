@@ -164,6 +164,48 @@ describe("buildAxiomPrompt", () => {
     expect(userMessage).toContain("bearish");
     expect(userMessage).toContain("Weak structure");
   });
+
+  it("includes r029 per-instrument note listing only volatile instruments when session has extreme mover", () => {
+    const snapshots = [
+      { name: "Crude Oil", symbol: "OIL", category: "commodities" as const, price: 91, previousClose: 99, change: -8, changePercent: -7.82, high: 99, low: 91, timestamp: new Date() },
+      { name: "EUR/USD",   symbol: "EURUSD", category: "forex" as const, price: 1.178, previousClose: 1.169, change: 0.009, changePercent: 0.75, high: 1.18, low: 1.17, timestamp: new Date() },
+    ];
+    const oracle = makeOracle({ marketSnapshots: snapshots });
+    const rules = makeRules();
+    const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
+    // Should tell AXIOM which instruments r029 applies to
+    expect(userMessage).toContain("r029 applies only to");
+    expect(userMessage).toContain("Crude Oil");
+    // Should explicitly exempt EUR/USD
+    expect(userMessage).toContain("EUR/USD");
+    expect(userMessage).toMatch(/EUR\/USD.*NOT subject|NOT.*r029.*EUR\/USD|no.*r029.*requirement.*EUR\/USD/i);
+  });
+
+  it("does not include r029 per-instrument note when no instruments moved ≥3%", () => {
+    const snapshots = [
+      { name: "EUR/USD", symbol: "EURUSD", category: "forex" as const, price: 1.178, previousClose: 1.169, change: 0.009, changePercent: 0.75, high: 1.18, low: 1.17, timestamp: new Date() },
+      { name: "GBP/USD", symbol: "GBPUSD", category: "forex" as const, price: 1.35, previousClose: 1.34, change: 0.01, changePercent: 0.75, high: 1.36, low: 1.34, timestamp: new Date() },
+    ];
+    const oracle = makeOracle({ marketSnapshots: snapshots });
+    const rules = makeRules();
+    const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
+    expect(userMessage).not.toContain("r029 applies only to");
+  });
+
+  it("lists both extreme and moderate volatile instruments in r029 note", () => {
+    const snapshots = [
+      { name: "Crude Oil", symbol: "OIL", category: "commodities" as const, price: 91, previousClose: 99, change: -8, changePercent: -7.82, high: 99, low: 91, timestamp: new Date() },
+      { name: "Silver",   symbol: "XAG", category: "commodities" as const, price: 32, previousClose: 31, change: 1, changePercent: 3.5, high: 32.5, low: 31, timestamp: new Date() },
+      { name: "EUR/USD",  symbol: "EURUSD", category: "forex" as const, price: 1.178, previousClose: 1.169, change: 0.009, changePercent: 0.75, high: 1.18, low: 1.17, timestamp: new Date() },
+    ];
+    const oracle = makeOracle({ marketSnapshots: snapshots });
+    const rules = makeRules();
+    const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
+    expect(userMessage).toContain("Crude Oil");
+    expect(userMessage).toContain("Silver");
+    // EUR/USD should be explicitly exempted
+    expect(userMessage).toMatch(/EUR\/USD.*NOT subject|NOT.*r029.*EUR\/USD|no.*r029.*requirement.*EUR\/USD/i);
+  });
 });
 
 // ── parseAxiomResponse ────────────────────────────────────
