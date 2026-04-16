@@ -174,7 +174,7 @@ describe("buildAxiomPrompt", () => {
     const rules = makeRules();
     const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
     // Should tell AXIOM which instruments r029 applies to
-    expect(userMessage).toContain("r029 applies only to");
+    expect(userMessage).toMatch(/r029 applies only to|r029 applies ONLY to/i);
     expect(userMessage).toContain("Crude Oil");
     // Should explicitly exempt EUR/USD
     expect(userMessage).toContain("EUR/USD");
@@ -205,6 +205,53 @@ describe("buildAxiomPrompt", () => {
     expect(userMessage).toContain("Silver");
     // EUR/USD should be explicitly exempted
     expect(userMessage).toMatch(/EUR\/USD.*NOT subject|NOT.*r029.*EUR\/USD|no.*r029.*requirement.*EUR\/USD/i);
+  });
+
+  it("shows per-setup r029 COMPLIANT status for low-move instrument with tight stop", () => {
+    // EUR/USD moved 0.75% — no r029 minimum. Tight stop should be COMPLIANT.
+    const snapshots = [
+      { name: "Crude Oil", symbol: "OIL",    category: "commodities" as const, price: 91,    previousClose: 99,    change: -8,    changePercent: -7.82, high: 99,    low: 91,    timestamp: new Date() },
+      { name: "EUR/USD",   symbol: "EURUSD", category: "forex" as const,       price: 1.1781, previousClose: 1.169, change: 0.009, changePercent: 0.75,  high: 1.18,  low: 1.17,  timestamp: new Date() },
+    ];
+    const setups: any[] = [
+      { instrument: "EUR/USD", type: "MSS", direction: "bullish", description: "test", invalidation: "test",
+        entry: 1.1781, stop: 1.174, target: 1.19, RR: 1.68, timeframe: "4H" },
+    ];
+    const oracle = makeOracle({ marketSnapshots: snapshots, setups });
+    const rules = makeRules();
+    const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
+    // EUR/USD stop is 0.35%, but EUR/USD moved 0.75% — no r029 minimum → COMPLIANT
+    expect(userMessage).toMatch(/EUR\/USD.*COMPLIANT|COMPLIANT.*EUR\/USD/i);
+    expect(userMessage).toMatch(/no.*minimum|no.*requirement|no.*r029/i);
+  });
+
+  it("shows per-setup r029 COMPLIANT status for Oil setup meeting 1.5% requirement", () => {
+    const snapshots = [
+      { name: "Crude Oil", symbol: "OIL", category: "commodities" as const, price: 91.47, previousClose: 99.5, change: -8.03, changePercent: -8.07, high: 99, low: 91, timestamp: new Date() },
+    ];
+    const setups: any[] = [
+      { instrument: "Crude Oil", type: "Liquidity Sweep", direction: "bearish", description: "test", invalidation: "test",
+        entry: 91.47, stop: 95, target: 85, RR: 1.83, timeframe: "4H" },
+    ];
+    const oracle = makeOracle({ marketSnapshots: snapshots, setups });
+    const rules = makeRules();
+    const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
+    // Oil stop is 3.86% — above 1.5% requirement → COMPLIANT
+    expect(userMessage).toMatch(/Crude Oil.*COMPLIANT|COMPLIANT.*Crude Oil/i);
+  });
+
+  it("shows per-setup r029 VIOLATION for Oil setup with stop below 1.5%", () => {
+    const snapshots = [
+      { name: "Crude Oil", symbol: "OIL", category: "commodities" as const, price: 91.47, previousClose: 99.5, change: -8.03, changePercent: -8.07, high: 99, low: 91, timestamp: new Date() },
+    ];
+    const setups: any[] = [
+      { instrument: "Crude Oil", type: "Liquidity Sweep", direction: "bearish", description: "test", invalidation: "test",
+        entry: 91.47, stop: 92, target: 85, RR: 1.83, timeframe: "4H" }, // stop is only 0.58% — violation
+    ];
+    const oracle = makeOracle({ marketSnapshots: snapshots, setups });
+    const rules = makeRules();
+    const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
+    expect(userMessage).toMatch(/Crude Oil.*VIOLATION|VIOLATION.*Crude Oil/i);
   });
 });
 
