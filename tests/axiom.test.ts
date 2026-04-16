@@ -513,6 +513,58 @@ describe("parseAxiomResponse forced self-task injection", () => {
     const ruleGapCount = (result.newSelfTasks ?? []).filter((t: any) => t.category === "rule-gap").length;
     expect(ruleGapCount).toBe(1); // only the one AXIOM already created, not a duplicate
   });
+
+  it("suppresses r029 self-task when AXIOM falsely claims violations but all setups are per-instrument compliant", () => {
+    // Session #183 pattern: Oil -8.17% extreme, EUR/USD +0.79% and EUR/JPY +0.84% (both <3%, no r029 req)
+    // AXIOM falsely flags EUR/USD and EUR/JPY stops as r029 violations
+    const oracle = makeOracle({
+      marketSnapshots: [
+        { name: "Crude Oil", symbol: "OIL",    category: "commodities" as const, price: 91,     previousClose: 99,    change: -8,    changePercent: -8.17, high: 99,   low: 91,   timestamp: new Date() },
+        { name: "EUR/USD",   symbol: "EURUSD",  category: "forex" as const,       price: 1.1783, previousClose: 1.169, change: 0.009, changePercent: 0.79,  high: 1.18, low: 1.17, timestamp: new Date() },
+        { name: "EUR/JPY",   symbol: "EURJPY",  category: "forex" as const,       price: 187.55, previousClose: 186,   change: 1.55,  changePercent: 0.84,  high: 188,  low: 186,  timestamp: new Date() },
+      ] as any,
+      setups: [
+        { instrument: "EUR/USD", type: "MSS",  direction: "bullish", description: "test", invalidation: "test", entry: 1.1783, stop: 1.176,  target: 1.182, RR: 1.61, timeframe: "1H" },
+        { instrument: "EUR/JPY", type: "MSS",  direction: "bullish", description: "test", invalidation: "test", entry: 187.55, stop: 186.5, target: 189,   RR: 1.38, timeframe: "1H" },
+      ] as any,
+    });
+    const json = JSON.stringify({
+      whatWorked: "Good analysis",
+      whatFailed: "EUR/USD 0.20% and EUR/JPY 0.56% stops both below required 1.5% during extreme volatility — r029 stop distance violation for fourth consecutive session",
+      cognitiveBiases: ["enforcement bias"],
+      evolutionSummary: "Need code-level enforcement",
+      ruleUpdates: [], newRules: [], systemPromptAdditions: "",
+      newSelfTasks: [], resolvedSelfTasks: [], codeChanges: [],
+    });
+    const result = parseAxiomResponse(json, 183, rules, oracle);
+    // All setups are compliant (EUR/USD and EUR/JPY both moved <3%) — false positive must be suppressed
+    const ruleGapCount = (result.newSelfTasks ?? []).filter((t: any) => t.category === "rule-gap").length;
+    expect(ruleGapCount).toBe(0);
+  });
+
+  it("does NOT suppress r029 self-task when a setup truly violates r029 (Oil tight stop)", () => {
+    // Oil moved -8.17% (extreme) — Oil setup has 0.58% stop which IS a real violation (< 1.5%)
+    const oracle = makeOracle({
+      marketSnapshots: [
+        { name: "Crude Oil", symbol: "OIL", category: "commodities" as const, price: 91.47, previousClose: 99.5, change: -8.03, changePercent: -8.17, high: 99, low: 91, timestamp: new Date() },
+      ] as any,
+      setups: [
+        { instrument: "Crude Oil", type: "Liquidity Sweep", direction: "bearish", description: "test", invalidation: "test", entry: 91.47, stop: 92, target: 85, RR: 1.83, timeframe: "4H" },
+      ] as any,
+    });
+    const json = JSON.stringify({
+      whatWorked: "Good analysis",
+      whatFailed: "Crude Oil stop is only 0.58% during extreme session — r029 violation, requires 1.5% minimum",
+      cognitiveBiases: [],
+      evolutionSummary: "Need wider stops on volatile instruments",
+      ruleUpdates: [], newRules: [], systemPromptAdditions: "",
+      newSelfTasks: [], resolvedSelfTasks: [], codeChanges: [],
+    });
+    const result = parseAxiomResponse(json, 183, rules, oracle);
+    // Oil truly violated r029 — self-task should be injected
+    const ruleGapCount = (result.newSelfTasks ?? []).filter((t: any) => t.category === "rule-gap").length;
+    expect(ruleGapCount).toBe(1);
+  });
 });
 
 // ── buildAxiomPrompt — session type context ───────────────

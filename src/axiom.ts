@@ -6,7 +6,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createSelfTask, closeSelfTask, SelfTask } from "./self-tasks";
 import { sanitizeAxiomOutput, getMaxOutputTokens, getMaxSystemPromptLength } from "./security";
-import { validateAxiomOutput, logFailure, extractConfidenceFromText, calculateTextSimilarity, detectAxiomRumination, detectAcknowledgedGap } from "./validate";
+import { validateAxiomOutput, logFailure, extractConfidenceFromText, calculateTextSimilarity, detectAxiomRumination, detectAcknowledgedGap, computeR029ActualViolations } from "./validate";
 import { loadAllJournalEntries } from "./journal";
 import {
   salvageJSON, stripSurrogates, extractJSONFromResponse,
@@ -495,6 +495,20 @@ export function parseAxiomResponse(
           priority: "high",
         },
       ];
+    }
+  }
+
+  // r029 false-positive suppression: if AXIOM complained about r029/stop violations
+  // but all setups are actually per-instrument compliant, remove the injected self-task.
+  // This prevents repeated false alerts when AXIOM applies global-max reasoning despite
+  // the per-instrument compliance verdicts injected into its prompt.
+  if (oracle && /r029|stop distance|stop.*violation|violation.*stop/i.test(rawParsed.whatFailed ?? "")) {
+    const actualViolations = computeR029ActualViolations(oracle);
+    if (actualViolations.length === 0) {
+      parsed.newSelfTasks = (parsed.newSelfTasks ?? []).filter(
+        (t: any) => t.category !== "rule-gap"
+      );
+      console.warn("  ⚠ Axiom: r029 false positive suppressed — AXIOM cited stop violations but all setups are per-instrument compliant");
     }
   }
 
