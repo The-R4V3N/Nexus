@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation, reclassifyOtherSetups } from "../src/oracle";
 import { resolveConfidence } from "../src/validate";
 import type { MarketSnapshot } from "../src/types";
 
@@ -1432,5 +1432,104 @@ describe("enforceR041ScreeningValidation", () => {
     expect(result).toMatch(/ETH|Ethereum/i);
     expect(result).toMatch(/Gold/i);
     expect(result).toMatch(/Oil/i);
+  });
+});
+
+// ── reclassifyOtherSetups ─────────────────────────────────
+// Code enforcement: when ORACLE types a setup as "Other", reclassify it
+// based on description keywords to the correct ICT pattern type.
+// Root cause of sessions #176-#177, #185: ORACLE defaults to "Other" as
+// a catch-all rather than selecting the matching ICT label.
+
+describe("reclassifyOtherSetups", () => {
+  function makeSetup(description: string, type = "Other", instrument = "EUR/USD") {
+    return { instrument, type, description, direction: "bullish", entry: 1.18, stop: 1.175, target: 1.19 };
+  }
+
+  it("reclassifies 'Other' with momentum/structure break keywords to MSS", () => {
+    const result = reclassifyOtherSetups([makeSetup("Strong momentum continuation above 1.1786, targeting 1.185 resistance")]);
+    expect(result[0].type).toBe("MSS");
+  });
+
+  it("reclassifies 'Other' with 'market structure shift' to MSS", () => {
+    const result = reclassifyOtherSetups([makeSetup("Market structure shift confirmed above 1.178 resistance level")]);
+    expect(result[0].type).toBe("MSS");
+  });
+
+  it("reclassifies 'Other' with 'breakout' to MSS", () => {
+    const result = reclassifyOtherSetups([makeSetup("Breakout above 26000 psychological resistance with volume confirmation")]);
+    expect(result[0].type).toBe("MSS");
+  });
+
+  it("reclassifies 'Other' with 'liquidity sweep' to Liquidity Sweep", () => {
+    const result = reclassifyOtherSetups([makeSetup("Liquidity sweep above equal highs at 1.185 before reversal")]);
+    expect(result[0].type).toBe("Liquidity Sweep");
+  });
+
+  it("reclassifies 'Other' with 'stop hunt' to Liquidity Sweep", () => {
+    const result = reclassifyOtherSetups([makeSetup("Stop hunt above session high clearing sell-side liquidity")]);
+    expect(result[0].type).toBe("Liquidity Sweep");
+  });
+
+  it("reclassifies 'Other' with 'fair value gap' to FVG", () => {
+    const result = reclassifyOtherSetups([makeSetup("Fair value gap fill opportunity from 1.175-1.178 imbalance zone")]);
+    expect(result[0].type).toBe("FVG");
+  });
+
+  it("reclassifies 'Other' with 'order block' to OB", () => {
+    const result = reclassifyOtherSetups([makeSetup("Bullish order block mitigation at 1.175 institutional level")]);
+    expect(result[0].type).toBe("OB");
+  });
+
+  it("reclassifies 'Other' with 'PDH' to PDH/PDL", () => {
+    const result = reclassifyOtherSetups([makeSetup("Break above PDH at 1.182 with continuation potential")]);
+    expect(result[0].type).toBe("PDH/PDL");
+  });
+
+  it("reclassifies 'Other' with 'previous day high' to PDH/PDL", () => {
+    const result = reclassifyOtherSetups([makeSetup("Rejection from previous day high creating bearish setup")]);
+    expect(result[0].type).toBe("PDH/PDL");
+  });
+
+  it("reclassifies 'Other' with 'CISD' to CISD", () => {
+    const result = reclassifyOtherSetups([makeSetup("CISD confirmed at 1.176 after displacement candle through support")]);
+    expect(result[0].type).toBe("CISD");
+  });
+
+  it("leaves 'Other' unchanged when no ICT keywords match", () => {
+    const result = reclassifyOtherSetups([makeSetup("Price near key level with potential for continuation")]);
+    expect(result[0].type).toBe("Other");
+  });
+
+  it("does not change already-classified setups", () => {
+    const setup = makeSetup("Market structure shift above resistance", "MSS");
+    const result = reclassifyOtherSetups([setup]);
+    expect(result[0].type).toBe("MSS");
+  });
+
+  it("processes mixed arrays — only reclassifies Other entries", () => {
+    const setups = [
+      makeSetup("Liquidity sweep at session highs", "Other"),
+      makeSetup("Fair value gap fill", "FVG"),
+      makeSetup("Order block mitigation zone", "Other"),
+    ];
+    const result = reclassifyOtherSetups(setups);
+    expect(result[0].type).toBe("Liquidity Sweep");
+    expect(result[1].type).toBe("FVG"); // unchanged
+    expect(result[2].type).toBe("OB");
+  });
+
+  it("handles empty array", () => {
+    expect(reclassifyOtherSetups([])).toEqual([]);
+  });
+
+  it("session #185 EUR/USD description reclassifies to MSS", () => {
+    const desc = "Strong USD weakness theme driving momentum above 1.1786, targeting psychological 1.1850 resistance";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("MSS");
+  });
+
+  it("session #185 Bitcoin description reclassifies to MSS", () => {
+    const desc = "Strong crypto momentum continuation above 75345, targeting 76000 ATH resistance";
+    expect(reclassifyOtherSetups([makeSetup(desc, "Other", "Bitcoin")])[0].type).toBe("MSS");
   });
 });
