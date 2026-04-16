@@ -153,6 +153,8 @@ Skipping any instrument on this list is a rule violation (r030).
   const allEntries = loadAllJournalEntries();
   const calibrationContext = buildCalibrationContext(allEntries);
 
+  const r041Note = !isWeekend ? buildR041ScreeningNote() : "";
+
   const analysisUserMessage = `
 ${weekendContext}${marketData}
 
@@ -183,7 +185,7 @@ FORMAT REQUIREMENTS:
    or correlation breakdown. Otherwise pick a direction (per r015).
 
 4. KEY LEVELS: Identify important support/resistance levels across all instruments.
-
+${r041Note}
 5. ASSUMPTIONS (r011 \u2014 MANDATORY): List every causal attribution to an unverified external event
    in the "assumptions" array. This includes geopolitical events, central bank actions, earnings,
    or any "X caused Y" claim not confirmed by price data alone.
@@ -633,6 +635,24 @@ export function buildMinSetupNote(confidence: number): string {
   if (confidence < 50) return "";
   const minSetups = confidence >= 60 ? 4 : 3;
   return `\nMANDATORY SETUP COUNT (your confidence is ${confidence}%): You MUST provide at least ${minSetups} setups. Returning fewer is a rule violation (r034). Systematically screen ALL instruments — forex majors, indices, crypto, commodities — before concluding no setup exists.\n`;
+}
+
+// ── r041 screening validation enforcement ─────────────────
+// Returns a prompt block requiring ORACLE to include a "Screening validation:"
+// line in its analysis text when confidence exceeds 55% on weekday sessions.
+// Injected into ORACLE-ANALYSIS prompt (pre-construction) so the requirement
+// is active before setup generation begins — not post-hoc like validateOracleOutput.
+// Root cause of sessions #168-#172: ORACLE omitted the mandatory prefix despite
+// having the analytical information to produce it.
+export function buildR041ScreeningNote(): string {
+  return `
+5. SCREENING VALIDATION (r041 — MANDATORY when your confidence exceeds 55%):
+   At the end of your Technical Confluence Analysis section, add a line in EXACTLY this format:
+   "Screening validation: EUR/USD [price] [level], GBP/USD [price] [level], NASDAQ [price] [level], S&P [price] [level], BTC [price] [level], ETH [price] [level], Gold [price] [level], Oil [price] [level]"
+   Replace [price] with the current instrument price and [level] with the key support/resistance level you identified.
+   If your confidence is ≤55%, you may omit this line.
+   This line is required BEFORE you proceed to any other content.
+`;
 }
 
 // ── RR self-check enforcement ──────────────────────────────
