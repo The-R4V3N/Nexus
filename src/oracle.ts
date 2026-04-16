@@ -489,6 +489,10 @@ Only respond with the JSON array, no other text.`;
     console.warn(`  \u26a0 ${rawSetups.length - validSetups.length} setup(s) dropped — see warnings above`);
   }
 
+  // Reclassify "Other" setup types to the correct ICT pattern based on description keywords.
+  // Code enforcement backup for ORACLE's tendency to use "Other" as a default catch-all.
+  const reclassifiedSetups = reclassifyOtherSetups(validSetups);
+
   // Fix undefined bias notes
   if (parsed.bias) {
     if (!parsed.bias.notes || parsed.bias.notes === "undefined" || parsed.bias.notes.trim() === "") {
@@ -509,7 +513,7 @@ Only respond with the JSON array, no other text.`;
   // r039/r040 code enforcement: penalize confidence when setups cover only 1 asset class
   // despite multi-class market conditions. Backup to buildR039R040CrossAssetNote prompt injection.
   const { penalized: confAfterCrossAsset, reason: crossAssetReason } = applyR039R040Penalty(
-    finalConfidence, snapshots, validSetups, isWeekend
+    finalConfidence, snapshots, reclassifiedSetups, isWeekend
   );
   if (crossAssetReason) {
     console.warn(`  ⚠ ORACLE ${crossAssetReason}`);
@@ -525,7 +529,7 @@ Only respond with the JSON array, no other text.`;
     sessionId,
     marketSnapshots: snapshots,
     analysis:        finalAnalysis,
-    setups:          validSetups,
+    setups:          reclassifiedSetups,
     bias:            parsed.bias           ?? { overall: "neutral", notes: "" },
     keyLevels:       [...(parsed.keyLevels ?? []), ...screeningKeyLevels],
     confidence:      finalConfidence,
@@ -785,6 +789,36 @@ export function enforceR041ScreeningValidation(
   const injected = `Screening validation: ${parts.join(", ")}`;
   console.warn(`  ⚠ ORACLE r041: screening validation missing at ${confidence}% confidence — auto-injected`);
   return `${analysis}\n${injected}`;
+}
+
+// ── ICT setup type reclassifier ───────────────────────────
+// Code enforcement: when ORACLE types a setup as "Other", attempt to reclassify
+// it to the correct ICT pattern by matching keywords in the description.
+// Priority: specific patterns (FVG, OB, CISD, PDH/PDL, Liquidity Sweep) before
+// MSS (which is the broadest structure-based catch-all).
+// Root cause of sessions #176-#177, #185: ORACLE uses "Other" as default instead
+// of selecting the matching ICT label from the prompt schema.
+export function reclassifyOtherSetups(setups: any[]): any[] {
+  const rules: Array<{ type: string; patterns: RegExp }> = [
+    { type: "FVG",            patterns: /fair\s+value\s+gap|fvg\b|imbalance/i },
+    { type: "OB",             patterns: /order\s+block|\bob\b|mitigation\s+block|institutional\s+(level|order)/i },
+    { type: "CISD",           patterns: /\bcisd\b|change\s+in\s+state\s+of\s+delivery|displacement\s+candle/i },
+    { type: "PDH/PDL",        patterns: /\bpdh\b|\bpdl\b|previous\s+day\s+high|previous\s+day\s+low|prior\s+day\s+high|prior\s+day\s+low/i },
+    { type: "Liquidity Sweep",patterns: /liquidity\s+sweep|stop\s+hunt|liquidity\s+grab|equal\s+highs|equal\s+lows|sell.?side\s+liquidity|buy.?side\s+liquidity/i },
+    { type: "MSS",            patterns: /market\s+structure\s+shift|structure\s+(break|shift)|structural\s+break|\bmss\b|\bmomentum\b|breakout|breaking\s+(above|below)|break\s+(above|below)/i },
+  ];
+
+  return setups.map(setup => {
+    if (setup.type !== "Other") return setup;
+    const desc = (setup.description ?? "").toLowerCase();
+    for (const rule of rules) {
+      if (rule.patterns.test(desc)) {
+        console.warn(`  ⚠ Setup reclassifier: "${setup.instrument}" Other → ${rule.type} (matched description keywords)`);
+        return { ...setup, type: rule.type };
+      }
+    }
+    return setup;
+  });
 }
 
 // ── r041 screening validation enforcement ─────────────────
