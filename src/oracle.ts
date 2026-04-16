@@ -271,10 +271,17 @@ ${weekendTemplate}
 \n` : "";
 
   const r029Note = buildR029StopNote(snapshots);
-  const minSetupNote = buildMinSetupNote(parsed.confidence ?? 50);
   const rrSelfCheckNote = buildRRSelfCheckNote();
 
-  const rawConf = parsed.confidence ?? 50;
+  // Pre-reconcile confidence before building ORACLE-SETUPS prompt.
+  // ORACLE-ANALYSIS may return a low JSON confidence (e.g. 45) while its analysis
+  // text clearly states a higher value (e.g. 58%). Using the raw JSON field here
+  // meant buildWeekdayScreeningTemplate and buildMinSetupNote received sub-50
+  // confidence and injected NO enforcement into ORACLE-SETUPS — root cause of the
+  // persistent 0-setup sessions (#174-#176, #178). resolveConfidence honours the
+  // text value when JSON diverges >10pts or when cap notation is present.
+  const rawConf = resolveConfidence(parsed.analysis ?? "", parsed.confidence ?? 50);
+  const minSetupNote = buildMinSetupNote(rawConf);
   const weekdayTemplate = !isWeekend ? buildWeekdayScreeningTemplate(snapshots, rawConf) : "";
   const minNonNeutral = rawConf >= 60 ? 4 : 3;
   const weekdayScreeningNote = weekdayTemplate
