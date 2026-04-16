@@ -496,21 +496,35 @@ Only respond with the JSON array, no other text.`;
     }
   }
 
-  // Compute final confidence: text/JSON reconciliation → zero-setup floor → setup-count penalty.
+  // Compute final confidence: text/JSON reconciliation → r031 auto-cap → zero-setup floor → setup-count penalty.
   // Uses computeOracleConfidence so the pipeline is testable and agent.ts does not need to
   // call resolveConfidence again (which would undo any penalty — backlog #23 double-call bug).
-  const finalConfidence = computeOracleConfidence(
+  let finalConfidence = computeOracleConfidence(
     parsed.analysis ?? "",
     parsed.confidence ?? 50,
     validSetups.length,
     isWeekend
   );
 
+  // r039/r040 code enforcement: penalize confidence when setups cover only 1 asset class
+  // despite multi-class market conditions. Backup to buildR039R040CrossAssetNote prompt injection.
+  const { penalized: confAfterCrossAsset, reason: crossAssetReason } = applyR039R040Penalty(
+    finalConfidence, snapshots, validSetups, isWeekend
+  );
+  if (crossAssetReason) {
+    console.warn(`  ⚠ ORACLE ${crossAssetReason}`);
+    finalConfidence = confAfterCrossAsset;
+  }
+
+  // r041 code enforcement: auto-inject screening validation line when ORACLE omitted it
+  // despite confidence > 55%. Backup to buildR041ScreeningNote prompt injection.
+  const finalAnalysis = enforceR041ScreeningValidation(parsed.analysis ?? "", snapshots, finalConfidence);
+
   return {
     timestamp:       new Date(),
     sessionId,
     marketSnapshots: snapshots,
-    analysis:        parsed.analysis,
+    analysis:        finalAnalysis,
     setups:          validSetups,
     bias:            parsed.bias           ?? { overall: "neutral", notes: "" },
     keyLevels:       [...(parsed.keyLevels ?? []), ...screeningKeyLevels],
@@ -661,6 +675,15 @@ export function computeOracleConfidence(
   isWeekend: boolean
 ): number {
   let c = resolveConfidence(analysisText, jsonConfidence);
+
+  // r031 code enforcement: confidence cannot exceed 65 without explicit cap notation.
+  // ORACLE is prompted to include "capped at X%" when it computes >65%, but when it
+  // ignores that requirement the code enforces the cap regardless.
+  if (c > 65 && !analysisText.match(/capped\s+(?:at|to)\s*\d+%/i)) {
+    console.warn(`  ⚠ ORACLE r031: ${c}% confidence exceeds 65 cap without notation — auto-capping to 65%`);
+    c = 65;
+  }
+
   if (c > 60 && setupCount === 0) {
     console.warn(`  ⚠ ORACLE contradiction: ${c}% confidence but 0 setups — forcing to 35%`);
     c = 35;
@@ -670,6 +693,98 @@ export function computeOracleConfidence(
     console.warn(`  ⚠ ORACLE ${reason}`);
   }
   return penalized;
+}
+
+// ── r039/r040 cross-asset confidence penalty ──────────────
+// Code enforcement counterpart to buildR039R040CrossAssetNote.
+// When ORACLE produces setups from only 1 asset class at high confidence despite
+// the prompt requirement, reduce confidence proportionally — same pattern as
+// applySetupCountPenalty. Called in runOracleAnalysis after computeOracleConfidence.
+export function applyR039R040Penalty(
+  confidence: number,
+  snapshots: MarketSnapshot[],
+  setups: any[],
+  isWeekend: boolean
+): { penalized: number; reason: string | null } {
+  if (isWeekend || confidence < 55) return { penalized: confidence, reason: null };
+
+  function classifySnap(name: string, symbol: string): string {
+    const n = (name ?? "").toLowerCase();
+    const s = (symbol ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    if (["bitcoin","ethereum","btc","eth","bnb","sol","ada","dot","link","xrp","matic","avax"].some(t => n.includes(t) || s.includes(t))) return "crypto";
+    if (["nasdaq","nas100","s&p","spx","dow","djia","dax","ftse","nikkei"].some(t => n.includes(t) || s.includes(t))) return "indices";
+    if (["gold","silver","oil","crude","copper","natgas","platinum","xau","xag"].some(t => n.includes(t) || s.includes(t))) return "commodities";
+    return "forex";
+  }
+
+  const classesWithBigMoves = new Set<string>();
+  for (const s of snapshots) {
+    if (Math.abs(s.changePercent ?? 0) >= 2) {
+      classesWithBigMoves.add(classifySnap(s.name, s.symbol));
+    }
+  }
+
+  const setupClasses = new Set<string>();
+  for (const s of setups) {
+    setupClasses.add(classifySnap(s.instrument ?? "", s.instrument ?? ""));
+  }
+
+  const r039Triggers = classesWithBigMoves.size >= 3;
+  const r040Triggers = confidence >= 60;
+
+  if (!r039Triggers && !r040Triggers) return { penalized: confidence, reason: null };
+  if (setupClasses.size >= 2) return { penalized: confidence, reason: null };
+
+  const penalty = r040Triggers ? 15 : 10;
+  const penalized = Math.max(35, confidence - penalty);
+  const rule = r039Triggers && r040Triggers ? "r039+r040" : r039Triggers ? "r039" : "r040";
+  const coveredClass = setupClasses.size === 0 ? "no" : [...setupClasses][0];
+  return {
+    penalized,
+    reason: `${rule} cross-asset enforcement: ${confidence}% confidence, setups cover only ${coveredClass} — reduced by ${penalty}pts to ${penalized}%`,
+  };
+}
+
+// ── r041 screening validation auto-inject ─────────────────
+// Code enforcement: when confidence > 55 and ORACLE omitted the mandatory
+// 'Screening validation:' line, auto-inject a stub from market snapshot data.
+// Prevents post-hoc validation warnings from being the only enforcement mechanism.
+export function enforceR041ScreeningValidation(
+  analysis: string,
+  snapshots: MarketSnapshot[],
+  confidence: number
+): string {
+  if (confidence <= 55) return analysis;
+  if (/screening validation:/i.test(analysis)) return analysis;
+
+  const r041Instruments = [
+    { label: "EUR/USD", matchers: ["eur/usd", "eurusd"] },
+    { label: "GBP/USD", matchers: ["gbp/usd", "gbpusd"] },
+    { label: "NASDAQ",  matchers: ["nasdaq", "nas100"] },
+    { label: "S&P",     matchers: ["s&p", "spx", "s&p 500"] },
+    { label: "BTC",     matchers: ["bitcoin", "btc"] },
+    { label: "ETH",     matchers: ["ethereum", "eth"] },
+    { label: "Gold",    matchers: ["gold", "xau"] },
+    { label: "Oil",     matchers: ["oil", "crude"] },
+  ];
+
+  const parts: string[] = [];
+  for (const instr of r041Instruments) {
+    const snap = snapshots.find(s => {
+      const n = (s.name ?? "").toLowerCase();
+      const sym = (s.symbol ?? "").toLowerCase();
+      return instr.matchers.some(m => n.includes(m) || sym.includes(m));
+    });
+    if (snap) {
+      parts.push(`${instr.label} ${snap.price}`);
+    }
+  }
+
+  if (parts.length === 0) return analysis;
+
+  const injected = `Screening validation: ${parts.join(", ")}`;
+  console.warn(`  ⚠ ORACLE r041: screening validation missing at ${confidence}% confidence — auto-injected`);
+  return `${analysis}\n${injected}`;
 }
 
 // ── r041 screening validation enforcement ─────────────────
