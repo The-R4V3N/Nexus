@@ -370,6 +370,60 @@ describe("validateOracleOutput", () => {
     );
     expect(result.warnings.some((w) => w.includes("r026"))).toBe(false);
   });
+
+  // ── r026 weekday 4-setup minimum (backlog #25) ──
+  // At confidence >= 60%, buildMinSetupNote requires 4 setups on weekday sessions.
+  // Sessions #172-#173 both had 65% confidence but only 3 setups — no warning fired.
+  // Fix: detect weekday (>=4 of 8 r041 instruments in snapshots) and require 4 setups at >=60%.
+
+  const r026WeekdaySnaps = [
+    { symbol: "EURUSD=X", name: "EUR/USD",    category: "forex",    price: 1.18,  previousClose: 1.17, change: 0.01, changePercent: 0.85, high: 1.19, low: 1.17, timestamp: new Date() },
+    { symbol: "GBPUSD=X", name: "GBP/USD",    category: "forex",    price: 1.35,  previousClose: 1.34, change: 0.01, changePercent: 0.75, high: 1.36, low: 1.34, timestamp: new Date() },
+    { symbol: "NQ=F",     name: "NASDAQ 100", category: "indices",  price: 26000, previousClose: 24700, change: 1300, changePercent: 5.26, high: 26200, low: 24700, timestamp: new Date() },
+    { symbol: "ES=F",     name: "S&P 500",    category: "indices",  price: 7000,  previousClose: 6760, change: 240,  changePercent: 3.55, high: 7026, low: 6760, timestamp: new Date() },
+    { symbol: "BTC-USD",  name: "Bitcoin",    category: "crypto",   price: 74800, previousClose: 70700, change: 4100, changePercent: 5.80, high: 75150, low: 70700, timestamp: new Date() },
+    { symbol: "ETH-USD",  name: "Ethereum",   category: "crypto",   price: 2350,  previousClose: 2200, change: 150,  changePercent: 6.82, high: 2380, low: 2200, timestamp: new Date() },
+    { symbol: "GC=F",     name: "Gold",       category: "commodities", price: 4836, previousClose: 4740, change: 96, changePercent: 2.03, high: 4860, low: 4740, timestamp: new Date() },
+    { symbol: "CL=F",     name: "Crude Oil",  category: "commodities", price: 60,  previousClose: 66, change: -6, changePercent: -9.09, high: 66, low: 59, timestamp: new Date() },
+  ] as any[];
+
+  it("warns when confidence >= 60 and exactly 3 setups on weekday (r026 — backlog #25)", () => {
+    // Reproduces sessions #172-#173: 65% confidence, 3 setups, all 8 instruments present
+    const result = validateOracleOutput(
+      makeOracle({
+        confidence: 65,
+        setups: [makeValidSetup("EUR/USD"), makeValidSetup("S&P 500"), makeValidSetup("Gold")],
+        marketSnapshots: r026WeekdaySnaps,
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r026"))).toBe(true);
+  });
+
+  it("does not warn when confidence >= 60 with 4 setups on weekday (r026)", () => {
+    const result = validateOracleOutput(
+      makeOracle({
+        confidence: 65,
+        setups: [makeValidSetup("EUR/USD"), makeValidSetup("S&P 500"), makeValidSetup("Gold"), makeValidSetup("Bitcoin")],
+        marketSnapshots: r026WeekdaySnaps,
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r026"))).toBe(false);
+  });
+
+  it("does not warn when confidence >= 60 with 3 setups on weekend (no weekday snaps)", () => {
+    // Weekend sessions have a minimum of 2, not 4 — r026 should not fire at 3 setups
+    const result = validateOracleOutput(
+      makeOracle({
+        confidence: 65,
+        setups: [makeValidSetup("Bitcoin"), makeValidSetup("Ethereum"), makeValidSetup("Ripple")],
+        marketSnapshots: [],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r026"))).toBe(false);
+  });
 });
 
 // ── r034: zero-setup screening documentation check ──────────────
