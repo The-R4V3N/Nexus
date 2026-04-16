@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation } from "../src/oracle";
 import { resolveConfidence } from "../src/validate";
 import type { MarketSnapshot } from "../src/types";
 
@@ -1135,9 +1135,15 @@ describe("buildR041ScreeningNote", () => {
 //     diff=20>10 and silently restores 65%)
 
 describe("computeOracleConfidence", () => {
-  it("returns resolved text confidence when json diverges >10pts", () => {
-    // text=73, json=50 → resolveConfidence returns 73; 4 setups → no penalty
-    expect(computeOracleConfidence("Confidence: 73% — TC(80%), MA(60%), RR(70%)", 50, 4, false)).toBe(73);
+  it("returns resolved text confidence when json diverges >10pts, capped at 65 by r031", () => {
+    // text=73, json=50 → resolveConfidence returns 73; no cap notation → r031 auto-cap to 65
+    // (Previously expected 73; r031 code enforcement now caps at 65 without cap notation)
+    expect(computeOracleConfidence("Confidence: 73% — TC(80%), MA(60%), RR(70%)", 50, 4, false)).toBe(65);
+  });
+
+  it("resolveConfidence itself still returns 73 when text diverges >10pts (no r031 applied)", () => {
+    // resolveConfidence is a lower-level function that does not apply r031
+    expect(resolveConfidence("Confidence: 73% — TC(80%), MA(60%), RR(70%)", 50)).toBe(73);
   });
 
   it("returns 35 when confidence >60 with zero setups (contradiction floor)", () => {
@@ -1259,5 +1265,172 @@ describe("buildR039R040CrossAssetNote", () => {
   it("note includes the confidence value", () => {
     const note = buildR039R040CrossAssetNote(multiClassSnaps, 67);
     expect(note).toContain("67%");
+  });
+});
+
+// ── r031 auto-cap in computeOracleConfidence ──────────────
+// Code enforcement: when confidence > 65 without cap notation, force to 65.
+// Replaces the old prompt-only approach where ORACLE could ignore the rule.
+
+describe("computeOracleConfidence r031 auto-cap", () => {
+  it("auto-caps at 65 when confidence > 65 and no cap notation", () => {
+    // Session #184 root cause: ORACLE reported 69% with no 'capped at X%' in text
+    expect(computeOracleConfidence("Confidence: 69% — TC (65%), MA (75%), RR (70%)", 69, 5, false)).toBe(65);
+  });
+
+  it("auto-caps at 65 when confidence is 70 with no cap notation", () => {
+    expect(computeOracleConfidence("Confidence: 70%", 70, 5, false)).toBe(65);
+  });
+
+  it("does NOT cap when confidence is exactly 65", () => {
+    expect(computeOracleConfidence("Confidence: 65%", 65, 5, false)).toBe(65);
+  });
+
+  it("does NOT cap when confidence is below 65", () => {
+    expect(computeOracleConfidence("Confidence: 60%", 60, 5, false)).toBe(60);
+  });
+
+  it("does NOT cap when cap notation is present (honors explicit cap)", () => {
+    // ORACLE calculated 73% but capped to 67% — respect the explicit notation
+    expect(computeOracleConfidence("Confidence: 73% — capped at 67% due to calibration discipline", 73, 5, false)).toBe(67);
+  });
+
+  it("does NOT cap when 'capped at 65%' is in text and json matches", () => {
+    expect(computeOracleConfidence("Confidence: 65% — capped at 65%", 65, 5, false)).toBe(65);
+  });
+
+  it("auto-cap interacts correctly with setup count penalty — cap first, then penalize", () => {
+    // 70% → auto-cap to 65 → 3 setups required at 65%, 2 provided → shortfall 1 → -10 → 55
+    expect(computeOracleConfidence("Confidence: 70%", 70, 2, false)).toBe(55);
+  });
+});
+
+// ── applyR039R040Penalty ──────────────────────────────────
+// Code enforcement: when setups cover only 1 asset class at high confidence,
+// reduce confidence proportionally — same pattern as applySetupCountPenalty.
+
+describe("applyR039R040Penalty", () => {
+  const multiSnaps = [
+    { name: "NASDAQ 100", symbol: "NAS100", changePercent: 4.65, price: 26248, change: 1166 },
+    { name: "Bitcoin",    symbol: "BTC",    changePercent: 5.15, price: 74397, change: 3643 },
+    { name: "Crude Oil",  symbol: "OIL",    changePercent: -7.87, price: 91.28, change: -7.78 },
+    { name: "EUR/USD",    symbol: "EURUSD", changePercent: 0.77,  price: 1.1781, change: 0.009 },
+  ];
+
+  const forexOnlySetups = [
+    { instrument: "EUR/USD", entry: 1.1781, stop: 1.174, target: 1.185 },
+    { instrument: "EUR/JPY", entry: 187.55, stop: 186.0, target: 190.0 },
+  ];
+
+  const crossClassSetups = [
+    { instrument: "EUR/USD",   entry: 1.1781, stop: 1.174, target: 1.185 },
+    { instrument: "NASDAQ 100", entry: 26248, stop: 25900, target: 26800 },
+  ];
+
+  it("applies penalty when only forex setups at ≥60% confidence with 3+ big-move classes", () => {
+    const result = applyR039R040Penalty(67, multiSnaps, forexOnlySetups, false);
+    expect(result.penalized).toBeLessThan(67);
+    expect(result.reason).not.toBeNull();
+  });
+
+  it("applies penalty when only forex setups at 55-59% confidence with 3+ big-move classes (r039)", () => {
+    const result = applyR039R040Penalty(57, multiSnaps, forexOnlySetups, false);
+    expect(result.penalized).toBeLessThan(57);
+    expect(result.reason).not.toBeNull();
+  });
+
+  it("does NOT penalize when setups span ≥2 asset classes", () => {
+    const result = applyR039R040Penalty(67, multiSnaps, crossClassSetups, false);
+    expect(result.penalized).toBe(67);
+    expect(result.reason).toBeNull();
+  });
+
+  it("does NOT penalize on weekend sessions (crypto-only is valid)", () => {
+    const result = applyR039R040Penalty(67, multiSnaps, forexOnlySetups, true);
+    expect(result.penalized).toBe(67);
+    expect(result.reason).toBeNull();
+  });
+
+  it("does NOT penalize when confidence < 55 (neither rule triggers)", () => {
+    const result = applyR039R040Penalty(50, multiSnaps, forexOnlySetups, false);
+    expect(result.penalized).toBe(50);
+    expect(result.reason).toBeNull();
+  });
+
+  it("does NOT penalize at 55-59% with fewer than 3 big-move classes (r039 not triggered, r040 not triggered)", () => {
+    const fewSnaps = [
+      { name: "EUR/USD", symbol: "EURUSD", changePercent: 2.5,  price: 1.18, change: 0.02 },
+      { name: "GBP/USD", symbol: "GBPUSD", changePercent: 0.5,  price: 1.35, change: 0.006 },
+    ];
+    const result = applyR039R040Penalty(57, fewSnaps, forexOnlySetups, false);
+    expect(result.penalized).toBe(57);
+    expect(result.reason).toBeNull();
+  });
+
+  it("penalized value does not drop below 35", () => {
+    const result = applyR039R040Penalty(40, multiSnaps, forexOnlySetups, false);
+    // 40 < 55, so no penalty
+    expect(result.penalized).toBe(40);
+  });
+
+  it("reason string mentions r039 or r040", () => {
+    const result = applyR039R040Penalty(67, multiSnaps, forexOnlySetups, false);
+    expect(result.reason).toMatch(/r039|r040/i);
+  });
+});
+
+// ── enforceR041ScreeningValidation ───────────────────────
+// Code enforcement: when confidence > 55 and analysis lacks 'Screening validation:',
+// auto-inject a stub line from market snapshot data rather than just warning.
+
+describe("enforceR041ScreeningValidation", () => {
+  const snaps = [
+    { name: "EUR/USD",    symbol: "EURUSD",  changePercent: 0.77,  price: 1.1781, change: 0.009 },
+    { name: "GBP/USD",    symbol: "GBPUSD",  changePercent: 0.77,  price: 1.3529, change: 0.01  },
+    { name: "NASDAQ 100", symbol: "NAS100",  changePercent: 4.65,  price: 26248,  change: 1166  },
+    { name: "S&P 500",    symbol: "SPX",     changePercent: 2.98,  price: 7028,   change: 203   },
+    { name: "Bitcoin",    symbol: "BTC",     changePercent: 5.15,  price: 74397,  change: 3643  },
+    { name: "Ethereum",   symbol: "ETH",     changePercent: 6.95,  price: 2328,   change: 151   },
+    { name: "Gold",       symbol: "GOLD",    changePercent: 1.44,  price: 4811,   change: 68    },
+    { name: "Crude Oil",  symbol: "OIL",     changePercent: -7.87, price: 91.28,  change: -7.78 },
+  ];
+
+  it("returns analysis unchanged when confidence ≤55 (rule does not apply)", () => {
+    const analysis = "Some analysis without screening validation.";
+    expect(enforceR041ScreeningValidation(analysis, snaps, 55)).toBe(analysis);
+    expect(enforceR041ScreeningValidation(analysis, snaps, 40)).toBe(analysis);
+  });
+
+  it("returns analysis unchanged when screening validation already present", () => {
+    const analysis = "Some analysis. Screening validation: EUR/USD 1.18 resistance 1.19, GBP/USD 1.35 resistance 1.36.";
+    const result = enforceR041ScreeningValidation(analysis, snaps, 67);
+    expect(result).toBe(analysis);
+  });
+
+  it("auto-injects screening validation line when confidence > 55 and line is missing", () => {
+    const analysis = "Strong bullish momentum. Technical Confluence Analysis: 4 confluences.";
+    const result = enforceR041ScreeningValidation(analysis, snaps, 67);
+    expect(result).toContain("Screening validation:");
+  });
+
+  it("injected line contains current prices from snapshots", () => {
+    const analysis = "Bullish session analysis.";
+    const result = enforceR041ScreeningValidation(analysis, snaps, 67);
+    // Should contain prices from the snapshots
+    expect(result).toContain("1.1781"); // EUR/USD price
+    expect(result).toContain("74397");  // BTC price
+  });
+
+  it("injected line includes all 8 r041 required instruments", () => {
+    const analysis = "Bullish session analysis.";
+    const result = enforceR041ScreeningValidation(analysis, snaps, 67);
+    expect(result).toMatch(/EUR\/USD/i);
+    expect(result).toMatch(/GBP\/USD/i);
+    expect(result).toMatch(/NASDAQ|NAS100/i);
+    expect(result).toMatch(/S&P|SPX/i);
+    expect(result).toMatch(/BTC|Bitcoin/i);
+    expect(result).toMatch(/ETH|Ethereum/i);
+    expect(result).toMatch(/Gold/i);
+    expect(result).toMatch(/Oil/i);
   });
 });
