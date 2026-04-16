@@ -329,10 +329,10 @@
     {
       "id": "r041",
       "category": "screening_enforcement",
-      "description": "When confidence exceeds 55%, explicitly state in analysis text: 'Screening validation: EUR/USD [price] [level], GBP/USD [price] [level], NASDAQ [price] [level], S&P [price] [level], BTC [price] [level], ETH [price] [level], Gold [price] [level], Oil [price] [level]' with setup viability decision for each. Required format prevents completion without comprehensive screening.",
+      "description": "When confidence exceeds 55%, analysis text must contain explicit screening validation block formatted as: 'Screening validation: EUR/USD [price] support/resistance [level], GBP/USD [price] support/resistance [level], NASDAQ [price] support/resistance [level], S&P [price] support/resistance [level], BTC [price] support/resistance [level], ETH [price] support/resistance [level], Gold [price] support/resistance [level], Oil [price] support/resistance [level]' with setup viability decision for each ",
       "weight": 9,
       "addedSession": 165,
-      "lastModifiedSession": 170
+      "lastModifiedSession": 178
     },
     {
       "id": "r042",
@@ -355,8 +355,8 @@
       "disabledReason": "Superseded by filterR036Setups() in validate.ts (PR #64) which hard-removes bearish risk asset setups during DXY weakness"
     }
   ],
-  "version": 98,
-  "lastUpdated": "2026-04-15T18:19:00.412Z",
+  "version": 99,
+  "lastUpdated": "2026-04-16T16:02:54.646Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -364,5 +364,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #170"
+  "sessionNotes": "Last updated: Session #178"
 }
