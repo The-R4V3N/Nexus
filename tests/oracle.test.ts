@@ -979,6 +979,17 @@ describe("buildMinSetupNote", () => {
   it("triggers at exactly 50", () => {
     expect(buildMinSetupNote(50)).not.toBe("");
   });
+
+  it("explicitly states that neutral entries do not count as setups (backlog #26)", () => {
+    const note = buildMinSetupNote(72);
+    expect(note.toLowerCase()).toMatch(/neutral.*not count|not count.*neutral|neutral.*do not|neutral entries.*not/i);
+  });
+
+  it("requires non-neutral direction entries, not just array length (backlog #26)", () => {
+    const note = buildMinSetupNote(55);
+    // Must mention bullish/bearish as the required direction
+    expect(note.toLowerCase()).toMatch(/bullish.*bearish|bearish.*bullish|non-neutral/i);
+  });
 });
 
 // ── buildRRSelfCheckNote ──────────────────────────────────

@@ -276,6 +276,7 @@ ${weekendTemplate}
 
   const rawConf = parsed.confidence ?? 50;
   const weekdayTemplate = !isWeekend ? buildWeekdayScreeningTemplate(snapshots, rawConf) : "";
+  const minNonNeutral = rawConf >= 60 ? 4 : 3;
   const weekdayScreeningNote = weekdayTemplate
     ? `\nSYSTEMATIC SCREENING REQUIRED (your confidence is ${rawConf}%):
 You MUST fill in EVERY slot in the JSON template below. Do NOT add or remove slots.
@@ -283,6 +284,8 @@ For each instrument:
   - If a valid structural level exists aligned with your bias → fill in entry, stop, target, RR, timeframe, set direction to "bullish" or "bearish"
   - If no valid setup exists → leave entry/stop/target/RR/timeframe as null, set direction to "neutral", explain briefly in description
 All ${snapshots.length} instruments must be accounted for. Returning fewer slots is a rule violation (r034).
+
+CRITICAL: Neutral entries (direction: "neutral") do NOT count as setups. At confidence ${rawConf}%, you MUST have at least ${minNonNeutral} slots with direction "bullish" or "bearish" and all numeric fields populated. Setting every slot to "neutral" is a direct violation of r034. Your ${biasOverall} bias with documented confluences guarantees structural opportunities exist — commit to them.
 
 START WITH THIS TEMPLATE (fill in every slot):
 ${weekdayTemplate}
@@ -627,7 +630,7 @@ export function buildWeekdayScreeningTemplate(snapshots: MarketSnapshot[], confi
 export function buildMinSetupNote(confidence: number): string {
   if (confidence < 50) return "";
   const minSetups = confidence >= 60 ? 4 : 3;
-  return `\nMANDATORY SETUP COUNT (your confidence is ${confidence}%): You MUST provide at least ${minSetups} setups. Returning fewer is a rule violation (r034). Systematically screen ALL instruments — forex majors, indices, crypto, commodities — before concluding no setup exists.\n`;
+  return `\nMANDATORY SETUP COUNT (your confidence is ${confidence}%): You MUST provide at least ${minSetups} setups with direction "bullish" or "bearish" and all fields populated. Neutral entries (direction: "neutral") do NOT count as setups — they are screened rejections only. Returning fewer than ${minSetups} non-neutral setups is a rule violation (r034). Systematically screen ALL instruments — forex majors, indices, crypto, commodities — before concluding no setup exists.\n`;
 }
 
 // ── Confidence computation (three-step pipeline) ──────────
