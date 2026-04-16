@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote, buildWeekdayScreeningTemplate } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote } from "../src/oracle";
 import type { MarketSnapshot } from "../src/types";
 
 function makeSnap(changePercent: number): MarketSnapshot {
@@ -1066,5 +1066,39 @@ describe("buildWeekdayScreeningTemplate", () => {
 
   it("returns empty string for empty snapshots regardless of confidence", () => {
     expect(buildWeekdayScreeningTemplate([], 80)).toBe("");
+  });
+});
+
+// ── buildR041ScreeningNote ────────────────────────────────
+
+describe("buildR041ScreeningNote", () => {
+  it("returns a non-empty string", () => {
+    expect(buildR041ScreeningNote()).toBeTruthy();
+  });
+
+  it("contains the 'Screening validation:' format requirement", () => {
+    expect(buildR041ScreeningNote()).toContain("Screening validation:");
+  });
+
+  it("references the 55% confidence threshold", () => {
+    expect(buildR041ScreeningNote()).toContain("55%");
+  });
+
+  it("lists all 8 required r041 instruments", () => {
+    const note = buildR041ScreeningNote();
+    expect(note).toContain("EUR/USD");
+    expect(note).toContain("GBP/USD");
+    expect(note).toContain("NASDAQ");
+    expect(note).toContain("S&P");
+    expect(note).toContain("BTC");
+    expect(note).toContain("ETH");
+    expect(note).toContain("Gold");
+    expect(note).toContain("Oil");
+  });
+
+  it("mentions price and level placeholders in the example format", () => {
+    const note = buildR041ScreeningNote();
+    expect(note).toMatch(/\[price\]/i);
+    expect(note).toMatch(/\[level\]/i);
   });
 });
