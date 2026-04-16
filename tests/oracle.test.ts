@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote } from "../src/oracle";
 import { resolveConfidence } from "../src/validate";
 import type { MarketSnapshot } from "../src/types";
 
@@ -1178,5 +1178,86 @@ describe("computeOracleConfidence", () => {
     expect(computeOracleConfidence("Confidence: 65%", 65, 2, true)).toBe(65);
     // weekend, 65% confidence, 1 setup: minSetups=2, shortfall=1, penalty=10 → 55
     expect(computeOracleConfidence("Confidence: 65%", 65, 1, true)).toBe(55);
+  });
+});
+
+// ── buildR039R040CrossAssetNote ───────────────────────────
+
+function makeCrossSnap(name: string, symbol: string, changePct: number) {
+  return { name, symbol, changePercent: changePct, price: 100, change: changePct };
+}
+
+describe("buildR039R040CrossAssetNote", () => {
+  const multiClassSnaps = [
+    makeCrossSnap("EUR/USD",      "EURUSD",  0.79),   // forex  <2% — small move
+    makeCrossSnap("NASDAQ 100",   "NAS100",  4.65),   // indices >2%
+    makeCrossSnap("Bitcoin",      "BTC",     5.15),   // crypto  >2%
+    makeCrossSnap("Crude Oil",    "OIL",    -7.87),   // commodities >2%
+    makeCrossSnap("Gold",         "GOLD",    1.44),   // commodities <2%
+    makeCrossSnap("EUR/JPY",      "EURJPY",  0.84),   // forex <2%
+  ];
+
+  it("returns empty string when confidence < 55 (neither rule triggers)", () => {
+    expect(buildR039R040CrossAssetNote(multiClassSnaps, 50)).toBe("");
+    expect(buildR039R040CrossAssetNote(multiClassSnaps, 40)).toBe("");
+  });
+
+  it("returns empty string when confidence 55-59 and fewer than 3 classes moving >2% (r039 not triggered, r040 not triggered)", () => {
+    // Only 1 class with a big move — r039 needs 3+, r040 needs ≥60
+    const fewSnaps = [
+      makeCrossSnap("EUR/USD", "EURUSD",  2.5),  // forex >2%
+      makeCrossSnap("GBP/USD", "GBPUSD",  0.5),  // forex <2%
+      makeCrossSnap("Bitcoin", "BTC",     1.0),  // crypto <2%
+    ];
+    expect(buildR039R040CrossAssetNote(fewSnaps, 57)).toBe("");
+  });
+
+  it("returns non-empty when confidence ≥55 and 3+ asset classes have moves >2% (r039)", () => {
+    // multiClassSnaps: indices, crypto, commodities all >2% → r039 triggers at 57%
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 57);
+    expect(note.length).toBeGreaterThan(0);
+  });
+
+  it("returns non-empty when confidence ≥60 regardless of move count (r040)", () => {
+    // Only 1 class moving >2% — r039 not triggered, but r040 triggers at ≥60
+    const fewSnaps = [
+      makeCrossSnap("EUR/USD", "EURUSD", 2.5),
+      makeCrossSnap("GBP/USD", "GBPUSD", 0.5),
+    ];
+    const note = buildR039R040CrossAssetNote(fewSnaps, 67);
+    expect(note.length).toBeGreaterThan(0);
+  });
+
+  it("note requires setups from ≥2 different asset classes", () => {
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 67);
+    expect(note).toMatch(/2.*(different|asset class)/i);
+  });
+
+  it("note names the four asset classes ORACLE must screen", () => {
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 67);
+    expect(note.toLowerCase()).toContain("forex");
+    expect(note.toLowerCase()).toContain("indices");
+    expect(note.toLowerCase()).toContain("crypto");
+    expect(note.toLowerCase()).toMatch(/commodit/i);
+  });
+
+  it("note flags only-forex setups as a violation", () => {
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 67);
+    expect(note.toLowerCase()).toMatch(/violation|violat/i);
+  });
+
+  it("note references r039 when coordinated move condition met", () => {
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 57);
+    expect(note).toContain("r039");
+  });
+
+  it("note references r040 when confidence ≥60", () => {
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 67);
+    expect(note).toContain("r040");
+  });
+
+  it("note includes the confidence value", () => {
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 67);
+    expect(note).toContain("67%");
   });
 });

@@ -281,6 +281,7 @@ ${weekendTemplate}
   // persistent 0-setup sessions (#174-#176, #178). resolveConfidence honours the
   // text value when JSON diverges >10pts or when cap notation is present.
   const rawConf = resolveConfidence(parsed.analysis ?? "", parsed.confidence ?? 50);
+  const crossAssetNote = !isWeekend ? buildR039R040CrossAssetNote(snapshots, rawConf) : "";
   const minSetupNote = buildMinSetupNote(rawConf);
   const weekdayTemplate = !isWeekend ? buildWeekdayScreeningTemplate(snapshots, rawConf) : "";
   const minNonNeutral = rawConf >= 60 ? 4 : 3;
@@ -324,7 +325,7 @@ RULES:
 - Weekend crypto sessions: at least 2 setups from available crypto instruments regardless of confidence
 - Every setup MUST have: entry, stop, target, RR, timeframe
 - ENTRY: nearest support/resistance, session high/low, or key level
-- STOP: beyond the next structural level, or 1x ATR from entry${r029Note}
+- STOP: beyond the next structural level, or 1x ATR from entry${r029Note}${crossAssetNote}
 - TARGET: next liquidity level, psychological number, or swing point
 - RR must be > 1.3 \u2014 do not include setups with risk exceeding reward${rrSelfCheckNote}
 - Include instrument, type, direction, description, and invalidation
@@ -686,6 +687,57 @@ export function buildR041ScreeningNote(): string {
    Replace [price] with the current instrument price and [level] with the key support/resistance level you identified.
    If your confidence is ≤55%, you may omit this line.
    This line is required BEFORE you proceed to any other content.
+`;
+}
+
+// ── r039/r040 cross-asset coverage requirement ────────────
+// Returns a prompt block requiring ORACLE to span ≥2 asset classes when:
+//   r039: confidence ≥55% AND 3+ asset classes each have an instrument moving >2%
+//   r040: confidence ≥60% with any market conditions
+// Injected into ORACLE-SETUPS prompt pre-construction so ORACLE knows before
+// committing to setups — not caught post-hoc by validateOracleOutput.
+// Root cause of sessions #181-#183: ORACLE produced only forex setups at 67%
+// confidence despite indices, crypto, and commodities all moving >2%.
+export function buildR039R040CrossAssetNote(snapshots: MarketSnapshot[], confidence: number): string {
+  if (confidence < 55) return "";
+
+  function classifySnap(name: string, symbol: string): string {
+    const n = (name ?? "").toLowerCase();
+    const s = (symbol ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    if (["bitcoin","ethereum","btc","eth","bnb","sol","ada","dot","link","xrp","matic","avax"].some(t => n.includes(t) || s.includes(t))) return "crypto";
+    if (["nasdaq","nas100","s&p","spx","dow","djia","dax","ftse","nikkei"].some(t => n.includes(t) || s.includes(t))) return "indices";
+    if (["gold","silver","oil","crude","copper","natgas","platinum","xau","xag"].some(t => n.includes(t) || s.includes(t))) return "commodities";
+    return "forex";
+  }
+
+  const classesWithBigMoves = new Set<string>();
+  for (const s of snapshots) {
+    if (Math.abs(s.changePercent ?? 0) >= 2) {
+      classesWithBigMoves.add(classifySnap(s.name, s.symbol));
+    }
+  }
+
+  const r039Triggers = classesWithBigMoves.size >= 3;
+  const r040Triggers = confidence >= 60;
+
+  if (!r039Triggers && !r040Triggers) return "";
+
+  const rules = r039Triggers && r040Triggers ? "r039 + r040" : r039Triggers ? "r039" : "r040";
+  const movingClasses = [...classesWithBigMoves].join(", ");
+  const coordinatedContext = r039Triggers
+    ? ` with ${classesWithBigMoves.size} asset classes moving >2% (${movingClasses})`
+    : "";
+
+  return `
+CROSS-ASSET COVERAGE REQUIREMENT (${rules} — MANDATORY):
+Your confidence is ${confidence}%${coordinatedContext}.
+You MUST either:
+  (1) Include setups from AT LEAST 2 DIFFERENT asset classes (forex, indices, crypto, commodities), OR
+  (2) For each asset class NOT covered by a setup, explicitly reject it with quantified reasons:
+      • Poor RR (<1.3) at the identified structural level
+      • Stop distance >2% required
+      • Conflicting higher timeframe structure
+Submitting only forex setups when indices, crypto, and commodities are all moving is a RULE VIOLATION.
 `;
 }
 
