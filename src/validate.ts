@@ -340,13 +340,37 @@ export function validateOracleOutput(
 
   // r026: high confidence must produce broad setup coverage
   // When effective confidence > 55%, fewer than 3 setups indicates incomplete screening.
-  // Analytics show this is the most common cause of hit rate underperformance
-  // in the 50-85% confidence bands.
+  // When confidence >= 60% on weekday sessions (≥4 r041 instruments present), minimum is 4
+  // setups — aligns with buildMinSetupNote which tells ORACLE "≥4 setups when confidence ≥60%".
+  // Sessions #172-#173 each produced only 3 setups at 65% confidence without triggering r026.
   if (effectiveConfidence > 55) {
     const setupCount = oracle.setups?.length ?? 0;
-    if (setupCount < 3) {
+    const snapNamesR026 = new Set(
+      (oracle.marketSnapshots ?? []).flatMap(s => [
+        (s.name ?? "").toLowerCase(),
+        (s.symbol ?? "").toLowerCase().replace(/[^a-z]/g, ""),
+      ])
+    );
+    const r026Aliases: string[][] = [
+      ["eur/usd", "eurusd", "eur"],
+      ["gbp/usd", "gbpusd", "gbp"],
+      ["nasdaq", "nas100"],
+      ["s&p", "spx", "s&p500", "s&p 500"],
+      ["bitcoin", "btc"],
+      ["ethereum", "eth"],
+      ["gold", "xau"],
+      ["oil", "crude", "wti", "brent"],
+    ];
+    const isWeekdaySession = r026Aliases.filter(aliases =>
+      aliases.some(a => [...snapNamesR026].some(n => n.includes(a.replace("/", ""))))
+    ).length >= 4;
+    const minRequired = isWeekdaySession && effectiveConfidence >= 60 ? 4 : 3;
+    if (setupCount < minRequired) {
       warnings.push(
-        `r026: confidence ${effectiveConfidence}% with only ${setupCount} setup(s) — high-confidence sessions require systematic screening across all available instruments (minimum 3 setups)`
+        `r026: confidence ${effectiveConfidence}% with only ${setupCount} setup(s) — ` +
+        (isWeekdaySession && effectiveConfidence >= 60
+          ? `weekday sessions at ≥60% confidence require minimum 4 setups (buildMinSetupNote threshold)`
+          : `high-confidence sessions require systematic screening across all available instruments (minimum 3 setups)`)
       );
     }
   }
