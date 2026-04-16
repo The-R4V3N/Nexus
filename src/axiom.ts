@@ -185,15 +185,53 @@ ${(() => {
   const moderate = snaps.filter(s => { const m = Math.abs(s.changePercent ?? 0); return m >= 3 && m < 5; });
   const lowMove  = snaps.filter(s => Math.abs(s.changePercent ?? 0) < 3);
   if (!extreme.length && !moderate.length) return "";
+
+  // Build volatility lookup map
+  const volatilityMap = new Map<string, number>();
+  for (const s of snaps) {
+    const move = Math.abs(s.changePercent ?? 0);
+    volatilityMap.set(s.name.toLowerCase(), move);
+    volatilityMap.set(s.symbol.toLowerCase().replace(/[^a-z0-9]/g, ""), move);
+  }
+
   const lines: string[] = [
     "",
     "### r029 per-instrument stop requirement — THIS SESSION:",
-    "r029 applies only to instruments that individually moved ≥5% or ≥3% in this session.",
+    "r029 applies ONLY to instruments that individually moved ≥5% or ≥3%. Other instruments have NO minimum stop requirement.",
   ];
   if (extreme.length)  lines.push("  ≥5% (requires ≥1.5% stop): " + extreme.map(s => `${s.name} (${(s.changePercent ?? 0).toFixed(1)}%)`).join(", "));
   if (moderate.length) lines.push("  ≥3% (requires ≥1.0% stop): " + moderate.map(s => `${s.name} (${(s.changePercent ?? 0).toFixed(1)}%)`).join(", "));
-  if (lowMove.length)  lines.push("  NOT subject to r029 (moved <3%): " + lowMove.map(s => s.name).join(", ") + " — tight stops on these instruments are NOT r029 violations.");
-  lines.push("Do NOT flag stops on instruments in the 'NOT subject' list as r029 violations.");
+  if (lowMove.length)  lines.push("  NOT subject to r029 (moved <3%): " + lowMove.map(s => s.name).join(", ") + " — ANY stop size is valid for these instruments.");
+
+  // Per-setup validation results so AXIOM sees explicit COMPLIANT/VIOLATION verdicts
+  const setups = oracle.setups ?? [];
+  const setupLines: string[] = [];
+  for (const setup of setups) {
+    if (typeof (setup as any).entry !== "number" || typeof (setup as any).stop !== "number") continue;
+    const instrKey = ((setup as any).instrument ?? "").toLowerCase();
+    const instrKeyNorm = instrKey.replace(/[^a-z0-9]/g, "");
+    const instrMove = volatilityMap.get(instrKey) ?? volatilityMap.get(instrKeyNorm) ?? 0;
+    const stopPct = (Math.abs((setup as any).entry - (setup as any).stop) / (setup as any).entry) * 100;
+    let verdict: string;
+    if (instrMove >= 5) {
+      verdict = stopPct >= 1.5
+        ? `COMPLIANT (moved ${instrMove.toFixed(1)}%, requires ≥1.5%, stop is ${stopPct.toFixed(2)}% ✓)`
+        : `VIOLATION (moved ${instrMove.toFixed(1)}%, requires ≥1.5%, stop is only ${stopPct.toFixed(2)}% ✗)`;
+    } else if (instrMove >= 3) {
+      verdict = stopPct >= 1.0
+        ? `COMPLIANT (moved ${instrMove.toFixed(1)}%, requires ≥1.0%, stop is ${stopPct.toFixed(2)}% ✓)`
+        : `VIOLATION (moved ${instrMove.toFixed(1)}%, requires ≥1.0%, stop is only ${stopPct.toFixed(2)}% ✗)`;
+    } else {
+      verdict = `COMPLIANT (moved ${instrMove.toFixed(1)}%, no r029 minimum applies — any stop is valid)`;
+    }
+    setupLines.push(`  - ${(setup as any).instrument}: stop ${stopPct.toFixed(2)}% — ${verdict}`);
+  }
+  if (setupLines.length) {
+    lines.push("");
+    lines.push("r029 validation per setup (authoritative — do not contradict these verdicts):");
+    lines.push(...setupLines);
+    lines.push("Stops marked COMPLIANT are NOT r029 violations. Do NOT report them as failures.");
+  }
   return lines.join("\n");
 })()}
 
