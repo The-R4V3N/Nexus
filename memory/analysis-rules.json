@@ -233,7 +233,7 @@
     {
       "id": "r029",
       "category": "setup_precision",
-      "description": "During extreme volatility (session moves â‰¥5%), stop loss must be minimum 1.5% from entry price. During moderate volatility (VIX >25 or daily moves >2x typical range), stops require minimum 1.25% from entry. Calculate and verify stop distance before finalizing any setup during elevated volatility periods.",
+      "description": "Per-instrument stop distance requirement during high volatility. For any instrument that individually moved ≥5% in the session, stop must be ≥1.5% from entry. For instruments that individually moved ≥3% but <5%, stop must be ≥1.0% from entry. Instruments with individual moves below 3% have NO minimum stop requirement from this rule — a large move in one instrument (e.g. Oil -8%) does NOT impose stop requirements on unrelated instruments (e.g. EUR/USD at +0.7%). Apply per-instrument only.",
       "weight": 9,
       "addedSession": 56,
       "lastModifiedSession": 147
