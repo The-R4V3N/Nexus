@@ -15,19 +15,17 @@ describe("buildR029StopNote", () => {
     expect(buildR029StopNote(snaps)).toBe("");
   });
 
-  it("returns extreme volatility note when any move >= 5%", () => {
+  it("requires 1.5% stop for instruments that moved >= 5%", () => {
     const snaps = [makeSnap(1.0), makeSnap(5.2), makeSnap(-2.0)];
     const note = buildR029StopNote(snaps);
     expect(note).toContain("1.5%");
-    expect(note).toContain("extreme volatility");
     expect(note).toContain("5.2%");
   });
 
-  it("returns moderate volatility note when max move >= 3% but < 5%", () => {
+  it("requires 1.0% stop for instruments that moved >= 3% but < 5%", () => {
     const snaps = [makeSnap(1.0), makeSnap(3.8), makeSnap(-1.0)];
     const note = buildR029StopNote(snaps);
     expect(note).toContain("1.0%");
-    expect(note).toContain("moderate volatility");
     expect(note).not.toContain("1.5%");
   });
 
@@ -35,7 +33,6 @@ describe("buildR029StopNote", () => {
     const snaps = [makeSnap(-6.0), makeSnap(1.0)];
     const note = buildR029StopNote(snaps);
     expect(note).toContain("1.5%");
-    expect(note).toContain("extreme volatility");
   });
 
   it("returns empty string for empty snapshots array", () => {
@@ -51,8 +48,17 @@ describe("buildR029StopNote", () => {
   it("includes a stop calculation example", () => {
     const snaps = [makeSnap(5.0)];
     const note = buildR029StopNote(snaps);
-    // Should tell ORACLE HOW to verify: |entry - stop| / entry
     expect(note.toLowerCase()).toMatch(/entry.*stop|stop.*entry/);
+  });
+
+  it("only lists volatile instruments — low-move instruments not mentioned with stop requirement (session #179 pattern)", () => {
+    // Oil -8.62% should get 1.5% requirement; EUR/USD 0.81% should get nothing
+    const oilSnap = { symbol: "CL=F",    name: "Crude Oil", category: "commodities" as const, price: 90,    previousClose: 98.16, change: -8.16, changePercent: -8.62, high: 98, low: 89, timestamp: new Date() };
+    const eurSnap = { symbol: "EURUSD=X",name: "EUR/USD",   category: "forex"        as const, price: 1.1786,previousClose: 1.169, change: 0.0095, changePercent: 0.81, high: 1.18, low: 1.17, timestamp: new Date() };
+    const note = buildR029StopNote([oilSnap, eurSnap]);
+    expect(note).toContain("1.5%");          // Oil needs wide stop
+    expect(note).toContain("Crude Oil");     // Oil is named
+    expect(note).not.toContain("EUR/USD");   // EUR/USD is NOT listed — no requirement for it
   });
 });
 

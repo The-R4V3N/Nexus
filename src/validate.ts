@@ -640,17 +640,22 @@ export function filterNonCompliantSetups(oracle: OracleAnalysis): {
   removed: SetupRemovalRecord[];
 } {
   const snapshots = oracle.marketSnapshots ?? [];
-  const maxMove = snapshots.reduce((max, s) => Math.max(max, Math.abs(s.changePercent)), 0);
 
-  const extremeVolatility = maxMove >= 5;
-  const moderateVolatility = maxMove >= 3;
-
-  if (!extremeVolatility && !moderateVolatility) {
-    return { oracle, removed: [] };
+  // Build per-instrument volatility lookup — name and symbol both keyed.
+  // Oil crashing 8.62% should NOT force EUR/USD (moved 0.81%) to need a 177-pip stop.
+  // Each setup's stop requirement is based on THAT instrument's own session move.
+  const volatilityMap = new Map<string, number>();
+  for (const snap of snapshots) {
+    const move = Math.abs(snap.changePercent ?? 0);
+    volatilityMap.set(snap.name.toLowerCase(), move);
+    volatilityMap.set(snap.symbol.toLowerCase().replace(/[^a-z0-9]/g, ""), move);
   }
 
-  const minStopPct = extremeVolatility ? 1.5 : 1.0;
-  const volatilityLabel = extremeVolatility ? "extreme" : "moderate";
+  // Fast-exit: if no instrument in the session had a moderate+ move, nothing to filter.
+  const sessionMaxMove = snapshots.reduce((max, s) => Math.max(max, Math.abs(s.changePercent ?? 0)), 0);
+  if (sessionMaxMove < 3) {
+    return { oracle, removed: [] };
+  }
 
   const removed: SetupRemovalRecord[] = [];
   const compliantSetups: typeof oracle.setups = [];
@@ -660,11 +665,27 @@ export function filterNonCompliantSetups(oracle: OracleAnalysis): {
       typeof s.entry === "number" && s.entry > 0 &&
       typeof s.stop  === "number" && s.stop  > 0
     ) {
+      // Look up this setup's own instrument move, not the session-wide max.
+      const instrKey = (s.instrument ?? "").toLowerCase();
+      const instrKeyNorm = instrKey.replace(/[^a-z0-9]/g, "");
+      const instrMove = volatilityMap.get(instrKey) ?? volatilityMap.get(instrKeyNorm) ?? 0;
+
+      const instrExtreme  = instrMove >= 5;
+      const instrModerate = instrMove >= 3;
+
+      if (!instrExtreme && !instrModerate) {
+        compliantSetups.push(s);
+        continue;
+      }
+
+      const minStopPct    = instrExtreme ? 1.5 : 1.0;
+      const volatilityLabel = instrExtreme ? "extreme" : "moderate";
       const stopPct = (Math.abs(s.entry - s.stop) / s.entry) * 100;
+
       if (stopPct < minStopPct) {
         removed.push({
           instrument: s.instrument ?? "unknown",
-          reason: `r029: stop is ${stopPct.toFixed(2)}% from entry — requires ≥${minStopPct}% during ${volatilityLabel} volatility (session move ${maxMove.toFixed(1)}%)`,
+          reason: `r029: stop is ${stopPct.toFixed(2)}% from entry — requires ≥${minStopPct}% during ${volatilityLabel} volatility (instrument move ${instrMove.toFixed(1)}%)`,
         });
         continue;
       }
