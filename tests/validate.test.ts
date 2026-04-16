@@ -1962,3 +1962,86 @@ describe("validateOracleOutput r041 pre-commitment check", () => {
     expect(validateOracleOutput(oracle, []).warnings.some((w) => w.includes("r041"))).toBe(false);
   });
 });
+
+// ── "Other" type overuse enforcement (backlog #27) ────────────
+
+describe('validateOracleOutput "Other" type overuse check', () => {
+  const makeSetupTyped = (instrument: string, type: string): any => ({
+    instrument, type, direction: "bullish",
+    description: "test setup", invalidation: "test",
+    entry: 100, stop: 95, target: 110, RR: 2.0, timeframe: "4H",
+  });
+
+  it("warns when ≥50% of setups use 'Other' at confidence ≥55% (session #177 pattern: 2/3)", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "Strong bullish momentum across asset classes.".padEnd(300, " "),
+      bias: { overall: "bullish", notes: "risk-on" }, confidence: 61,
+      setups: [
+        makeSetupTyped("S&P 500", "PDH/PDL"),
+        makeSetupTyped("Gold", "Other"),
+        makeSetupTyped("Oil", "Other"),
+      ],
+      keyLevels: [], marketSnapshots: [], assumptions: [],
+    };
+    const warnings = validateOracleOutput(oracle, []).warnings;
+    expect(warnings.some((w) => w.toLowerCase().includes("other"))).toBe(true);
+    expect(warnings.some((w) => w.includes("ICT"))).toBe(true);
+  });
+
+  it("warns when all setups use 'Other'", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "Mixed signals across markets.".padEnd(300, " "),
+      bias: { overall: "mixed", notes: "conflicting" }, confidence: 58,
+      setups: [makeSetupTyped("EUR/USD", "Other"), makeSetupTyped("Bitcoin", "Other")],
+      keyLevels: [], marketSnapshots: [], assumptions: [],
+    };
+    const warnings = validateOracleOutput(oracle, []).warnings;
+    expect(warnings.some((w) => w.toLowerCase().includes("other"))).toBe(true);
+  });
+
+  it("does not warn when only 1 of 3 setups uses 'Other' (<50%)", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "Bullish breakout on multiple instruments.".padEnd(300, " "),
+      bias: { overall: "bullish", notes: "momentum" }, confidence: 65,
+      setups: [
+        makeSetupTyped("EUR/USD", "FVG"),
+        makeSetupTyped("NASDAQ", "OB"),
+        makeSetupTyped("Gold", "Other"),
+      ],
+      keyLevels: [], marketSnapshots: [], assumptions: [],
+    };
+    const warnings = validateOracleOutput(oracle, []).warnings;
+    expect(warnings.some((w) => w.toLowerCase().includes("other") && w.includes("ICT"))).toBe(false);
+  });
+
+  it("does not warn when no setups exist", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "No setups today.".padEnd(300, " "),
+      bias: { overall: "neutral", notes: "" }, confidence: 40,
+      setups: [], keyLevels: [], marketSnapshots: [], assumptions: [],
+    };
+    const warnings = validateOracleOutput(oracle, []).warnings;
+    expect(warnings.some((w) => w.toLowerCase().includes("other") && w.includes("ICT"))).toBe(false);
+  });
+
+  it("does not warn when all setups use specific ICT types", () => {
+    const oracle: OracleAnalysis = {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "Clear ICT patterns across instruments.".padEnd(300, " "),
+      bias: { overall: "bullish", notes: "momentum" }, confidence: 70,
+      setups: [
+        makeSetupTyped("EUR/USD", "FVG"),
+        makeSetupTyped("NASDAQ", "OB"),
+        makeSetupTyped("Bitcoin", "Liquidity Sweep"),
+        makeSetupTyped("Gold", "MSS"),
+      ],
+      keyLevels: [], marketSnapshots: [], assumptions: [],
+    };
+    const warnings = validateOracleOutput(oracle, []).warnings;
+    expect(warnings.some((w) => w.toLowerCase().includes("other") && w.includes("ICT"))).toBe(false);
+  });
+});
