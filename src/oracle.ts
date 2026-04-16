@@ -485,22 +485,15 @@ Only respond with the JSON array, no other text.`;
     }
   }
 
-  // Resolve text vs JSON confidence mismatch
-  let finalConfidence = resolveConfidence(parsed.analysis ?? "", parsed.confidence ?? 50);
-
-  // Enforce: high confidence with zero setups is contradictory
-  if (finalConfidence > 60 && validSetups.length === 0) {
-    console.warn(`  \u26a0 ORACLE contradiction: ${finalConfidence}% confidence but 0 setups \u2014 forcing confidence to 35%`);
-    finalConfidence = 35;
-  }
-
-  // Enforce minimum setup counts based on confidence (proportional penalty, backlog #13)
-  const { penalized: penalizedConfidence, reason: penaltyReason } =
-    applySetupCountPenalty(finalConfidence, validSetups.length, isWeekend);
-  if (penaltyReason) {
-    console.warn(`  \u26a0 ORACLE ${penaltyReason}`);
-    finalConfidence = penalizedConfidence;
-  }
+  // Compute final confidence: text/JSON reconciliation → zero-setup floor → setup-count penalty.
+  // Uses computeOracleConfidence so the pipeline is testable and agent.ts does not need to
+  // call resolveConfidence again (which would undo any penalty — backlog #23 double-call bug).
+  const finalConfidence = computeOracleConfidence(
+    parsed.analysis ?? "",
+    parsed.confidence ?? 50,
+    validSetups.length,
+    isWeekend
+  );
 
   return {
     timestamp:       new Date(),
@@ -635,6 +628,32 @@ export function buildMinSetupNote(confidence: number): string {
   if (confidence < 50) return "";
   const minSetups = confidence >= 60 ? 4 : 3;
   return `\nMANDATORY SETUP COUNT (your confidence is ${confidence}%): You MUST provide at least ${minSetups} setups. Returning fewer is a rule violation (r034). Systematically screen ALL instruments — forex majors, indices, crypto, commodities — before concluding no setup exists.\n`;
+}
+
+// ── Confidence computation (three-step pipeline) ──────────
+// Encapsulates the three confidence transformations applied after ORACLE-ANALYSIS:
+//   1. resolveConfidence  — reconcile analysis text vs JSON field (text wins when diff >10pts or cap explicit)
+//   2. Zero-setup floor   — >60% confidence with 0 setups is contradictory → force to 35%
+//   3. applySetupCountPenalty — proportional penalty when setups < minimum for this confidence level
+//
+// Exported so agent.ts can call this once and avoid a second resolveConfidence call that
+// would silently undo any penalty applied in step 3 (backlog #23 double-call bug).
+export function computeOracleConfidence(
+  analysisText: string,
+  jsonConfidence: number,
+  setupCount: number,
+  isWeekend: boolean
+): number {
+  let c = resolveConfidence(analysisText, jsonConfidence);
+  if (c > 60 && setupCount === 0) {
+    console.warn(`  ⚠ ORACLE contradiction: ${c}% confidence but 0 setups — forcing to 35%`);
+    c = 35;
+  }
+  const { penalized, reason } = applySetupCountPenalty(c, setupCount, isWeekend);
+  if (reason) {
+    console.warn(`  ⚠ ORACLE ${reason}`);
+  }
+  return penalized;
 }
 
 // ── r041 screening validation enforcement ─────────────────
