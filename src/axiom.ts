@@ -114,11 +114,12 @@ export function buildAxiomPrompt(
   previousSessions:  string,
   communityIssues:   string,
   openSelfTasksText: string,
-  noChangeStreak:    number,
-  setupOutcomes:     string,
-  currentRules:      AnalysisRules,
-  identityContext:   string,
-  isWeekend:         boolean = false
+  noChangeStreak:             number,
+  setupOutcomes:              string,
+  currentRules:               AnalysisRules,
+  identityContext:            string,
+  isWeekend:                  boolean = false,
+  consecutiveZeroSetupCount:  number = 0
 ): { systemMessage: string; userMessage: string } {
   const systemMessage = `You are NEXUS AXIOM, the self-reflection engine of the NEXUS market intelligence system.
 Your purpose is to critique the analysis just produced, identify cognitive biases and gaps, then generate precise updates to improve future performance.
@@ -264,6 +265,11 @@ ${setupOutcomes ? "### Setup outcome tracking:\n" + setupOutcomes : ""}
 ${noChangeStreak >= 3 ? `### STAGNATION ALERT
 You have not modified any rules in ${noChangeStreak} consecutive sessions.
 Your self-critiques are repeating without action.${openSelfTasksText ? ` You have open self-tasks listed above that you have not acted on — generating codeChanges or resolvedSelfTasks for those tasks IS the required concrete action this session. Do not add system prompt text. Do not open new tasks. Act on the existing ones.` : ` This session, you MUST propose at least ONE concrete change — a rule weight adjustment, wording refinement, new rule, or code change.`} Reflection without action is not evolution.
+` : ""}${consecutiveZeroSetupCount >= 3 ? `### FORGE ESCALATION — CRITICAL (${consecutiveZeroSetupCount} consecutive sessions with zero setups)
+NEXUS has produced ZERO trading setups for ${consecutiveZeroSetupCount} consecutive sessions despite confidence > 50%.
+Rule modifications have NOT resolved this execution gap.
+This session you MUST include codeChanges in your response — a prompt injection, validation gate, or enforcement mechanism that forces ORACLE to produce setups or provide explicit rejection reasons.
+codeChanges are MANDATORY this session. ruleUpdates alone are insufficient. The execution gap requires a code-level fix, not another rule.
 ` : ""}### Codebase context (so you can write precise codeChanges):
 ${buildCodebaseContext(openSelfTasksText)}
 
@@ -549,9 +555,10 @@ export async function runAxiomReflection(
   communityIssues:        string = "",
   openSelfTasksText:      string = "",
   openSelfTaskNumbers:    number[] = [],
-  noChangeStreak:         number = 0,
-  setupOutcomes:          string = "",
-  isWeekend:              boolean = false
+  noChangeStreak:             number = 0,
+  setupOutcomes:              string = "",
+  isWeekend:                  boolean = false,
+  consecutiveZeroSetupCount:  number = 0
 ): Promise<{ reflection: AxiomReflection; forgeRequests: ForgeRequest[] }> {
   const currentSystemPrompt = fs.existsSync(SYSTEM_PROMPT_PATH)
     ? fs.readFileSync(SYSTEM_PROMPT_PATH, "utf-8")
@@ -575,7 +582,7 @@ export async function runAxiomReflection(
   const { systemMessage, userMessage } = buildAxiomPrompt(
     oracle, sessionNumber, previousSessions, communityIssues,
     openSelfTasksText, noChangeStreak, setupOutcomes,
-    currentRules, identityContext, isWeekend
+    currentRules, identityContext, isWeekend, consecutiveZeroSetupCount
   );
 
   // Strip lone surrogates before serializing to JSON — broken emoji in issue titles

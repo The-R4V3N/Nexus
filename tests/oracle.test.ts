@@ -1533,3 +1533,117 @@ describe("reclassifyOtherSetups", () => {
     expect(reclassifyOtherSetups([makeSetup(desc, "Other", "Bitcoin")])[0].type).toBe("MSS");
   });
 });
+
+// ── buildExecutionForceNote ───────────────────────────────
+// Injected into ORACLE-SETUPS when analysis already contains a Screening
+// validation block at confidence >= 55. Forces ORACLE to either construct
+// setups or document explicit inline rejection reasons per instrument.
+// Root cause of session #188: ORACLE documented 8 levels then produced 0 setups.
+
+import { buildExecutionForceNote } from "../src/oracle";
+
+describe("buildExecutionForceNote", () => {
+  const analysisWithScreening = `**Technical Confluence Analysis:** 5 confluences. Confidence: 61% — TC (65%), MA (70%), RR (45%).
+Screening validation: EUR/USD 1.1836 resistance 1.1900, GBP/USD 1.3574 resistance 1.3600, NASDAQ 26531 resistance 26600, S&P 7083 resistance 7100, BTC 76567 resistance 77000, ETH 2403 resistance 2450, Gold 4880 resistance 4920, Oil 81.62 support 80.00`;
+
+  const analysisWithoutScreening = "**Technical Confluence Analysis:** Strong bullish momentum. Confidence: 61% — TC (65%), MA (70%), RR (45%).";
+
+  it("returns empty string when confidence < 55", () => {
+    expect(buildExecutionForceNote(analysisWithScreening, 50)).toBe("");
+    expect(buildExecutionForceNote(analysisWithScreening, 40)).toBe("");
+  });
+
+  it("returns empty string at exactly confidence 54", () => {
+    expect(buildExecutionForceNote(analysisWithScreening, 54)).toBe("");
+  });
+
+  it("returns empty string when no Screening validation block present, even at high confidence", () => {
+    expect(buildExecutionForceNote(analysisWithoutScreening, 65)).toBe("");
+  });
+
+  it("returns non-empty when confidence >= 55 AND screening validation block is present", () => {
+    expect(buildExecutionForceNote(analysisWithScreening, 55)).not.toBe("");
+    expect(buildExecutionForceNote(analysisWithScreening, 61)).not.toBe("");
+    expect(buildExecutionForceNote(analysisWithScreening, 70)).not.toBe("");
+  });
+
+  it("references r041 in the note", () => {
+    expect(buildExecutionForceNote(analysisWithScreening, 61)).toContain("r041");
+  });
+
+  it("requires either setup construction or explicit rejection reason", () => {
+    const note = buildExecutionForceNote(analysisWithScreening, 61);
+    expect(note.toLowerCase()).toMatch(/reject/i);
+  });
+
+  it("mentions execution requirement or execution failure", () => {
+    const note = buildExecutionForceNote(analysisWithScreening, 61);
+    expect(note.toLowerCase()).toMatch(/execution/i);
+  });
+
+  it("is case-insensitive when detecting 'Screening validation:'", () => {
+    const lowerCase = analysisWithScreening.replace("Screening validation:", "screening validation:");
+    expect(buildExecutionForceNote(lowerCase, 61)).not.toBe("");
+  });
+
+  it("returns empty string when confidence exactly 55 but no screening block", () => {
+    expect(buildExecutionForceNote(analysisWithoutScreening, 55)).toBe("");
+  });
+});
+
+// ── enforceR031CapNotation ────────────────────────────────
+// Injects 'capped from X%' notation into analysis text when ORACLE
+// calculated >65% without self-documenting the r031 cap.
+// Root cause of session #187: 69% calculated, cap notation absent.
+
+import { enforceR031CapNotation } from "../src/oracle";
+
+describe("enforceR031CapNotation", () => {
+  it("returns analysis unchanged when rawConfidence <= 65", () => {
+    const analysis = "Confidence: 65% — TC (70%), MA (60%), RR (60%)";
+    expect(enforceR031CapNotation(analysis, 65)).toBe(analysis);
+    expect(enforceR031CapNotation(analysis, 60)).toBe(analysis);
+  });
+
+  it("returns analysis unchanged when 'capped from' notation already present", () => {
+    const analysis = "Confidence: 69% — TC (65%) capped from 69% due to calibration discipline per r031";
+    expect(enforceR031CapNotation(analysis, 69)).toBe(analysis);
+  });
+
+  it("returns analysis unchanged when 'capped at' notation already present", () => {
+    const analysis = "Confidence: 65% — capped at 65% due to calibration";
+    expect(enforceR031CapNotation(analysis, 69)).toBe(analysis);
+  });
+
+  it("returns analysis unchanged when 'capped to' notation already present", () => {
+    const analysis = "Confidence: 65% — capped to 65%";
+    expect(enforceR031CapNotation(analysis, 70)).toBe(analysis);
+  });
+
+  it("injects cap notation when rawConfidence > 65 and notation missing", () => {
+    const analysis = "Confidence: 69% — TC (65%), MA (70%), RR (70%)";
+    const result = enforceR031CapNotation(analysis, 69);
+    expect(result).not.toBe(analysis);
+    expect(result.toLowerCase()).toContain("capped from 69%");
+  });
+
+  it("injected notation references r031", () => {
+    const analysis = "Market bullish. Confidence: 70% — TC (80%), MA (60%), RR (60%)";
+    const result = enforceR031CapNotation(analysis, 70);
+    expect(result).toContain("r031");
+  });
+
+  it("works when analysis has no Confidence line (appends notation to end)", () => {
+    const analysis = "Strong bullish session with multiple confluences.";
+    const result = enforceR031CapNotation(analysis, 70);
+    expect(result.toLowerCase()).toContain("capped from 70%");
+    expect(result.length).toBeGreaterThan(analysis.length);
+  });
+
+  it("does not modify analysis when rawConfidence is exactly 66", () => {
+    // 66 > 65, so cap notation should be injected
+    const analysis = "Confidence: 66% — TC (70%), MA (62%), RR (65%)";
+    const result = enforceR031CapNotation(analysis, 66);
+    expect(result.toLowerCase()).toContain("capped from 66%");
+  });
+});
