@@ -233,10 +233,10 @@
     {
       "id": "r029",
       "category": "setup_precision",
-      "description": "Stop distance validation: when any instrument individually moves ≥5% in session, that instrument requires stop ≥1.5% from entry. When any instrument moves ≥3% but <5%, that instrument requires stop ≥1.0% from entry. Validation applies per-instrument only — Oil -8% does NOT impose EUR/USD requirements. If validation warnings persist 3+ sessions, validation logic needs code-level enforcement enhancement.",
+      "description": "Stop distance validation: when any instrument individually moves ≥5% in session, that specific instrument requires stop ≥1.5% from entry. When any instrument moves ≥3% but <5%, that specific instrument requires stop ≥1.0% from entry. Validation applies per-instrument only — Oil -8% does NOT impose EUR/USD requirements. Instruments moving <3% have no minimum stop requirement regardless of other instrument volatility.",
       "weight": 9,
       "addedSession": 56,
-      "lastModifiedSession": 181
+      "lastModifiedSession": 187
     },
     {
       "id": "r030",
@@ -355,8 +355,8 @@
       "disabledReason": "Superseded by filterR036Setups() in validate.ts (PR #64) which hard-removes bearish risk asset setups during DXY weakness"
     }
   ],
-  "version": 100,
-  "lastUpdated": "2026-04-16T18:15:48.401Z",
+  "version": 101,
+  "lastUpdated": "2026-04-17T09:38:31.147Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -364,5 +364,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #181"
+  "sessionNotes": "Last updated: Session #187"
 }
