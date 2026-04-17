@@ -84,6 +84,21 @@ function getNoChangeStreak(): number {
   return streak;
 }
 
+function getConsecutiveZeroSetupCount(): number {
+  const allEntries = loadAllJournalEntries();
+  let streak = 0;
+  for (let i = allEntries.length - 1; i >= 0; i--) {
+    const setups = allEntries[i].fullAnalysis?.setups ?? [];
+    const conf   = allEntries[i].fullAnalysis?.confidence ?? 0;
+    if (setups.length === 0 && conf > 50) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
 function buildSetupOutcomes(snapshots: MarketSnapshot[]): string {
   const allEntries = loadAllJournalEntries();
   if (allEntries.length === 0) return "";
@@ -674,10 +689,11 @@ System prompt additions about this same topic do NOT count as action.`;
   }
 
   try {
-    const noChangeStreak = getNoChangeStreak();
-    const setupOutcomes  = buildSetupOutcomes(snapshots);
+    const noChangeStreak             = getNoChangeStreak();
+    const consecutiveZeroSetupCount  = getConsecutiveZeroSetupCount();
+    const setupOutcomes              = buildSetupOutcomes(snapshots);
     const closeableNumbers = [...selfTaskNumbers, ...issueNumbers];
-    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, closeableNumbers, noChangeStreak, setupOutcomes, weekendMode);
+    axiomResult = await runAxiomReflection(client, oracle, sessionNumber, prevContext, issuesText, selfTasksText, closeableNumbers, noChangeStreak, setupOutcomes, weekendMode, consecutiveZeroSetupCount);
     reflection = axiomResult.reflection;
 
     // Block system prompt additions when AXIOM is ruminating without real action,

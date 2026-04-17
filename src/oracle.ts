@@ -272,8 +272,7 @@ ${weekendTemplate}
 
   const r029Note = buildR029StopNote(snapshots);
   const rrSelfCheckNote = buildRRSelfCheckNote();
-
-  // Pre-reconcile confidence before building ORACLE-SETUPS prompt.
+    // Pre-reconcile confidence before building ORACLE-SETUPS prompt.
   // ORACLE-ANALYSIS may return a low JSON confidence (e.g. 45) while its analysis
   // text clearly states a higher value (e.g. 58%). Using the raw JSON field here
   // meant buildWeekdayScreeningTemplate and buildMinSetupNote received sub-50
@@ -281,6 +280,9 @@ ${weekendTemplate}
   // persistent 0-setup sessions (#174-#176, #178). resolveConfidence honours the
   // text value when JSON diverges >10pts or when cap notation is present.
   const rawConf = resolveConfidence(parsed.analysis ?? "", parsed.confidence ?? 50);
+  // r031 cap notation: inject when ORACLE calculated >65% without self-documenting the cap
+  parsed.analysis = enforceR031CapNotation(parsed.analysis ?? "", rawConf);
+  const executionForceNote = !isWeekend ? buildExecutionForceNote(parsed.analysis ?? "", rawConf) : "";
   const crossAssetNote = !isWeekend ? buildR039R040CrossAssetNote(snapshots, rawConf) : "";
   const minSetupNote = buildMinSetupNote(rawConf);
   const weekdayTemplate = !isWeekend ? buildWeekdayScreeningTemplate(snapshots, rawConf) : "";
@@ -327,7 +329,7 @@ RULES:
 - ENTRY: nearest support/resistance, session high/low, or key level
 - STOP: beyond the next structural level, or 1x ATR from entry${r029Note}${crossAssetNote}
 - TARGET: next liquidity level, psychological number, or swing point
-- RR must be > 1.3 \u2014 do not include setups with risk exceeding reward${rrSelfCheckNote}
+- RR must be > 1.3 \u2014 do not include setups with risk exceeding reward${rrSelfCheckNote}${executionForceNote}
 - Include instrument, type, direction, description, and invalidation
 - TYPE must be a specific ICT pattern: FVG, OB, Liquidity Sweep, MSS, CISD, or PDH/PDL. These apply to ALL markets including crypto. "Other" is only acceptable if the setup genuinely does not fit any ICT pattern — do not use "Other" as a default.
 
@@ -821,6 +823,30 @@ export function reclassifyOtherSetups(setups: any[]): any[] {
   });
 }
 
+// ── r031 cap notation auto-inject ─────────────────────────
+// When ORACLE calculated >65% confidence but omitted the mandatory "capped from X%"
+// notation (r031), inject it into the analysis text programmatically.
+// Called after rawConf is computed in runOracleAnalysis so the notation appears
+// in both ORACLE-SETUPS prompt (via parsed.analysis) and the final journal entry.
+// Root cause of session #187: 69% calculated, cap notation absent.
+export function enforceR031CapNotation(analysis: string, rawConfidence: number): string {
+  if (rawConfidence <= 65) return analysis;
+  if (/capped\s+(?:from|at|to)\s*\d+%/i.test(analysis)) return analysis;
+
+  const notation = ` (capped from ${rawConfidence}% due to calibration discipline per r031)`;
+  const patched = analysis.replace(
+    /(Confidence:\s*\d+%[^\n]*)/i,
+    `$1${notation}`
+  );
+  if (patched !== analysis) {
+    console.warn(`  ⚠ ORACLE r031: auto-injected cap notation into confidence line (raw ${rawConfidence}% → capped at 65%)`);
+    return patched;
+  }
+  // No confidence line found — append to end
+  console.warn(`  ⚠ ORACLE r031: auto-injected cap notation at end of analysis (raw ${rawConfidence}% → capped at 65%)`);
+  return `${analysis}\nCapped from ${rawConfidence}% due to calibration discipline per r031.`;
+}
+
 // ── r041 screening validation enforcement ─────────────────
 // Returns a prompt block requiring ORACLE to include a "Screening validation:"
 // line in its analysis text when confidence exceeds 55% on weekday sessions.
@@ -887,6 +913,30 @@ You MUST either:
       • Stop distance >2% required
       • Conflicting higher timeframe structure
 Submitting only forex setups when indices, crypto, and commodities are all moving is a RULE VIOLATION.
+`;
+}
+
+// ── r041 execution force note ─────────────────────────────
+// When ORACLE has already documented structural levels in a Screening validation
+// block (ORACLE-ANALYSIS), inject a CRITICAL note into ORACLE-SETUPS requiring
+// it to either construct a setup or provide an explicit inline rejection reason
+// per instrument. Prevents the session #188 pattern where levels were documented
+// but zero setups were constructed.
+export function buildExecutionForceNote(analysis: string, confidence: number): string {
+  if (confidence < 55) return "";
+  if (!/screening validation:/i.test(analysis)) return "";
+
+  return `
+EXECUTION REQUIREMENT (r041 — MANDATORY):
+Your analysis already contains a Screening validation block listing specific structural levels.
+For EACH instrument in that block you MUST do ONE of:
+  (a) Construct a COMPLETE setup: entry, stop, target, RR, timeframe with direction "bullish" or "bearish"
+  (b) Include a "neutral" entry whose description states the EXACT rejection reason:
+      - "Poor RR: entry [PRICE], target [LEVEL] yields only X.X RR — below minimum 1.3"
+      - "Stop distance: structural stop requires X.X% which exceeds 2% maximum"
+      - "Conflicting timeframe: [LEVEL] identified but higher timeframe trend conflicts"
+Documenting structural levels then returning zero non-neutral setups without rejection reasons
+is an execution failure (r041). The screening validation block is not a substitute for setup construction.
 `;
 }
 

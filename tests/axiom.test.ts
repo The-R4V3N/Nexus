@@ -592,6 +592,50 @@ describe("buildAxiomPrompt session type", () => {
   });
 });
 
+// ── buildAxiomPrompt — FORGE escalation for persistent zero-setup sessions (#33) ──
+// When NEXUS produces zero setups in 3+ consecutive sessions, AXIOM must be forced
+// to raise a FORGE codeChanges entry. Rule modifications alone have not resolved the
+// pattern in sessions #185-#188.
+
+describe("buildAxiomPrompt FORGE escalation", () => {
+  it("includes FORGE escalation when consecutiveZeroSetupCount >= 3", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 190, "", "", "", 0, "", makeRules(), "", false, 3);
+    expect(userMessage).toMatch(/FORGE.*ESCALATION|ESCALATION.*REQUIRED|codeChanges.*MANDATORY|MANDATORY.*codeChanges/i);
+  });
+
+  it("includes the consecutive count in the escalation message", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 190, "", "", "", 0, "", makeRules(), "", false, 4);
+    expect(userMessage).toContain("4");
+  });
+
+  it("states that rule modifications alone have not resolved the pattern", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 190, "", "", "", 0, "", makeRules(), "", false, 3);
+    expect(userMessage.toLowerCase()).toMatch(/rule.*not.*resolv|modification.*not.*resolv/i);
+  });
+
+  it("explicitly requires codeChanges this session", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 190, "", "", "", 0, "", makeRules(), "", false, 3);
+    expect(userMessage.toLowerCase()).toContain("codechanges");
+  });
+
+  it("does NOT include FORGE escalation when consecutiveZeroSetupCount < 3", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 190, "", "", "", 0, "", makeRules(), "", false, 2);
+    expect(userMessage).not.toMatch(/FORGE.*ESCALATION|ESCALATION.*REQUIRED|codeChanges.*MANDATORY/i);
+  });
+
+  it("does NOT include FORGE escalation when consecutiveZeroSetupCount is 0 (default)", () => {
+    const { userMessage } = buildAxiomPrompt(makeOracle(), 190, "", "", "", 0, "", makeRules(), "", false);
+    expect(userMessage).not.toMatch(/FORGE.*ESCALATION|ESCALATION.*REQUIRED|codeChanges.*MANDATORY/i);
+  });
+
+  it("escalation fires at exactly 3 consecutive zero-setup sessions", () => {
+    const at3 = buildAxiomPrompt(makeOracle(), 190, "", "", "", 0, "", makeRules(), "", false, 3).userMessage;
+    const at2 = buildAxiomPrompt(makeOracle(), 190, "", "", "", 0, "", makeRules(), "", false, 2).userMessage;
+    expect(at3).toMatch(/FORGE.*ESCALATION|ESCALATION.*REQUIRED|codeChanges.*MANDATORY/i);
+    expect(at2).not.toMatch(/FORGE.*ESCALATION|ESCALATION.*REQUIRED|codeChanges.*MANDATORY/i);
+  });
+});
+
 // ── sanitizeRulesText — encoding corruption repair ────────────
 
 describe("sanitizeRulesText", () => {
