@@ -329,10 +329,10 @@
     {
       "id": "r041",
       "category": "screening_enforcement",
-      "description": "When confidence exceeds 55%, analysis text must contain explicit screening validation block formatted as: 'Screening validation: EUR/USD [price] support/resistance [level], GBP/USD [price] support/resistance [level], NASDAQ [price] support/resistance [level], S&P [price] support/resistance [level], BTC [price] support/resistance [level], ETH [price] support/resistance [level], Gold [price] support/resistance [level], Oil [price] support/resistance [level]' with setup viability decision for each ",
+      "description": "When confidence exceeds 55%, analysis must produce either (1) minimum 1 setup per 20% confidence above 40% (55% = 1 setup, 75% = 2 setups), or (2) explicit screening validation block documenting why specific structural levels were rejected. Format: 'Screening validation: EUR/USD 1.1836 resistance 1.1900 - rejected: [reason], GBP/USD 1.3574 resistance 1.3600 - rejected: [reason]' etc. Validation without corresponding setup construction constitutes compliance failure.",
       "weight": 9,
       "addedSession": 165,
-      "lastModifiedSession": 178
+      "lastModifiedSession": 188
     },
     {
       "id": "r042",
@@ -355,8 +355,8 @@
       "disabledReason": "Superseded by filterR036Setups() in validate.ts (PR #64) which hard-removes bearish risk asset setups during DXY weakness"
     }
   ],
-  "version": 101,
-  "lastUpdated": "2026-04-17T09:38:31.147Z",
+  "version": 102,
+  "lastUpdated": "2026-04-17T13:35:30.694Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -364,5 +364,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #187"
+  "sessionNotes": "Last updated: Session #188"
 }
