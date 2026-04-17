@@ -59,3 +59,7 @@ When analyzing coordinated market moves with extreme magnitude (>2x typical rang
 ## Evolved — Session #147
 
 When crypto shows sector divergence >1.5% during weekend sessions, infrastructure tokens (BNB, SOL) typically demonstrate relative defensive characteristics while utility tokens (ADA, DOT, LINK) show amplified volatility. This creates systematic rotation patterns independent of broader market correlations, warranting mixed bias classification and comprehensive screening across all crypto instruments for uncorrelated opportunities.
+
+## Evolved — Session #186
+
+When validation systems generate persistent false positives (warnings for compliant behavior), the solution is architectural enhancement of the validation logic, not additional enforcement rules that will also be bypassed by the same faulty validation gates.
