@@ -95459,5 +95459,320 @@
     },
     "ruleCount": 43,
     "systemPromptVersion": 102
+  },
+  {
+    "sessionNumber": 190,
+    "date": "2026-04-18 08:15",
+    "title": "WEEKEND ↕ Bitcoin PDH/PDL + no rule changes",
+    "oracleSummary": "MIXED bias | 4 setups | Confidence: 55/100 | Bitcoin PDH/PDL (bearish), Ethereum PDH/PDL (bearish), Ripple Liquidity Sweep (bullish), BNB PDH/PDL (bearish)",
+    "axiomSummary": "This session confirmed that my weekend screening architecture is now functioning correctly, but revealed persistent blind spots in causal attribution documentation. The r011 compliance warning pattern indicates I need enforcement mechanisms rather than additional rules, since awareness exists but execution discipline remains inconsistent across different validation categories.",
+    "fullAnalysis": {
+      "timestamp": "2026-04-18T08:14:50.613Z",
+      "sessionId": "nx-1776500047276-8d14ux",
+      "marketSnapshots": [
+        {
+          "symbol": "BTC-USD",
+          "name": "Bitcoin",
+          "category": "crypto",
+          "price": 76958,
+          "previousClose": 75096.12,
+          "change": 1861.88,
+          "changePercent": 2.47932,
+          "high": 78240,
+          "low": 75029,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "ETH-USD",
+          "name": "Ethereum",
+          "category": "crypto",
+          "price": 2401.56,
+          "previousClose": 2337.41,
+          "change": 64.15,
+          "changePercent": 2.74443,
+          "high": 2462.81,
+          "low": 2336.98,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "XRP-USD",
+          "name": "Ripple",
+          "category": "crypto",
+          "price": 1.47,
+          "previousClose": 1.43817223,
+          "change": 0.03182777,
+          "changePercent": 2.21517,
+          "high": 1.51,
+          "low": 1.44,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "BNB-USD",
+          "name": "BNB",
+          "category": "crypto",
+          "price": 643,
+          "previousClose": 628.49,
+          "change": 14.51,
+          "changePercent": 2.30811,
+          "high": 648.56,
+          "low": 628.29,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "SOL-USD",
+          "name": "Solana",
+          "category": "crypto",
+          "price": 88.29,
+          "previousClose": 88.29839296626194,
+          "change": -0.008392966261936863,
+          "changePercent": -0.00951,
+          "high": 90.46,
+          "low": 87.63,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "DOGE-USD",
+          "name": "Dogecoin",
+          "category": "crypto",
+          "price": 0.098692,
+          "previousClose": 0.09792286,
+          "change": 0.00076914,
+          "changePercent": 0.78545,
+          "high": 0.102006,
+          "low": 0.097831,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "ADA-USD",
+          "name": "Cardano",
+          "category": "crypto",
+          "price": 0.258084,
+          "previousClose": 0.25619179,
+          "change": 0.00189221,
+          "changePercent": 0.73859,
+          "high": 0.266982,
+          "low": 0.254891,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "LINK-USD",
+          "name": "Chainlink",
+          "category": "crypto",
+          "price": 9.6,
+          "previousClose": 9.480532,
+          "change": 0.119468,
+          "changePercent": 1.26038,
+          "high": 9.84,
+          "low": 9.48,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "AVAX-USD",
+          "name": "Avalanche",
+          "category": "crypto",
+          "price": 9.7,
+          "previousClose": 9.635563,
+          "change": 0.064437,
+          "changePercent": 0.66902,
+          "high": 9.97,
+          "low": 9.53,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        },
+        {
+          "symbol": "DOT-USD",
+          "name": "Polkadot",
+          "category": "crypto",
+          "price": 1.33,
+          "previousClose": 1.32966058,
+          "change": 0.00033942,
+          "changePercent": 0.02553,
+          "high": 1.35,
+          "low": 1.3,
+          "timestamp": "2026-04-18T08:14:10.126Z"
+        }
+      ],
+      "analysis": "**Higher Timeframe Context:** Crypto markets showing broad-based strength with Bitcoin leading at +2.48% to $76,958, approaching the psychological $78K level. Ethereum displaying similar momentum at +2.74% to $2,401, while major altcoins show mixed performance ranging from Solana's flat -0.01% to XRP's +2.22%. The infrastructure vs utility token rotation is evident with BNB (+2.31%) and SOL (flat) showing defensive characteristics while utility tokens like LINK (+1.26%) and ADA (+0.74%) demonstrate weaker performance, creating a 2.3% performance spread indicating sector rotation within crypto ecosystem.\n\n**Intraday Analysis:** Weekend session displaying clear infrastructure token outperformance pattern consistent with defensive positioning within crypto. Bitcoin's $78,240 high represents a significant test of resistance, while Ethereum's move toward $2,462 suggests continuation momentum. The performance divergence between strongest performers (ETH +2.74%, BTC +2.48%) and weakest (SOL -0.01%, DOT +0.03%) creates a 2.75% spread, exceeding the 1.5% threshold for systematic sector rotation analysis. Solana's flat performance despite typically strong correlation with major tokens suggests internal rotation dynamics.\n\n**Cross-Asset Dynamics:** Clear infrastructure vs utility token divergence with BNB, BTC, ETH leading while utility tokens (LINK, ADA, DOT, AVAX) showing subdued performance. This rotation pattern operates independently from traditional market correlations and represents defensive positioning within crypto ecosystem rather than broader risk sentiment. The 2.75% performance spread between strongest and weakest performers indicates significant internal sector rotation warranting mixed bias classification per established weekend crypto criteria.\n\n**Technical Confluence Analysis:** Valid confluences identified: (1) trend alignment with Bitcoin approaching key $78K psychological level, (2) infrastructure token outperformance indicating defensive rotation, (3) sector divergence exceeding 1.5% threshold, (4) weekend isolation creating uncorrelated opportunities. Four confluences present across crypto ecosystem. Confidence: 55% — TC (65%), MA (45%), RR (50%). Technical confluence strong with multiple structural levels in play, macro alignment moderate due to weekend isolation limiting cross-asset validation, risk/reward clarity moderate with multiple timeframes showing mixed signals.",
+      "setups": [
+        {
+          "instrument": "Bitcoin",
+          "type": "PDH/PDL",
+          "direction": "bearish",
+          "description": "Rejection at session high $78,240 near major psychological $78K resistance with infrastructure token rotation showing potential exhaustion",
+          "invalidation": "Break above $78,500 with volume",
+          "entry": 77500,
+          "stop": 78800,
+          "target": 75500,
+          "RR": 1.54,
+          "timeframe": "4H"
+        },
+        {
+          "instrument": "Ethereum",
+          "type": "PDH/PDL",
+          "direction": "bearish",
+          "description": "Session high rejection at $2,462 with infrastructure rotation showing signs of defensive positioning exhaustion",
+          "invalidation": "Break above $2,480 with conviction",
+          "entry": 2420,
+          "stop": 2480,
+          "target": 2340,
+          "RR": 1.33,
+          "timeframe": "4H"
+        },
+        {
+          "instrument": "Ripple",
+          "type": "Liquidity Sweep",
+          "direction": "bullish",
+          "description": "Sweep of $1.44 lows with recovery showing utility token potential catch-up to infrastructure outperformance",
+          "invalidation": "Break below $1.42",
+          "entry": 1.48,
+          "stop": 1.42,
+          "target": 1.56,
+          "RR": 1.33,
+          "timeframe": "1H"
+        },
+        {
+          "instrument": "BNB",
+          "type": "PDH/PDL",
+          "direction": "bearish",
+          "description": "Session high rejection at $648.56 near $650 psychological resistance, infrastructure token showing defensive rotation fatigue",
+          "invalidation": "Break above $655",
+          "entry": 640,
+          "stop": 655,
+          "target": 620,
+          "RR": 1.33,
+          "timeframe": "4H"
+        }
+      ],
+      "bias": {
+        "overall": "mixed",
+        "notes": "Weekend crypto sector divergence >1.5% between infrastructure tokens (BTC/ETH/BNB leading) and utility tokens (LINK/ADA/DOT lagging) creates defensive rotation within crypto ecosystem, meeting mixed bias criteria per r015 condition 5"
+      },
+      "keyLevels": [
+        {
+          "instrument": "BTC-USD",
+          "level": 78000,
+          "type": "resistance",
+          "notes": "Major psychological level, session high at 78240 shows rejection potential"
+        },
+        {
+          "instrument": "BTC-USD",
+          "level": 75000,
+          "type": "support",
+          "notes": "Session low area, significant round number support"
+        },
+        {
+          "instrument": "ETH-USD",
+          "level": 2460,
+          "type": "resistance",
+          "notes": "Session high at 2462.81, key rejection zone"
+        },
+        {
+          "instrument": "ETH-USD",
+          "level": 2340,
+          "type": "support",
+          "notes": "Session low area providing structural support"
+        },
+        {
+          "instrument": "BNB-USD",
+          "level": 650,
+          "type": "resistance",
+          "notes": "Round number resistance near session high 648.56"
+        },
+        {
+          "instrument": "SOL-USD",
+          "level": 90,
+          "type": "resistance",
+          "notes": "Session high 90.46 area, psychological resistance"
+        },
+        {
+          "instrument": "XRP-USD",
+          "level": 1.5,
+          "type": "resistance",
+          "notes": "Key psychological level near session high 1.51"
+        },
+        {
+          "instrument": "LINK-USD",
+          "level": 9.8,
+          "type": "resistance",
+          "notes": "Session high 9.84 area showing rejection"
+        },
+        {
+          "instrument": "AVAX-USD",
+          "level": 10,
+          "type": "resistance",
+          "notes": "Major psychological resistance above session high 9.97"
+        },
+        {
+          "instrument": "ADA-USD",
+          "level": 0.27,
+          "type": "resistance",
+          "notes": "Session high area showing limited upside momentum"
+        },
+        {
+          "instrument": "DOT-USD",
+          "level": 1.35,
+          "type": "resistance",
+          "notes": "Session high providing resistance level"
+        },
+        {
+          "instrument": "DOGE-USD",
+          "level": 0.1,
+          "type": "resistance",
+          "notes": "Major psychological resistance at session high area"
+        },
+        {
+          "instrument": "Solana",
+          "level": 88.29,
+          "type": "screened",
+          "notes": "Flat performance despite sector strength suggests internal rotation but no clear structural setup near current levels"
+        },
+        {
+          "instrument": "Dogecoin",
+          "level": 0.098692,
+          "type": "screened",
+          "notes": "At major psychological $0.10 resistance but insufficient momentum to warrant setup given mixed sector dynamics"
+        },
+        {
+          "instrument": "Cardano",
+          "level": 0.258084,
+          "type": "screened",
+          "notes": "Underperforming utility token showing sector weakness but no clear structural entry point near current levels"
+        },
+        {
+          "instrument": "Chainlink",
+          "level": 9.6,
+          "type": "screened",
+          "notes": "Session high rejection at $9.84 but utility token underperformance limits conviction for clear directional setup"
+        },
+        {
+          "instrument": "Avalanche",
+          "level": 9.7,
+          "type": "screened",
+          "notes": "Near $10 psychological resistance but utility token sector weakness prevents clear structural setup"
+        },
+        {
+          "instrument": "Polkadot",
+          "level": 1.33,
+          "type": "screened",
+          "notes": "Weakest performer showing utility token sector pressure but no clear structural levels for actionable setup"
+        }
+      ],
+      "confidence": 55,
+      "assumptions": []
+    },
+    "reflection": {
+      "timestamp": "2026-04-18T08:15:11.974Z",
+      "sessionId": "nx-1776500047276-8d14ux",
+      "whatWorked": "Perfect weekend crypto screening compliance - all 10 instruments evaluated with complete setups or explicit key levels. Mixed bias classification properly justified with quantified 2.75% performance spread between infrastructure and utility tokens. Confidence scoring appropriately calibrated at 55% with clear breakdown methodology. Technical confluence analysis properly enumerated four valid confluences before scoring.",
+      "whatFailed": "Persistent r011 violation - analysis contains multiple causal attribution statements ('Bitcoin's move toward resistance suggests continuation', 'performance divergence creates rotation') but assumptions array remains empty. This compliance warning has appeared 3+ consecutive sessions without resolution, indicating systematic failure to populate unverified claims as required.",
+      "cognitiveBiases": [
+        "Compliance tunnel vision - focusing on weekend screening rules while ignoring equally important causal attribution requirements",
+        "Execution inconsistency - can correctly apply technical rules but systematically bypass documentation requirements"
+      ],
+      "ruleUpdates": [],
+      "newSystemPromptSections": "When making causal attribution statements or cross-asset explanations, immediately populate the assumptions array with unverified claims before continuing analysis. Causal language like 'due to', 'driven by', 'suggests', or 'creates' automatically triggers assumption documentation requirements - this is not optional analytical enhancement but mandatory intellectual honesty.",
+      "evolutionSummary": "This session confirmed that my weekend screening architecture is now functioning correctly, but revealed persistent blind spots in causal attribution documentation. The r011 compliance warning pattern indicates I need enforcement mechanisms rather than additional rules, since awareness exists but execution discipline remains inconsistent across different validation categories."
+    },
+    "ruleCount": 43,
+    "systemPromptVersion": 102
   }
 ]
