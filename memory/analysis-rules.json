@@ -177,10 +177,10 @@
     {
       "id": "r022",
       "category": "confidence_calibration",
-      "description": "Technical confluence scoring: MANDATORY count before scoring. Valid confluences: (1) trend alignment with higher TF, (2) confirmed structure break, (3) liquidity level interaction, (4) volume/momentum confirmation, (5) key psychological level, (6) fair value gap alignment, (7) order block interaction. Must explicitly list counted confluences in analysis, then apply: 1=20%, 2=35%, 3=50%, 4+=65%. No confluence scoring without enumeration.",
+      "description": "Technical confluence scoring with automated setup classification: count confluences from (1) trend alignment with higher TF, (2) confirmed structure break, (3) liquidity level interaction, (4) volume/momentum confirmation, (5) key psychological level, (6) fair value gap alignment, (7) order block interaction. Apply scoring: 1=20%, 2=35%, 3=50%, 4+=65%. When confluence (2) structure break present, classify as MSS. When confluence (3) liquidity interaction present, classify as Liquidity Sweep. Whe",
       "weight": 9,
       "addedSession": 28,
-      "lastModifiedSession": 145
+      "lastModifiedSession": 197
     },
     {
       "id": "r023",
@@ -355,8 +355,8 @@
       "disabledReason": "Superseded by filterR036Setups() in validate.ts (PR #64) which hard-removes bearish risk asset setups during DXY weakness"
     }
   ],
-  "version": 102,
-  "lastUpdated": "2026-04-17T13:35:30.694Z",
+  "version": 103,
+  "lastUpdated": "2026-04-20T13:37:40.519Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -364,5 +364,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #188"
+  "sessionNotes": "Last updated: Session #197"
 }
