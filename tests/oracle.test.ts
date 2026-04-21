@@ -1532,6 +1532,60 @@ describe("reclassifyOtherSetups", () => {
     const desc = "Strong crypto momentum continuation above 75345, targeting 76000 ATH resistance";
     expect(reclassifyOtherSetups([makeSetup(desc, "Other", "Bitcoin")])[0].type).toBe("MSS");
   });
+
+  // ── Session #194-#200 regression: "Other" epidemic patterns ──
+  // These descriptions stayed "Other" across 5 sessions because the reclassifier
+  // lacked patterns for psychological levels, session highs, oversold bounces.
+
+  it("session #194 Bitcoin: psychological support → PDH/PDL", () => {
+    const desc = "Holding above 75000 psychological support despite session weakness, showing institutional accumulation zone strength";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("PDH/PDL");
+  });
+
+  it("session #196 EUR/USD: rejection from session high → PDH/PDL", () => {
+    const desc = "Rejection from 1.18 high with consolidation near support suggests potential break lower on risk-off rotation";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("PDH/PDL");
+  });
+
+  it("session #196 Gold: testing resistance → PDH/PDL", () => {
+    const desc = "Modest gain +0.28% with resistance at 4850 being tested. Safe-haven bid suggests continuation above resistance";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("PDH/PDL");
+  });
+
+  it("session #198 NASDAQ: approaching key resistance → PDH/PDL", () => {
+    const desc = "Extreme rally +4.75% approaching resistance at 26700, risk-reward favors pullback from overextension";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("PDH/PDL");
+  });
+
+  it("session #198 S&P: approaching key resistance → PDH/PDL", () => {
+    const desc = "Strong rally +3.24% approaching key resistance at 7150, overextended conditions suggest pullback";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("PDH/PDL");
+  });
+
+  it("session #197 AUD/USD: targeting session high resistance → PDH/PDL", () => {
+    const desc = "Strong +0.94% rally on USD weakness, targeting 0.72 session high resistance";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("PDH/PDL");
+  });
+
+  it("session #196 Oil: oversold conditions reversal from major support → Liquidity Sweep", () => {
+    const desc = "Severe decline -9.53% testing critical support at 80.00. Oversold conditions with geopolitical premium suggesting reversal potential from major support zone";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("Liquidity Sweep");
+  });
+
+  it("session #197 Oil: supply shock exhaustion bounce → Liquidity Sweep", () => {
+    const desc = "Supply shock exhaustion after -5.47% collapse, targeting 85.00 major support bounce";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("Liquidity Sweep");
+  });
+
+  it("session #198 Oil: extreme decline oversold bounce → Liquidity Sweep", () => {
+    const desc = "Extreme decline -5.31% testing psychological support at 85.00, oversold bounce expected";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("Liquidity Sweep");
+  });
+
+  it("session #200 USD/CAD: oversold reversion → Liquidity Sweep", () => {
+    const desc = "Oversold after -0.89% decline, approaching 1.364 support with USD weakness creating reversion opportunity";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("Liquidity Sweep");
+  });
 });
 
 // ── buildExecutionForceNote ───────────────────────────────
