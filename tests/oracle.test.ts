@@ -1586,6 +1586,17 @@ describe("reclassifyOtherSetups", () => {
     const desc = "Oversold after -0.89% decline, approaching 1.364 support with USD weakness creating reversion opportunity";
     expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("Liquidity Sweep");
   });
+
+  // ── Session #202 regressions: 'near' price support not caught ──
+  it("session #202 Bitcoin: near psychological price support → PDH/PDL", () => {
+    const desc = "BTC at 75616 near psychological 75000 support level. Defensive rotation within crypto showing relative strength versus altcoins. Targeting 77000 resistance.";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("PDH/PDL");
+  });
+
+  it("session #202 Gold: near price support level → PDH/PDL", () => {
+    const desc = "Gold at 4728 near 4700 support level after -1.18% decline. Dollar weakness theme should support precious metals recovery targeting 4800 resistance.";
+    expect(reclassifyOtherSetups([makeSetup(desc)])[0].type).toBe("PDH/PDL");
+  });
 });
 
 // ── buildExecutionForceNote ───────────────────────────────

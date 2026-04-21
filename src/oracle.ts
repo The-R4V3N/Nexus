@@ -806,7 +806,7 @@ export function reclassifyOtherSetups(setups: any[]): any[] {
     { type: "OB",             patterns: /order\s+block|\bob\b|mitigation\s+block|institutional\s+(level|order)/i },
     { type: "CISD",           patterns: /\bcisd\b|change\s+in\s+state\s+of\s+delivery|displacement\s+candle/i },
     { type: "Liquidity Sweep",patterns: /liquidity\s+sweep|stop\s+hunt|liquidity\s+grab|equal\s+highs|equal\s+lows|sell.?side\s+liquidity|buy.?side\s+liquidity|oversold.{0,100}(bounce|reversal|reversion|recovery)|(extreme|severe).{0,20}(decline|collapse|drop|fall).{0,60}(bounce|reversal)|(supply|demand)\s+shock.{0,20}(exhaustion|bounce|reversal)/i },
-    { type: "PDH/PDL",        patterns: /\bpdh\b|\bpdl\b|previous\s+day\s+high|previous\s+day\s+low|prior\s+day\s+high|prior\s+day\s+low|session\s+(high|low)|psychological\s+(level|support|number)|(approaching|testing|rejection\s+from|rejecting)\s+.{0,30}(key\s+|major\s+|critical\s+|psychological\s+)?(resistance|support)|rejection\s+from\s+.{0,20}(high|low)\b|(resistance|support).{0,30}being\s+tested/i },
+    { type: "PDH/PDL",        patterns: /\bpdh\b|\bpdl\b|previous\s+day\s+high|previous\s+day\s+low|prior\s+day\s+high|prior\s+day\s+low|session\s+(high|low)|psychological\s+(level|support|number)|(approaching|testing|near|rejection\s+from|rejecting)\s+.{0,30}(key\s+|major\s+|critical\s+|psychological\s+)?(resistance|support)|rejection\s+from\s+.{0,20}(high|low)\b|(resistance|support).{0,30}being\s+tested/i },
     { type: "MSS",            patterns: /market\s+structure\s+shift|structure\s+(break|shift)|structural\s+break|\bmss\b|\bmomentum\b|breakout|breaking\s+(above|below)|break\s+(above|below)/i },
   ];
 
