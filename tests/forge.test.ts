@@ -188,6 +188,13 @@ describe("PROTECTED_FILES", () => {
   it("contains README.md", () => {
     expect(PROTECTED_FILES.has("README.md")).toBe(true);
   });
+
+  it("contains validate.ts — too large for FORGE (45k chars) and quality-gate file", () => {
+    // validate.ts is 45,790 chars vs FORGE's 12,000-char limit.
+    // Protecting it makes failure immediate (no wasted API call) and prevents
+    // AXIOM from burning a FORGE slot on a file FORGE can never patch.
+    expect(PROTECTED_FILES.has("validate.ts")).toBe(true);
+  });
 });
 
 // ── PROTECTED_PREFIXES ──────────────────────────────────────

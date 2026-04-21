@@ -59,6 +59,7 @@ const PROTECTED_FILES = new Set([
   "forge.ts",      // FORGE cannot rewrite itself
   "session.yml",   // self-modifying execution environment is too dangerous
   "README.md",     // documentation integrity — FORGE must not strip formatting
+  "validate.ts",   // 45k chars — exceeds FORGE's 12k limit; quality gates must be changed via developer PRs
 ]);
 
 // ── Filename prefixes FORGE can never modify ─────────────
