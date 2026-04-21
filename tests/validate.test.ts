@@ -503,6 +503,86 @@ describe("validateOracleOutput", () => {
   });
 });
 
+// ── r011: causal attribution check ─────────────────────────────
+// validateOracleOutput warns when analysis contains causal language but
+// assumptions[] is empty. Root cause of 10+ sessions: ORACLE attributes moves
+// to unverified events without documenting them.
+
+describe("validateOracleOutput r011 causal attribution check", () => {
+  function makeOracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
+    return {
+      timestamp: new Date(),
+      sessionId: "test-session",
+      marketSnapshots: [],
+      analysis: "A".repeat(300),
+      setups: [],
+      bias: { overall: "bullish", notes: "Strong uptrend" },
+      keyLevels: [],
+      confidence: 55,
+      ...overrides,
+    };
+  }
+
+  it("warns when analysis contains 'driven by' and assumptions[] is empty", () => {
+    const result = validateOracleOutput(
+      makeOracle({ analysis: "USD strength driven by Fed hawkishness. Price approaching resistance." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r011"))).toBe(true);
+  });
+
+  it("warns when analysis contains 'due to' and assumptions[] is empty", () => {
+    const result = validateOracleOutput(
+      makeOracle({ analysis: "Rally stalled due to geopolitical risk premium fading. Watching key levels." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r011"))).toBe(true);
+  });
+
+  it("warns when analysis contains 'indicates' and assumptions[] is empty", () => {
+    const result = validateOracleOutput(
+      makeOracle({ analysis: "Price action indicates institutional accumulation. Structure remains bullish." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r011"))).toBe(true);
+  });
+
+  it("warns when analysis contains 'suggests' and assumptions[] is empty", () => {
+    const result = validateOracleOutput(
+      makeOracle({ analysis: "Consolidation suggests breakout potential above resistance at 1.185." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r011"))).toBe(true);
+  });
+
+  it("does NOT warn when causal language is present and assumptions[] is populated", () => {
+    const result = validateOracleOutput(
+      makeOracle({
+        analysis: "USD strength driven by Fed hawkishness. Price approaching resistance.",
+        assumptions: ["Fed hawkishness narrative — unconfirmed, based on recent FOMC minutes"],
+      } as any),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r011"))).toBe(false);
+  });
+
+  it("does NOT warn when analysis has no causal language and assumptions[] is empty", () => {
+    const result = validateOracleOutput(
+      makeOracle({ analysis: "Price at 1.182 near 1.185 resistance. Key support at 1.175. Watching structure." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r011"))).toBe(false);
+  });
+
+  it("warns on 'reflects' attribution with empty assumptions", () => {
+    const result = validateOracleOutput(
+      makeOracle({ analysis: "Bearish structure reflects ongoing risk-off sentiment from macro uncertainty." }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("r011"))).toBe(true);
+  });
+});
+
 // ── r034: zero-setup screening documentation check ──────────────
 
 describe("validateOracleOutput r034 zero-setup check", () => {
