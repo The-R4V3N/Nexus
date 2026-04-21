@@ -230,6 +230,83 @@ describe("validateOracleOutput", () => {
     expect(result.warnings.some((w) => w.includes("stop") && w.includes("volatility"))).toBe(true);
   });
 
+  it("does NOT warn about tight stop on EUR/USD when only Oil moved 8% (false-positive regression)", () => {
+    // Bug: session-wide ≥3% trigger warned on ALL setups even when the setup's own
+    // instrument barely moved. Sessions #196-#200 hit this — EUR/USD (0.05% move),
+    // GBP/USD (0.54%), USD/CAD (0.89%) all got r029 warnings because Oil or indices moved big.
+    const oilSnapshot = {
+      symbol: "USOIL", name: "Crude Oil", category: "commodities",
+      price: 82.59, previousClose: 91.16, change: -8.57, changePercent: -9.40,
+      high: 91.20, low: 82.10, timestamp: new Date(),
+    };
+    const eurusdSnapshot = {
+      symbol: "EURUSD", name: "EUR/USD", category: "forex",
+      price: 1.1758, previousClose: 1.1752, change: 0.0006, changePercent: 0.05,
+      high: 1.1770, low: 1.1740, timestamp: new Date(),
+    };
+    const result = validateOracleOutput(
+      makeOracle({
+        marketSnapshots: [oilSnapshot, eurusdSnapshot],
+        setups: [{
+          instrument: "EUR/USD", type: "MSS", direction: "bullish",
+          description: "test", invalidation: "test",
+          entry: 1.1758, stop: 1.1745, target: 1.1800, RR: 2.0, timeframe: "4H",
+          // stopPct ≈ 0.11% — tight, but EUR/USD itself only moved 0.05% (no r029 applies)
+        }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("stop") && w.includes("volatility"))).toBe(false);
+  });
+
+  it("does NOT warn about tight stop on GBP/USD (0.54% move) when NASDAQ moved 4.75%", () => {
+    const nasdaqSnapshot = {
+      symbol: "NAS100", name: "NASDAQ 100", category: "index",
+      price: 26672, previousClose: 25406, change: 1266, changePercent: 4.98,
+      high: 26700, low: 25400, timestamp: new Date(),
+    };
+    const gbpusdSnapshot = {
+      symbol: "GBPUSD", name: "GBP/USD", category: "forex",
+      price: 1.3502, previousClose: 1.3429, change: 0.0073, changePercent: 0.54,
+      high: 1.3545, low: 1.3420, timestamp: new Date(),
+    };
+    const result = validateOracleOutput(
+      makeOracle({
+        marketSnapshots: [nasdaqSnapshot, gbpusdSnapshot],
+        setups: [{
+          instrument: "GBP/USD", type: "OB", direction: "bearish",
+          description: "test", invalidation: "test",
+          entry: 1.3502, stop: 1.3520, target: 1.3450, RR: 2.9, timeframe: "4H",
+          // stopPct ≈ 0.13% — tight, but GBP/USD itself only moved 0.54% (no r029 applies)
+        }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("stop") && w.includes("volatility"))).toBe(false);
+  });
+
+  it("still warns on NASDAQ tight stop when NASDAQ itself moved 4.78%", () => {
+    // Regression: the per-instrument fix must not break the legitimate case
+    const nasdaqSnapshot = {
+      symbol: "NAS100", name: "NASDAQ 100", category: "index",
+      price: 25200, previousClose: 24050, change: 1150, changePercent: 4.78,
+      high: 25202, low: 24050, timestamp: new Date(),
+    };
+    const result = validateOracleOutput(
+      makeOracle({
+        marketSnapshots: [nasdaqSnapshot],
+        setups: [{
+          instrument: "NASDAQ 100", type: "PDH", direction: "bullish",
+          description: "test", invalidation: "test",
+          entry: 25200, stop: 25180, target: 25250, RR: 2.5, timeframe: "4H",
+          // stopPct ≈ 0.08% — NASDAQ itself moved 4.78%, so r029 warning is correct
+        }],
+      }),
+      []
+    );
+    expect(result.warnings.some((w) => w.includes("stop") && w.includes("volatility"))).toBe(true);
+  });
+
   it("does not warn about stop size when session moves are normal (<5%)", () => {
     const normalSnapshot = {
       symbol: "NAS100", name: "NASDAQ 100", category: "index",

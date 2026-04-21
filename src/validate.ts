@@ -310,21 +310,31 @@ export function validateOracleOutput(
     }
   }
 
-  // Tight stop warning on extreme volatility days (r029 enforcement)
-  // If any snapshot moved ≥5%, stops <1% of entry are almost certainly
-  // too narrow to survive normal noise on that instrument.
-  const extremeDay = oracle.marketSnapshots?.some(s => Math.abs(s.changePercent) >= 3);
-  if (extremeDay && oracle.setups) {
+  // Tight stop warning — per-instrument r029 enforcement (warn-only layer).
+  // Only warns when THAT INSTRUMENT's own session move ≥3% and stop <1% of entry.
+  // A session where Oil moves 8% does NOT trigger warnings on EUR/USD setups.
+  if (oracle.marketSnapshots && oracle.setups) {
+    const instrVolMap = new Map<string, number>();
+    for (const snap of oracle.marketSnapshots) {
+      const move = Math.abs(snap.changePercent ?? 0);
+      instrVolMap.set(snap.name.toLowerCase(), move);
+      instrVolMap.set(snap.symbol.toLowerCase().replace(/[^a-z0-9]/g, ""), move);
+    }
     for (const s of oracle.setups) {
       if (
         typeof s.entry === "number" && s.entry > 0 &&
         typeof s.stop  === "number" && s.stop  > 0
       ) {
-        const stopPct = (Math.abs(s.entry - s.stop) / s.entry) * 100;
-        if (stopPct < 1) {
-          warnings.push(
-            `${s.instrument ?? "Setup"}: stop is only ${stopPct.toFixed(2)}% from entry during extreme volatility (≥5% session move) — r029 requires wider stops`
-          );
+        const instrKey     = (s.instrument ?? "").toLowerCase();
+        const instrKeyNorm = instrKey.replace(/[^a-z0-9]/g, "");
+        const instrMove    = instrVolMap.get(instrKey) ?? instrVolMap.get(instrKeyNorm) ?? 0;
+        if (instrMove >= 3) {
+          const stopPct = (Math.abs(s.entry - s.stop) / s.entry) * 100;
+          if (stopPct < 1) {
+            warnings.push(
+              `${s.instrument ?? "Setup"}: stop is only ${stopPct.toFixed(2)}% from entry during elevated volatility (instrument moved ${instrMove.toFixed(1)}%) — r029 requires wider stops`
+            );
+          }
         }
       }
     }
