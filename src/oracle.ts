@@ -284,6 +284,7 @@ ${weekendTemplate}
   parsed.analysis = enforceR031CapNotation(parsed.analysis ?? "", rawConf);
   const executionForceNote = !isWeekend ? buildExecutionForceNote(parsed.analysis ?? "", rawConf) : "";
   const crossAssetNote = !isWeekend ? buildR039R040CrossAssetNote(snapshots, rawConf) : "";
+  const oilEnforcementNote = !isWeekend ? buildOilEnforcementNote(snapshots, rawConf) : "";
   const minSetupNote = buildMinSetupNote(rawConf);
   const weekdayTemplate = !isWeekend ? buildWeekdayScreeningTemplate(snapshots, rawConf) : "";
   const minNonNeutral = rawConf >= 60 ? 4 : 3;
@@ -327,7 +328,7 @@ RULES:
 - Weekend crypto sessions: at least 2 setups from available crypto instruments regardless of confidence
 - Every setup MUST have: entry, stop, target, RR, timeframe
 - ENTRY: nearest support/resistance, session high/low, or key level
-- STOP: beyond the next structural level, or 1x ATR from entry${r029Note}${crossAssetNote}
+- STOP: beyond the next structural level, or 1x ATR from entry${r029Note}${crossAssetNote}${oilEnforcementNote}
 - TARGET: next liquidity level, psychological number, or swing point
 - RR must be > 1.3 \u2014 do not include setups with risk exceeding reward${rrSelfCheckNote}${executionForceNote}
 - Include instrument, type, direction, description, and invalidation
@@ -937,6 +938,39 @@ For EACH instrument in that block you MUST do ONE of:
       - "Conflicting timeframe: [LEVEL] identified but higher timeframe trend conflicts"
 Documenting structural levels then returning zero non-neutral setups without rejection reasons
 is an execution failure (r041). The screening validation block is not a substitute for setup construction.
+`;
+}
+
+// ── Oil enforcement note ───────────────────────────────────
+// When Oil moves ≥5% AND confidence ≥55%, ORACLE must explicitly evaluate Oil —
+// either construct a setup or provide a written rejection reason.
+// Root cause: sessions #201-#203 each had Oil move 5-8% but received no setup
+// because generic screening notes didn't call out Oil specifically.
+export function buildOilEnforcementNote(snapshots: MarketSnapshot[], confidence: number): string {
+  if (confidence < 55) return "";
+
+  const oilSnap = snapshots.find(s => {
+    const n = (s.name ?? "").toLowerCase();
+    const sym = (s.symbol ?? "").toLowerCase();
+    return n.includes("oil") || n.includes("crude") || sym.includes("cl=") || sym.includes("usoil") || sym.includes("wti");
+  });
+
+  if (!oilSnap) return "";
+  if (Math.abs(oilSnap.changePercent ?? 0) < 5) return "";
+
+  const pct = Math.abs(oilSnap.changePercent ?? 0).toFixed(2);
+  const direction = (oilSnap.changePercent ?? 0) > 0 ? "bullish (surge)" : "bearish (crash)";
+
+  return `
+OIL COVERAGE REQUIREMENT (r026 exceptional coordination — MANDATORY):
+Crude Oil has moved ${pct}% this session (${direction}) — an exceptional commodity move.
+At confidence ${confidence}%, you MUST include one of the following for Crude Oil:
+  (a) A COMPLETE setup: entry, stop, target, RR ≥ 1.3, timeframe, direction "bullish" or "bearish", OR
+  (b) An EXPLICIT written rejection in the Oil slot description stating the exact reason:
+      - "Stop distance: structural stop requires X.X% which exceeds 2% maximum"
+      - "Poor RR: entry [PRICE], target [LEVEL] yields only X.X RR — below 1.3 minimum"
+      - "Conflicting structure: [LEVEL] identified but higher timeframe trend invalidates setup"
+Omitting Crude Oil without a written rejection is an execution gap — exceptional moves require explicit evaluation.
 `;
 }
 
