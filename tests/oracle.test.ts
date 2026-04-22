@@ -1712,3 +1712,55 @@ describe("enforceR031CapNotation", () => {
     expect(result.toLowerCase()).toContain("capped from 66%");
   });
 });
+
+// ── buildOilEnforcementNote ───────────────────────────────────
+import { buildOilEnforcementNote } from "../src/oracle";
+
+const makeOilSnap = (changePercent: number) => ({
+  symbol: "CL=F", name: "Crude Oil", category: "commodities" as const,
+  price: 90, previousClose: 90 / (1 + changePercent / 100),
+  change: 90 * changePercent / 100, changePercent,
+  high: 92, low: 88, timestamp: new Date(),
+});
+
+describe("buildOilEnforcementNote", () => {
+  it("returns empty string when confidence < 55", () => {
+    expect(buildOilEnforcementNote([makeOilSnap(7)], 54)).toBe("");
+  });
+
+  it("returns empty string when oil move < 5%", () => {
+    expect(buildOilEnforcementNote([makeOilSnap(4.9)], 60)).toBe("");
+  });
+
+  it("returns empty string when no oil snapshot present", () => {
+    const nonOil = [{ symbol: "EURUSD", name: "EUR/USD", category: "forex" as const,
+      price: 1.18, previousClose: 1.17, change: 0.01, changePercent: 0.85,
+      high: 1.185, low: 1.175, timestamp: new Date() }];
+    expect(buildOilEnforcementNote(nonOil, 60)).toBe("");
+  });
+
+  it("returns enforcement note when oil moves >= 5% and confidence >= 55 (sessions #201-#203 regression)", () => {
+    // Sessions #201 (-5.44%), #202 (+7.67%), #203 (+8.50%) all had Oil ≥5% but no setups
+    const note = buildOilEnforcementNote([makeOilSnap(7.67)], 55);
+    expect(note.length).toBeGreaterThan(0);
+    expect(note).toContain("Oil");
+    expect(note).toContain("MANDATORY");
+  });
+
+  it("fires at exactly 5% move and confidence 55 (boundary)", () => {
+    const note = buildOilEnforcementNote([makeOilSnap(5)], 55);
+    expect(note.length).toBeGreaterThan(0);
+  });
+
+  it("fires for negative oil move >= 5% (oil crash like session #201)", () => {
+    const note = buildOilEnforcementNote([makeOilSnap(-5.44)], 58);
+    expect(note.length).toBeGreaterThan(0);
+    expect(note).toContain("Oil");
+  });
+
+  it("detects oil by name 'crude' (symbol variant)", () => {
+    const snap = { ...makeOilSnap(6), symbol: "USOIL", name: "Crude Oil WTI" };
+    const note = buildOilEnforcementNote([snap], 60);
+    expect(note.length).toBeGreaterThan(0);
+  });
+});
