@@ -1178,10 +1178,16 @@ describe("resolveConfidence", () => {
     expect(resolveConfidence(analysis, 60)).toBe(60);
   });
 
-  it("returns JSON value when mismatch is exactly 10 points (boundary)", () => {
-    // diff == 10, not > 10, so return JSON
+  it("returns text value when mismatch is exactly 10 points (session #202 regression)", () => {
+    // Session #202: text=65%, JSON=55% — diff==10, should use text value (>= 10 threshold)
+    const analysis = "Confidence: 65% — TC (65%), MA (75%), RR (55%).";
+    expect(resolveConfidence(analysis, 55)).toBe(65);
+  });
+
+  it("returns text value when mismatch is exactly 10 points (boundary, high→low)", () => {
+    // diff == 10 exactly — must override JSON per >= 10 rule
     const analysis = "Confidence: 70%";
-    expect(resolveConfidence(analysis, 60)).toBe(60);
+    expect(resolveConfidence(analysis, 60)).toBe(70);
   });
 
   it("returns extracted value when mismatch is 11 points (just over boundary)", () => {
