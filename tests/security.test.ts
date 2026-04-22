@@ -291,12 +291,28 @@ describe("sanitizeAxiomOutput", () => {
     const output = {
       ...baseOutput,
       newRules: [
-        { id: "r020", description: "X".repeat(600), weight: 5 },
+        { id: "r020", description: "X".repeat(1100), weight: 5 },
       ],
     };
     const result = sanitizeAxiomOutput(output, 10);
     expect(result.newRules[0].description.length).toBeLessThanOrEqual(LIMITS.MAX_RULE_LENGTH);
     expect(result.warnings.some((w) => w.includes("truncated"))).toBe(true);
+  });
+
+  it("preserves rule update 'after' text up to 1000 chars (r026-class regression)", () => {
+    // Session #202: r026 'after' was ~560 chars and got silently cut at the old 500-char limit.
+    // A 550-char enumerated rule must survive unchanged after the limit is raised to 1000.
+    // Use r099 (non-existent rule) to bypass cooldown check, and empty cooldownRulesOverride.
+    const longAfter = "A".repeat(550);
+    const output = {
+      ...baseOutput,
+      ruleUpdates: [
+        { ruleId: "r099", type: "modify" as const, reason: "expand", before: "old text", after: longAfter },
+      ],
+    };
+    const result = sanitizeAxiomOutput(output, 10, 10, []);
+    expect(result.ruleUpdates[0].after).toBe(longAfter);
+    expect(result.warnings.some((w) => w.includes("truncated"))).toBe(false);
   });
 
   it("blocks removal of foundational rules (r001-r010)", () => {
