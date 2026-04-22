@@ -209,7 +209,7 @@
     {
       "id": "r026",
       "category": "setup_construction",
-      "description": "When confidence exceeds 60%, must systematically document structural level evaluation for minimum 8 instruments: EUR/USD, GBP/USD, AUD/USD (forex), NASDAQ, S&P (indices), BTC, ETH (crypto), Gold (metals). For each instrument, specify current price, key structural level (support/resistance), and setup viability decision with reason. During exceptional coordination (3+ asset classes >2x average moves), add Crude Oil and Silver to mandatory evaluation list (10 total instruments). Only after complet",
+      "description": "When confidence exceeds 60%, must systematically document structural level evaluation for minimum 8 instruments: EUR/USD, GBP/USD, AUD/USD (forex), NASDAQ, S&P (indices), BTC, ETH (crypto), Gold (metals). For each instrument, specify current price, key structural level (support/resistance), and setup viability decision with reason. During exceptional coordination (3+ asset classes >2x average moves), add Crude Oil and Silver to mandatory evaluation list (10 total instruments). Only after completing 10-instrument evaluation may setup construction begin.",
       "weight": 9,
       "addedSession": 46,
       "lastModifiedSession": 202
