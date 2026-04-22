@@ -106,7 +106,7 @@ export function resolveConfidence(analysis: string, jsonConfidence: number): num
   }
 
   const textConfidence = extractConfidenceFromText(analysis);
-  if (textConfidence !== null && Math.abs(textConfidence - jsonConfidence) > 10) {
+  if (textConfidence !== null && Math.abs(textConfidence - jsonConfidence) >= 10) {
     return textConfidence;
   }
   return jsonConfidence;
