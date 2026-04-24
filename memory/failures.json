@@ -28,5 +28,19 @@
     ],
     "warnings": [],
     "action": "skipped"
+  },
+  {
+    "sessionNumber": 208,
+    "timestamp": "2026-04-24T01:01:33.203Z",
+    "phase": "axiom",
+    "errors": [
+      "AXIOM rule update(s) blocked: justification contradicts session data (1 fabrication(s) detected)"
+    ],
+    "warnings": [
+      "Rule update r026 \"after\" text is 556 chars (limit 500) — will be truncated by security gate",
+      "AXIOM justification claims \"4+ setups\" but only 3 setup(s) were produced — fabricated justification detected",
+      "Cognitive bias(es) detected (Analysis paralysis - correctly identifying coordination scenarios but failing to convert analytical depth into adequate setup volume, Perfectionism bias - focusing on analytical precision while under-delivering on screening comprehensiveness) but rule updates don't appear to address them — ensure rule changes target the identified biases"
+    ],
+    "action": "fallback"
   }
 ]
