@@ -115,10 +115,10 @@
     {
       "id": "r015",
       "category": "bias_classification",
-      "description": "Mixed bias requires quantified justification meeting one condition: (1) equal-weighted conflicting signals across 3+ asset classes with magnitude differences >1.5%, (2) correlation breakdown with proxy data showing >1 standard deviation from norm, (3) VIX >25 with risk assets rallying, (4) coordination magnitude exceeding 2x typical ranges across 4+ asset classes creating uncorrelated opportunities, (5) weekend crypto sector divergence >1.5% between strongest/weakest performers. MUST document sp",
+      "description": "Mixed bias requires quantified justification meeting one condition: (1) equal-weighted conflicting signals across 3+ asset classes with magnitude differences >1.5%, (2) correlation breakdown with proxy data showing >1 standard deviation from norm, (3) VIX >25 with risk assets rallying, (4) coordination magnitude exceeding 2x typical ranges across 4+ asset classes creating uncorrelated opportunities, (5) weekend crypto sector divergence >1.0% between infrastructure tokens (BNB, SOL) and utility tokens (XRP, ADA, LINK) indicating defensive rotation patterns. Document specific divergence magnitude and historical context.",
       "weight": 8,
       "addedSession": 3,
-      "lastModifiedSession": 203
+      "lastModifiedSession": 211
     },
     {
       "id": "r016",
@@ -353,10 +353,18 @@
       "lastModifiedSession": 168,
       "disabled": true,
       "disabledReason": "Superseded by filterR036Setups() in validate.ts (PR #64) which hard-removes bearish risk asset setups during DXY weakness"
+    },
+    {
+      "id": "r044",
+      "category": "weekend_depth",
+      "description": "Weekend crypto sessions with sector divergence >1.0% require structural context analysis: document order flow patterns (rejection levels, volume clusters), historical precedent for current divergence magnitude, and catalyst assessment (regulatory, institutional, or technical drivers). Superficial percentage moves without structural context constitute depth violations.",
+      "weight": 8,
+      "addedSession": 211,
+      "lastModifiedSession": 211
     }
   ],
-  "version": 109,
-  "lastUpdated": "2026-04-23T13:36:39.874Z",
+  "version": 110,
+  "lastUpdated": "2026-04-25T00:18:32.503Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -364,5 +372,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #207"
+  "sessionNotes": "Last updated: Session #211"
 }
