@@ -193,13 +193,13 @@ describe("validateOracleOutput", () => {
     expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(true);
   });
 
-  it("does not warn on a legitimate high R:R up to 20", () => {
+  it("does not warn on a legitimate high R:R up to 5.0", () => {
     const result = validateOracleOutput(
       makeOracle({
         setups: [{
           instrument: "Gold", type: "FVG", direction: "bullish",
           description: "test", invalidation: "test",
-          entry: 2000, stop: 1990, target: 2200, RR: 20, timeframe: "1H",
+          entry: 2000, stop: 1990, target: 2050, RR: 5, timeframe: "1H",
         }],
       }),
       []
@@ -2273,5 +2273,52 @@ describe('validateOracleOutput "Other" type overuse check', () => {
     };
     const warnings = validateOracleOutput(oracle, []).warnings;
     expect(warnings.some((w) => w.toLowerCase().includes("other") && w.includes("ICT"))).toBe(false);
+  });
+});
+
+// ── R:R implausibility cap at 5.0 ──────────────────────────
+// Backlog #44: session #210 NASDAQ R:R=9.0 (0.12% stop, 1.06% target) passed
+// through the >20 threshold without warning. Lower threshold to >5.0.
+
+describe("validateOracleOutput R:R implausibility cap at 5.0", () => {
+  function makeSetupWithRR(rr: number): OracleAnalysis {
+    // Session #210 NASDAQ OB: entry 27088, stop 27120 (+32pt, 0.12%), target 26800
+    return {
+      sessionId: "test", timestamp: new Date(),
+      analysis: "NASDAQ overbought analysis".padEnd(300, " "),
+      bias: { overall: "bearish", notes: "overbought at resistance" },
+      confidence: 55,
+      setups: [{
+        instrument: "NASDAQ 100", type: "OB", direction: "bearish",
+        description: "Overbought at session high", invalidation: "Break above 27120",
+        entry: 27088, stop: 27120, target: 26800, RR: rr, timeframe: "4H",
+      }],
+      keyLevels: [], marketSnapshots: [], assumptions: [],
+    };
+  }
+
+  it("warns on R:R of 9.0 — session #210 NASDAQ regression", () => {
+    const result = validateOracleOutput(makeSetupWithRR(9.0), []);
+    expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(true);
+  });
+
+  it("warns on R:R of 5.1 (just above threshold)", () => {
+    const result = validateOracleOutput(makeSetupWithRR(5.1), []);
+    expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(true);
+  });
+
+  it("does not warn on R:R of exactly 5.0 (at boundary)", () => {
+    const result = validateOracleOutput(makeSetupWithRR(5.0), []);
+    expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(false);
+  });
+
+  it("does not warn on R:R of 3.0 (legitimate high R:R)", () => {
+    const result = validateOracleOutput(makeSetupWithRR(3.0), []);
+    expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(false);
+  });
+
+  it("still warns on R:R of 21 (above old >20 threshold)", () => {
+    const result = validateOracleOutput(makeSetupWithRR(21), []);
+    expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(true);
   });
 });

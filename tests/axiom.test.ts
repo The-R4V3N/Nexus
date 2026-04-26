@@ -686,3 +686,45 @@ describe("sanitizeRulesText", () => {
     expect(result.rules[0].description).not.toContain(MOJO);
   });
 });
+
+// ── parseAxiomResponse field-boundary salvage ─────────────
+// Backlog #43: sessions #208 and #215 produced "JSON parse error" sentinel.
+// parseAxiomResponse currently tries JSON.parse → salvageJSON → empty fallback.
+// oracle.ts uses a field-boundary cut (slicing at `", "` boundaries) when
+// salvageJSON fails. This test verifies the same pattern is applied to AXIOM.
+
+describe("parseAxiomResponse field-boundary salvage", () => {
+  it("recovers AXIOM response when a non-required field has invalid content (null byte)", () => {
+    // systemPromptAdditions has a null byte (\x00) — invalid JSON content.
+    // JSON.parse fails. salvageJSON also fails (can't repair content, only structure).
+    // Field-boundary cut recovers the 4 required fields from before the broken field.
+    // systemPromptAdditions is placed right after evolutionSummary (string→string
+    // transition) so a `", "` boundary exists for the cutter.
+    const rawText =
+      '{"whatWorked": "Strong screening compliance", ' +
+      '"whatFailed": "r011 attribution gap persists", ' +
+      '"cognitiveBiases": ["attribution bias"], ' +
+      '"evolutionSummary": "Need pre-commitment injection for r011", ' +
+      '"systemPromptAdditions": "Add \x00 invalid control char here"}';
+
+    const rules = makeRules();
+    const result = parseAxiomResponse(rawText, 1, rules);
+
+    // Must NOT fall back to empty-reflection sentinel values
+    expect(result.whatWorked).not.toBe("Unable to parse reflection");
+    expect(result.whatWorked).not.toBe("Validation failed");
+    // Must recover the clean earlier fields
+    expect(result.whatWorked).toBe("Strong screening compliance");
+    expect(result.whatFailed).toBe("r011 attribution gap persists");
+  });
+
+  it("returns normal sentinel when every field is broken (unrecoverable)", () => {
+    // Completely unparseable — not even a partial recovery is possible
+    const rawText = "not json at all \x00\x01\x02 completely broken";
+    const rules = makeRules();
+    const result = parseAxiomResponse(rawText, 1, rules);
+    // Should get one of the two sentinel values (parse failure or validation failure)
+    const sentinels = ["Unable to parse reflection", "Validation failed"];
+    expect(sentinels).toContain(result.whatWorked);
+  });
+});

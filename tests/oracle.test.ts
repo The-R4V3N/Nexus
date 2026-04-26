@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation, reclassifyOtherSetups } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation, reclassifyOtherSetups, buildR011AssumptionNote } from "../src/oracle";
 import { resolveConfidence } from "../src/validate";
 import type { MarketSnapshot } from "../src/types";
 
@@ -1762,5 +1762,47 @@ describe("buildOilEnforcementNote", () => {
     const snap = { ...makeOilSnap(6), symbol: "USOIL", name: "Crude Oil WTI" };
     const note = buildOilEnforcementNote([snap], 60);
     expect(note.length).toBeGreaterThan(0);
+  });
+});
+
+// ── buildR011AssumptionNote ────────────────────────────────
+// Backlog #42: the existing r011 prompt section only references external events
+// (Iran war, ECB policy). ORACLE consistently uses soft attribution language
+// ("suggests underlying strength", "indicates defensive rotation") on weekend
+// sessions without populating assumptions[]. The new function must explicitly
+// cover these internal analytical assertions, not just external events.
+
+describe("buildR011AssumptionNote", () => {
+  it("returns a non-empty string", () => {
+    expect(buildR011AssumptionNote().length).toBeGreaterThan(0);
+  });
+
+  it("references r011", () => {
+    expect(buildR011AssumptionNote()).toContain("r011");
+  });
+
+  it("explicitly covers soft attribution language — suggests/indicates/reflects", () => {
+    const note = buildR011AssumptionNote().toLowerCase();
+    expect(note).toMatch(/suggests?|indicates?|reflects?/);
+  });
+
+  it("covers internal market attribution, not only external events", () => {
+    const note = buildR011AssumptionNote().toLowerCase();
+    // Must address interpretation/inference beyond geopolitical event attribution
+    expect(note).toMatch(/internal|interpret|infer|analytical|attribution/);
+  });
+
+  it("provides a BAD example showing what not to do", () => {
+    const note = buildR011AssumptionNote().toLowerCase();
+    expect(note).toMatch(/bad|do not|avoid|wrong/);
+  });
+
+  it("provides a GOOD example showing the correct pattern", () => {
+    const note = buildR011AssumptionNote().toLowerCase();
+    expect(note).toMatch(/good|correct|instead|use\b/);
+  });
+
+  it("mentions the assumptions array explicitly", () => {
+    expect(buildR011AssumptionNote()).toMatch(/assumptions/i);
   });
 });

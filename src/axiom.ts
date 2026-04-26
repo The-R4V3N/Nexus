@@ -392,24 +392,41 @@ export function parseAxiomResponse(
     rawParsed = JSON.parse(jsonText);
   } catch {
     // Try to salvage truncated JSON
-    const salvaged = salvageJSON(jsonText);
+    let salvaged = salvageJSON(jsonText);
     if (salvaged) {
       rawParsed = salvaged;
       console.warn("  ⚠ AXIOM returned malformed JSON — salvaged partial response");
     } else {
-      console.error("  ✗ AXIOM returned unparseable JSON, using empty reflection");
-      rawParsed = {
-        whatWorked:             "Unable to parse reflection",
-        whatFailed:             "JSON parse error in AXIOM response",
-        cognitiveBiases:        [],
-        evolutionSummary:       "Reflection failed due to malformed response — no changes applied.",
-        ruleUpdates:            [],
-        newRules:               [],
-        systemPromptAdditions:  "",
-        newSelfTasks:           [],
-        resolvedSelfTasks:      [],
-        codeChanges:            [],
-      };
+      // Field-boundary cut: slice at ", "fieldName" boundaries (latest first)
+      // to recover required fields when a non-required field has invalid content.
+      const cutPoints: number[] = [];
+      const re = /",\s*"/g;
+      let m;
+      while ((m = re.exec(jsonText)) !== null) {
+        cutPoints.push(m.index + 1);
+      }
+      for (let i = cutPoints.length - 1; i >= 0; i--) {
+        salvaged = salvageJSON(jsonText.slice(0, cutPoints[i]));
+        if (salvaged) break;
+      }
+      if (salvaged) {
+        rawParsed = salvaged;
+        console.warn("  ⚠ AXIOM returned malformed JSON — recovered via field-boundary cut");
+      } else {
+        console.error("  ✗ AXIOM returned unparseable JSON, using empty reflection");
+        rawParsed = {
+          whatWorked:             "Unable to parse reflection",
+          whatFailed:             "JSON parse error in AXIOM response",
+          cognitiveBiases:        [],
+          evolutionSummary:       "Reflection failed due to malformed response — no changes applied.",
+          ruleUpdates:            [],
+          newRules:               [],
+          systemPromptAdditions:  "",
+          newSelfTasks:           [],
+          resolvedSelfTasks:      [],
+          codeChanges:            [],
+        };
+      }
     }
   }
 
