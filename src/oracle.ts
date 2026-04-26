@@ -186,14 +186,7 @@ FORMAT REQUIREMENTS:
 
 4. KEY LEVELS: Identify important support/resistance levels across all instruments.
 ${r041Note}
-5. ASSUMPTIONS (r011 \u2014 MANDATORY): List every causal attribution to an unverified external event
-   in the "assumptions" array. This includes geopolitical events, central bank actions, earnings,
-   or any "X caused Y" claim not confirmed by price data alone.
-   - BAD: weaving "Iran war escalation driving oil surge" into the narrative without documenting it
-   - GOOD: list it in assumptions[], then write in the narrative: "oil surge consistent with supply
-     shock premium (see assumptions)"
-   - Use [] ONLY when every move is attributed purely to technical structure with zero reference to
-     external events. When in doubt, list it.
+${buildR011AssumptionNote()}
 
 Respond in JSON:
 
@@ -852,6 +845,30 @@ export function enforceR031CapNotation(analysis: string, rawConfidence: number):
 // Returns a prompt block requiring ORACLE to include a "Screening validation:"
 // line in its analysis text when confidence exceeds 55% on weekday sessions.
 // Injected into ORACLE-ANALYSIS prompt (pre-construction) so the requirement
+// ── r011 assumption pre-commitment note ───────────────────
+// Injected into ORACLE-ANALYSIS prompt before generation so ORACLE documents
+// BOTH external event attributions AND internal soft analytical assertions
+// (e.g. "suggests underlying strength", "indicates defensive rotation") in
+// assumptions[]. Post-hoc validate.ts warnings (PR #100) fire after generation
+// and cannot change already-committed output.
+// Root cause of sessions #212-#214: inline r011 text only mentioned "unverified
+// external events", so internal analytical attribution phrases like "suggests",
+// "indicates", "reflects" were written without assumptions[] entries.
+export function buildR011AssumptionNote(): string {
+  return `5. ASSUMPTIONS (r011 — MANDATORY): List EVERY causal attribution in the "assumptions" array.
+   This includes:
+   - External event attributions: geopolitical events, central bank actions, earnings, macro releases
+   - Internal analytical assertions: any phrase like "suggests", "indicates", "reflects", "driven by",
+     "due to", or "consistent with" that attributes a price move to a cause not directly proven by price data
+   - BAD (external): weaving "Iran war escalation driving oil surge" into the narrative without documenting it
+   - BAD (internal): "NASDAQ suggests underlying strength" or "EUR/USD indicates defensive rotation" without
+     listing those interpretations in assumptions[]
+   - GOOD: list every attribution in assumptions[], then reference it in the narrative as "(see assumptions)"
+   - Use [] ONLY when every move is described purely as price structure with zero interpretive attribution.
+     When in doubt, list it.`;
+}
+
+// ── r041 screening validation note ────────────────────────
 // is active before setup generation begins — not post-hoc like validateOracleOutput.
 // Root cause of sessions #168-#172: ORACLE omitted the mandatory prefix despite
 // having the analytical information to produce it.
