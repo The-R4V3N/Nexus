@@ -154,6 +154,7 @@ Skipping any instrument on this list is a rule violation (r030).
   const calibrationContext = buildCalibrationContext(allEntries);
 
   const r041Note = !isWeekend ? buildR041ScreeningNote() : "";
+  const r044Note = isWeekend  ? buildR044DepthNote(snapshots, isWeekend) : "";
 
   const analysisUserMessage = `
 ${weekendContext}${marketData}
@@ -185,7 +186,7 @@ FORMAT REQUIREMENTS:
    or correlation breakdown. Otherwise pick a direction (per r015).
 
 4. KEY LEVELS: Identify important support/resistance levels across all instruments.
-${r041Note}
+${r041Note}${r044Note}
 ${buildR011AssumptionNote()}
 
 Respond in JSON:
@@ -866,6 +867,47 @@ export function buildR011AssumptionNote(): string {
    - GOOD: list every attribution in assumptions[], then reference it in the narrative as "(see assumptions)"
    - Use [] ONLY when every move is described purely as price structure with zero interpretive attribution.
      When in doubt, list it.`;
+}
+
+// ── r044 weekend structural depth note ────────────────────
+// Injected into ORACLE-ANALYSIS on weekend sessions when sector divergence >1.0%
+// between infrastructure tokens (BNB, SOL) and utility tokens (XRP, ADA, LINK).
+// Root cause: sessions #212-#214 produced surface-level percentage analysis
+// without order flow, volume clusters, or catalyst context despite >1% divergence.
+export function buildR044DepthNote(snapshots: MarketSnapshot[], isWeekend: boolean): string {
+  if (!isWeekend || !snapshots.length) return "";
+
+  const infraIds  = ["bnb", "binancecoin", "sol", "solana"];
+  const utilityIds = ["xrp", "ripple", "ada", "cardano", "link", "chainlink"];
+
+  function matches(s: MarketSnapshot, ids: string[]): boolean {
+    const n   = s.name.toLowerCase();
+    const sym = s.symbol.toLowerCase().replace(/[^a-z]/g, "");
+    return ids.some(t => n.includes(t) || sym.includes(t));
+  }
+
+  const infraSnaps   = snapshots.filter(s => matches(s, infraIds));
+  const utilitySnaps = snapshots.filter(s => matches(s, utilityIds));
+  if (!infraSnaps.length || !utilitySnaps.length) return "";
+
+  const infraAvg   = infraSnaps.reduce((sum, s) => sum + (s.changePercent ?? 0), 0) / infraSnaps.length;
+  const utilityAvg = utilitySnaps.reduce((sum, s) => sum + (s.changePercent ?? 0), 0) / utilitySnaps.length;
+  const divergence = Math.abs(infraAvg - utilityAvg);
+  if (divergence <= 1.0) return "";
+
+  const sign = (v: number) => v >= 0 ? "+" : "";
+  const infraStr   = infraSnaps.map(s => `${s.name} ${sign(s.changePercent ?? 0)}${(s.changePercent ?? 0).toFixed(1)}%`).join(", ");
+  const utilityStr = utilitySnaps.map(s => `${s.name} ${sign(s.changePercent ?? 0)}${(s.changePercent ?? 0).toFixed(1)}%`).join(", ");
+
+  return `
+SECTOR DIVERGENCE DETECTED (r044 — MANDATORY STRUCTURAL DEPTH):
+Infrastructure tokens (${infraStr}) vs utility tokens (${utilityStr}) diverge by ${divergence.toFixed(1)}% — exceeds 1.0% threshold.
+Your analysis MUST document:
+  1. ORDER FLOW: Identify rejection levels and volume clusters for the diverging groups
+  2. HISTORICAL PRECEDENT: Reference comparable divergence magnitude and what followed
+  3. CATALYST ASSESSMENT: Identify regulatory, institutional, or technical driver
+Superficial percentage comparisons without this structural context constitute an r044 depth violation.
+`;
 }
 
 // ── r041 screening validation note ────────────────────────
