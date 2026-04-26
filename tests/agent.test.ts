@@ -235,3 +235,105 @@ describe("formatComplianceReport", () => {
     expect(result).toContain("3+ sessions in a row");
   });
 });
+
+// ── computeNoChangeStreak ─────────────────────────────────
+
+function makeStreakEntry(opts: {
+  ruleUpdates?: number;
+  resolvedSelfTaskCount?: number;
+  codeChangeCount?: number;
+  sessionNumber?: number;
+} = {}): JournalEntry {
+  return {
+    sessionNumber: opts.sessionNumber ?? 1,
+    date: "2026-04-26",
+    title: "Test session",
+    oracleSummary: "Test summary",
+    axiomSummary: "Test axiom",
+    ruleCount: 44,
+    systemPromptVersion: 110,
+    fullAnalysis: {
+      timestamp: new Date(),
+      sessionId: "test-1",
+      analysis: "Test analysis",
+      bias: { overall: "neutral", notes: "" },
+      confidence: 50,
+      setups: [],
+      keyLevels: [],
+    },
+    reflection: {
+      timestamp: new Date(),
+      sessionId: "test-1",
+      whatWorked: "Test",
+      whatFailed: "Test",
+      cognitiveBiases: [],
+      ruleUpdates: Array(opts.ruleUpdates ?? 0).fill({ ruleId: "r001", type: "modify", reason: "test" }),
+      newSystemPromptSections: "",
+      evolutionSummary: "Test",
+      resolvedSelfTaskCount: opts.resolvedSelfTaskCount ?? 0,
+      codeChangeCount: opts.codeChangeCount ?? 0,
+    },
+  } as any;
+}
+
+describe("computeNoChangeStreak", () => {
+  it("returns 0 for empty entries", async () => {
+    const { computeNoChangeStreak } = await import("../src/agent");
+    expect(computeNoChangeStreak([])).toBe(0);
+  });
+
+  it("returns 0 when latest entry has rule updates", async () => {
+    const { computeNoChangeStreak } = await import("../src/agent");
+    const entries = [makeStreakEntry({ ruleUpdates: 0 }), makeStreakEntry({ ruleUpdates: 2 })];
+    expect(computeNoChangeStreak(entries)).toBe(0);
+  });
+
+  it("counts consecutive zero-action sessions from most recent", async () => {
+    const { computeNoChangeStreak } = await import("../src/agent");
+    const entries = [
+      makeStreakEntry({ ruleUpdates: 1 }),
+      makeStreakEntry({ ruleUpdates: 0 }),
+      makeStreakEntry({ ruleUpdates: 0 }),
+      makeStreakEntry({ ruleUpdates: 0 }),
+    ];
+    expect(computeNoChangeStreak(entries)).toBe(3);
+  });
+
+  it("resets streak when latest entry has resolvedSelfTaskCount > 0", async () => {
+    const { computeNoChangeStreak } = await import("../src/agent");
+    const entries = [
+      makeStreakEntry({ ruleUpdates: 0 }),
+      makeStreakEntry({ ruleUpdates: 0 }),
+      makeStreakEntry({ ruleUpdates: 0, resolvedSelfTaskCount: 1 }),
+    ];
+    expect(computeNoChangeStreak(entries)).toBe(0);
+  });
+
+  it("resets streak when latest entry has codeChangeCount > 0", async () => {
+    const { computeNoChangeStreak } = await import("../src/agent");
+    const entries = [
+      makeStreakEntry({ ruleUpdates: 0 }),
+      makeStreakEntry({ ruleUpdates: 0 }),
+      makeStreakEntry({ ruleUpdates: 0, codeChangeCount: 1 }),
+    ];
+    expect(computeNoChangeStreak(entries)).toBe(0);
+  });
+
+  it("AXIOM parse failure (empty ruleUpdates, no tasks/code) counts toward streak", async () => {
+    const { computeNoChangeStreak } = await import("../src/agent");
+    const failEntry = makeStreakEntry({ ruleUpdates: 0, resolvedSelfTaskCount: 0, codeChangeCount: 0 });
+    (failEntry.reflection as any).whatWorked = "Unable to parse reflection";
+    const entries = [
+      makeStreakEntry({ ruleUpdates: 1 }),
+      failEntry,
+      makeStreakEntry({ ruleUpdates: 0 }),
+    ];
+    expect(computeNoChangeStreak(entries)).toBe(2);
+  });
+
+  it("returns 1 when only last entry has no action", async () => {
+    const { computeNoChangeStreak } = await import("../src/agent");
+    const entries = [makeStreakEntry({ ruleUpdates: 2 }), makeStreakEntry({ ruleUpdates: 0 })];
+    expect(computeNoChangeStreak(entries)).toBe(1);
+  });
+});

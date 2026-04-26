@@ -31,7 +31,7 @@ import { buildAnalyticsSummary }                                    from "./anal
 import { fetchRSSNews, formatRSSForPrompt }                          from "./rss";
 import { notifySessionComplete }                                     from "./notifications";
 import { MEMORY_DIR, ANALYSIS_RULES_PATH } from "./utils";
-import type { AnalysisRules, MarketSnapshot, OracleAnalysis, AxiomReflection, ForgeRequest, ForgeResult } from "./types";
+import type { AnalysisRules, MarketSnapshot, OracleAnalysis, AxiomReflection, ForgeRequest, ForgeResult, JournalEntry } from "./types";
 
 // ── Session ID generator ───────────────────────────────────
 
@@ -70,18 +70,29 @@ function buildPreviousSessionsContext(): string {
   return sessionLines + streakLine;
 }
 
-function getNoChangeStreak(): number {
-  const allEntries = loadAllJournalEntries();
+// Pure helper — exported for testing. Counts consecutive sessions from
+// most-recent where AXIOM took no concrete action (no rule updates,
+// no resolved self-tasks, no code changes). resolvedSelfTaskCount and
+// codeChangeCount were added to AxiomReflection so closing developer-fixed
+// tasks also breaks the stagnation streak.
+export function computeNoChangeStreak(entries: JournalEntry[]): number {
   let streak = 0;
-  for (let i = allEntries.length - 1; i >= 0; i--) {
-    const ruleUpdates = allEntries[i].reflection?.ruleUpdates ?? [];
-    if (ruleUpdates.length === 0) {
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const r = entries[i].reflection;
+    const ruleUpdates       = r?.ruleUpdates            ?? [];
+    const resolvedTasks     = (r as any)?.resolvedSelfTaskCount ?? 0;
+    const codeChanges       = (r as any)?.codeChangeCount       ?? 0;
+    if (ruleUpdates.length === 0 && resolvedTasks === 0 && codeChanges === 0) {
       streak++;
     } else {
       break;
     }
   }
   return streak;
+}
+
+function getNoChangeStreak(): number {
+  return computeNoChangeStreak(loadAllJournalEntries());
 }
 
 function getConsecutiveZeroSetupCount(): number {

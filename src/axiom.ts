@@ -106,6 +106,29 @@ function buildCodebaseContext(openSelfTasksText: string): string {
   return lines.join("\n");
 }
 
+// ── r011 compliance verdict for AXIOM ────────────────────
+// Computes an authoritative r011 verdict from the oracle output so AXIOM
+// doesn't have to guess by scanning narrative text. Prevents false-positive
+// violations when causal language is present but assumptions[] is populated.
+// Root cause of session #216: AXIOM flagged r011 violation despite 3 entries
+// in assumptions[].
+export function buildR011ComplianceNote(oracle: OracleAnalysis | undefined): string {
+  if (!oracle) return "";
+
+  const analysis = oracle.analysis ?? "";
+  const assumptions = oracle.assumptions ?? [];
+  const causalPattern = /\b(suggests?|indicates?|reflects?|driven by|due to)\b/i;
+  const hasCausal = causalPattern.test(analysis);
+
+  if (!hasCausal) {
+    return "\nr011 compliance: No causal attribution language detected — r011 not applicable this session.";
+  }
+  if (assumptions.length > 0) {
+    return `\nr011 compliance: COMPLIANT — causal language present AND assumptions[] populated with ${assumptions.length} entr${assumptions.length === 1 ? "y" : "ies"}. Do NOT flag r011 as a violation this session.`;
+  }
+  return "\nr011 compliance: VIOLATION — causal language detected but assumptions[] is empty. This is a genuine r011 failure.";
+}
+
 // ── Prompt Builder ────────────────────────────────────────
 
 export function buildAxiomPrompt(
@@ -235,6 +258,7 @@ ${(() => {
   }
   return lines.join("\n");
 })()}
+${buildR011ComplianceNote(oracle)}
 
 IMPORTANT ANTI-REPETITION RULES:
 - If a CONFIDENCE ADJUSTMENT NOTICE appeared above, you MUST NOT treat the pipeline enforcement as a rule execution failure or "output mechanism corruption". Do not mention confidence methodology inconsistency in whatFailed. Do not modify r014 or r032.
@@ -263,8 +287,8 @@ ${openSelfTasksText ? openSelfTasksText : "### My open self-tasks: none."}
 ${setupOutcomes ? "### Setup outcome tracking:\n" + setupOutcomes : ""}
 
 ${noChangeStreak >= 3 ? `### STAGNATION ALERT
-You have not modified any rules in ${noChangeStreak} consecutive sessions.
-Your self-critiques are repeating without action.${openSelfTasksText ? ` You have open self-tasks listed above that you have not acted on — generating codeChanges or resolvedSelfTasks for those tasks IS the required concrete action this session. Do not add system prompt text. Do not open new tasks. Act on the existing ones.` : ` This session, you MUST propose at least ONE concrete change — a rule weight adjustment, wording refinement, new rule, or code change.`} Reflection without action is not evolution.
+You have taken no concrete action in ${noChangeStreak} consecutive sessions (no ruleUpdates, resolvedSelfTasks, or codeChanges).
+Your self-critiques are repeating without action.${openSelfTasksText ? ` Required action this session — pick ONE: (a) add or modify a rule (ruleUpdates), (b) generate a code change (codeChanges), or (c) close stale self-tasks via resolvedSelfTasks. If a self-task targets a problem already fixed by a developer PR, resolve it with the PR number — that IS concrete action. Do not open new tasks. Do not add system prompt text.` : ` This session, you MUST propose at least ONE concrete change — a rule weight adjustment, wording refinement, new rule, or code change.`} Any of ruleUpdates, resolvedSelfTasks, or codeChanges will suppress this alert next session. Reflection without action is not evolution.
 ` : ""}${consecutiveZeroSetupCount >= 3 ? `### FORGE ESCALATION — CRITICAL (${consecutiveZeroSetupCount} consecutive sessions with zero setups)
 NEXUS has produced ZERO trading setups for ${consecutiveZeroSetupCount} consecutive sessions despite confidence > 50%.
 Rule modifications have NOT resolved this execution gap.
@@ -641,6 +665,8 @@ export async function runAxiomReflection(
     ruleUpdates:             [...(parsed.ruleUpdates ?? []), ...newRuleEntries],
     newSystemPromptSections: parsed.systemPromptAdditions ?? "",
     evolutionSummary:        parsed.evolutionSummary ?? "",
+    resolvedSelfTaskCount:   (parsed.resolvedSelfTasks ?? []).length,
+    codeChangeCount:         (parsed.codeChanges ?? []).length,
   };
 
   await evolveMemory(currentRules, currentSystemPrompt, parsed, sessionNumber);

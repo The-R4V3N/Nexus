@@ -75,6 +75,8 @@ export interface AxiomReflection {
   ruleUpdates: RuleUpdate[];
   newSystemPromptSections: string;
   evolutionSummary: string;
+  resolvedSelfTaskCount: number;
+  codeChangeCount: number;
 }
 
 export interface RuleUpdate {
