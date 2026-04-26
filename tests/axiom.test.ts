@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { buildAxiomPrompt, parseAxiomResponse, handleSelfTasks, isThemeDuplicate, sanitizeRulesText } from "../src/axiom";
+import { buildAxiomPrompt, parseAxiomResponse, handleSelfTasks, isThemeDuplicate, sanitizeRulesText, buildR011ComplianceNote } from "../src/axiom";
 import type { OracleAnalysis, AnalysisRules } from "../src/types";
 
 function makeOracle(overrides: Partial<OracleAnalysis> = {}): OracleAnalysis {
@@ -726,5 +726,67 @@ describe("parseAxiomResponse field-boundary salvage", () => {
     // Should get one of the two sentinel values (parse failure or validation failure)
     const sentinels = ["Unable to parse reflection", "Validation failed"];
     expect(sentinels).toContain(result.whatWorked);
+  });
+});
+
+// ── buildR011ComplianceNote ───────────────────────────────
+
+describe("buildR011ComplianceNote", () => {
+  it("returns empty string when oracle is undefined", () => {
+    expect(buildR011ComplianceNote(undefined)).toBe("");
+  });
+
+  it("returns not-applicable note when no causal language present", () => {
+    const oracle = makeOracle({ analysis: "BTC held 77k. ETH tested 2300. Tight ranges across crypto.", assumptions: [] });
+    const note = buildR011ComplianceNote(oracle);
+    expect(note).toMatch(/not applicable|no causal/i);
+  });
+
+  it("returns COMPLIANT when causal language present AND assumptions populated", () => {
+    const oracle = makeOracle({
+      analysis: "BTC suggests underlying strength with infrastructure tokens leading.",
+      assumptions: ["Infrastructure token outperformance suggests risk-on — unconfirmed from price data alone"],
+    });
+    const note = buildR011ComplianceNote(oracle);
+    expect(note).toMatch(/COMPLIANT/);
+    expect(note).toMatch(/Do NOT flag/i);
+  });
+
+  it("COMPLIANT note includes assumptions count", () => {
+    const oracle = makeOracle({
+      analysis: "NASDAQ indicates defensive rotation driven by DXY strength.",
+      assumptions: ["DXY strength driving NASDAQ weakness — unconfirmed", "Defensive rotation inferred from cross-asset correlation"],
+    });
+    const note = buildR011ComplianceNote(oracle);
+    expect(note).toMatch(/2 entr/);
+  });
+
+  it("returns VIOLATION when causal language present AND assumptions empty", () => {
+    const oracle = makeOracle({
+      analysis: "EUR/USD suggests bearish continuation driven by ECB policy.",
+      assumptions: [],
+    });
+    const note = buildR011ComplianceNote(oracle);
+    expect(note).toMatch(/VIOLATION/);
+  });
+
+  it("detects 'indicates' as causal language", () => {
+    const oracle = makeOracle({ analysis: "This indicates a trend reversal.", assumptions: [] });
+    expect(buildR011ComplianceNote(oracle)).toMatch(/VIOLATION/);
+  });
+
+  it("detects 'reflects' as causal language", () => {
+    const oracle = makeOracle({ analysis: "The move reflects macro uncertainty.", assumptions: [] });
+    expect(buildR011ComplianceNote(oracle)).toMatch(/VIOLATION/);
+  });
+
+  it("detects 'driven by' as causal language", () => {
+    const oracle = makeOracle({ analysis: "Rally driven by risk-on sentiment.", assumptions: [] });
+    expect(buildR011ComplianceNote(oracle)).toMatch(/VIOLATION/);
+  });
+
+  it("detects 'due to' as causal language", () => {
+    const oracle = makeOracle({ analysis: "Weakness due to USD strength.", assumptions: [] });
+    expect(buildR011ComplianceNote(oracle)).toMatch(/VIOLATION/);
   });
 });
