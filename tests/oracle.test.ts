@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation, reclassifyOtherSetups, buildR011AssumptionNote } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation, reclassifyOtherSetups, buildR011AssumptionNote, buildR044DepthNote } from "../src/oracle";
 import { resolveConfidence } from "../src/validate";
 import type { MarketSnapshot } from "../src/types";
 
@@ -1804,5 +1804,65 @@ describe("buildR011AssumptionNote", () => {
 
   it("mentions the assumptions array explicitly", () => {
     expect(buildR011AssumptionNote()).toMatch(/assumptions/i);
+  });
+});
+
+// ── buildR044DepthNote ────────────────────────────────────
+
+function makeCryptoSnap(name: string, symbol: string, changePercent: number): MarketSnapshot {
+  return { symbol, name, category: "crypto", price: 100, previousClose: 95, change: 5, changePercent, high: 105, low: 90, timestamp: new Date() };
+}
+
+describe("buildR044DepthNote", () => {
+  const infraSnaps = [
+    makeCryptoSnap("BNB", "BNB-USD", 3.0),  // infra avg = 2.5%
+    makeCryptoSnap("Solana", "SOL-USD", 2.0),
+  ];
+  const utilitySnaps = [
+    makeCryptoSnap("XRP", "XRP-USD", 1.0),   // utility avg = 1.0%
+    makeCryptoSnap("Cardano", "ADA-USD", 1.1),
+    makeCryptoSnap("Chainlink", "LINK-USD", 0.9),
+  ];
+  const allSnaps = [...infraSnaps, ...utilitySnaps];
+
+  it("returns empty string when not a weekend session", () => {
+    expect(buildR044DepthNote(allSnaps, false)).toBe("");
+  });
+
+  it("returns empty string when snapshots array is empty", () => {
+    expect(buildR044DepthNote([], true)).toBe("");
+  });
+
+  it("returns empty string when divergence is exactly 1.0%", () => {
+    // infra avg 2.0%, utility avg 1.0% → divergence = 1.0% (not > 1.0%)
+    const infra = [makeCryptoSnap("BNB", "BNB-USD", 2.0), makeCryptoSnap("Solana", "SOL-USD", 2.0)];
+    const util  = [makeCryptoSnap("XRP", "XRP-USD", 1.0), makeCryptoSnap("Cardano", "ADA-USD", 1.0), makeCryptoSnap("Chainlink", "LINK-USD", 1.0)];
+    expect(buildR044DepthNote([...infra, ...util], true)).toBe("");
+  });
+
+  it("returns empty string when divergence is below 1.0%", () => {
+    const infra = [makeCryptoSnap("BNB", "BNB-USD", 1.5), makeCryptoSnap("Solana", "SOL-USD", 1.5)];
+    const util  = [makeCryptoSnap("XRP", "XRP-USD", 1.0), makeCryptoSnap("Cardano", "ADA-USD", 1.0), makeCryptoSnap("Chainlink", "LINK-USD", 1.0)];
+    expect(buildR044DepthNote([...infra, ...util], true)).toBe("");
+  });
+
+  it("returns non-empty note when divergence exceeds 1.0% on a weekend session (1.5% case)", () => {
+    // infra avg 2.5%, utility avg 1.0% → divergence = 1.5%
+    const note = buildR044DepthNote(allSnaps, true);
+    expect(note.length).toBeGreaterThan(0);
+  });
+
+  it("note references r044", () => {
+    expect(buildR044DepthNote(allSnaps, true)).toMatch(/r044/i);
+  });
+
+  it("note requires order flow and structural context", () => {
+    const note = buildR044DepthNote(allSnaps, true).toLowerCase();
+    expect(note).toMatch(/order flow|volume cluster|rejection level/);
+  });
+
+  it("note requires catalyst assessment", () => {
+    const note = buildR044DepthNote(allSnaps, true).toLowerCase();
+    expect(note).toMatch(/catalyst/);
   });
 });

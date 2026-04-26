@@ -2322,3 +2322,25 @@ describe("validateOracleOutput R:R implausibility cap at 5.0", () => {
     expect(result.warnings.some((w) => w.includes("implausible") && w.includes("RR"))).toBe(true);
   });
 });
+
+// ── r014 vs r031 rule conflict resolution ────────────────
+
+import * as fs from "fs";
+import { ANALYSIS_RULES_PATH } from "../src/utils";
+
+describe("r014 vs r031 rule conflict resolved", () => {
+  it("r014 does not contain an active hard cap at 50% that contradicts r031", () => {
+    const rules = JSON.parse(fs.readFileSync(ANALYSIS_RULES_PATH, "utf-8"));
+    const r014 = rules.rules.find((r: any) => r.id === "r014");
+    expect(r014).toBeDefined();
+    expect(r014.description).not.toMatch(/Hard cap: maximum confidence 50%/);
+  });
+
+  it("r031 remains active with its 65% calibration cap", () => {
+    const rules = JSON.parse(fs.readFileSync(ANALYSIS_RULES_PATH, "utf-8"));
+    const r031 = rules.rules.find((r: any) => r.id === "r031");
+    expect(r031).toBeDefined();
+    expect(r031.disabled).not.toBe(true);
+    expect(r031.description).toMatch(/65%/);
+  });
+});
