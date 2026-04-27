@@ -790,3 +790,73 @@ describe("buildR011ComplianceNote", () => {
     expect(buildR011ComplianceNote(oracle)).toMatch(/VIOLATION/);
   });
 });
+
+describe("parseAxiomResponse — r011 false-positive suppression", () => {
+  const rules = makeRules();
+
+  function makeAxiomJson(whatFailed: string, selfTasks: any[] = []): string {
+    return JSON.stringify({
+      whatWorked: "Good screening",
+      whatFailed,
+      cognitiveBiases: [],
+      evolutionSummary: "Learned something",
+      ruleUpdates: [],
+      newRules: [],
+      systemPromptAdditions: "",
+      newSelfTasks: selfTasks,
+      resolvedSelfTasks: [],
+      codeChanges: [],
+    });
+  }
+
+  it("strips r011 violation sentence from whatFailed when oracle.assumptions is populated", () => {
+    const oracle = makeOracle({ assumptions: ["Iran tensions driving oil", "USD strength from safe haven"], analysis: "Oil suggests geopolitical catalyst." });
+    const result = parseAxiomResponse(makeAxiomJson("Systematic r011 causal attribution violation persists."), 1, rules, oracle);
+    expect(result.whatFailed).not.toMatch(/r011/i);
+  });
+
+  it("preserves non-r011 content in whatFailed after r011 suppression", () => {
+    const oracle = makeOracle({ assumptions: ["Iran geopolitical attribution"], analysis: "This indicates a move." });
+    const result = parseAxiomResponse(makeAxiomJson("r011 causal attribution failure. Also missed 4 setups in forex."), 1, rules, oracle);
+    expect(result.whatFailed).not.toMatch(/r011/i);
+    expect(result.whatFailed).toMatch(/4 setups/i);
+  });
+
+  it("does NOT suppress when oracle.assumptions is empty (genuine violation)", () => {
+    const oracle = makeOracle({ assumptions: [], analysis: "Oil indicates geopolitical risk." });
+    const result = parseAxiomResponse(makeAxiomJson("r011 causal attribution violation — assumptions array empty."), 1, rules, oracle);
+    expect(result.whatFailed).toMatch(/r011/i);
+  });
+
+  it("does NOT suppress when oracle is undefined", () => {
+    const result = parseAxiomResponse(makeAxiomJson("r011 causal attribution violation."), 1, rules, undefined);
+    expect(result.whatFailed).toMatch(/r011/i);
+  });
+
+  it("does NOT modify whatFailed when r011 is not mentioned", () => {
+    const oracle = makeOracle({ assumptions: ["some assumption"], analysis: "This suggests a move." });
+    const result = parseAxiomResponse(makeAxiomJson("Missed EUR/USD setup. Confidence too low."), 1, rules, oracle);
+    expect(result.whatFailed).toMatch(/EUR\/USD/);
+  });
+
+  it("suppresses r011 self-task when assumptions are populated", () => {
+    const oracle = makeOracle({ assumptions: ["some attribution"], analysis: "This reflects risk sentiment." });
+    const selfTask = { title: "Fix r011 causal attribution violations", body: "r011 keeps being violated", category: "rule-gap", priority: "high" };
+    const result = parseAxiomResponse(makeAxiomJson("r011 violation detected.", [selfTask]), 1, rules, oracle);
+    const hasr011Task = (result.newSelfTasks ?? []).some((t: any) => /r011|causal attribution/i.test(t.title ?? ""));
+    expect(hasr011Task).toBe(false);
+  });
+
+  it("keeps non-r011 self-tasks when suppressing r011", () => {
+    const oracle = makeOracle({ assumptions: ["some attribution"], analysis: "This suggests a move." });
+    const tasks = [
+      { title: "Fix r011 causal attribution", body: "r011 issue description", category: "rule-gap", priority: "high" },
+      { title: "Improve setup coverage for forex", body: "forex coverage description", category: "rule-gap", priority: "medium" },
+    ];
+    const result = parseAxiomResponse(makeAxiomJson("r011 violation. Also forex coverage gap.", tasks), 1, rules, oracle);
+    const hasr011Task = (result.newSelfTasks ?? []).some((t: any) => /r011/i.test(t.title ?? ""));
+    const hasForexTask = (result.newSelfTasks ?? []).some((t: any) => /forex/i.test(t.title ?? ""));
+    expect(hasr011Task).toBe(false);
+    expect(hasForexTask).toBe(true);
+  });
+});
