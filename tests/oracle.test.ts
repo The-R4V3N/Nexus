@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation, reclassifyOtherSetups, buildR011AssumptionNote, buildR044DepthNote } from "../src/oracle";
+import { buildR029StopNote, buildWeekdayScreeningTemplate, buildR041ScreeningNote, computeOracleConfidence, buildR039R040CrossAssetNote, applyR039R040Penalty, enforceR041ScreeningValidation, reclassifyOtherSetups, buildR011AssumptionNote, buildR044DepthNote, buildLargeMoverCoverageNote } from "../src/oracle";
 import { resolveConfidence } from "../src/validate";
 import type { MarketSnapshot } from "../src/types";
 
@@ -1864,5 +1864,75 @@ describe("buildR044DepthNote", () => {
   it("note requires catalyst assessment", () => {
     const note = buildR044DepthNote(allSnaps, true).toLowerCase();
     expect(note).toMatch(/catalyst/);
+  });
+});
+
+describe("buildLargeMoverCoverageNote", () => {
+  function makeNamedSnap(name: string, changePercent: number, category = "forex"): MarketSnapshot {
+    return { symbol: "X", name, category, price: 100, previousClose: 100, change: 0, changePercent, high: 101, low: 99, timestamp: new Date() };
+  }
+
+  it("returns empty string when confidence < 55", () => {
+    const snaps = [makeNamedSnap("Crude Oil", 4.0)];
+    expect(buildLargeMoverCoverageNote(snaps, 54)).toBe("");
+  });
+
+  it("returns empty string when no instrument moved >= 3%", () => {
+    const snaps = [makeNamedSnap("EUR/USD", 2.99), makeNamedSnap("Gold", -2.5)];
+    expect(buildLargeMoverCoverageNote(snaps, 60)).toBe("");
+  });
+
+  it("returns note when one instrument moved exactly 3% (boundary)", () => {
+    const note = buildLargeMoverCoverageNote([makeNamedSnap("Silver", 3.0)], 55);
+    expect(note.length).toBeGreaterThan(0);
+  });
+
+  it("includes the instrument name in the note", () => {
+    const note = buildLargeMoverCoverageNote([makeNamedSnap("Crude Oil", 3.44)], 58);
+    expect(note).toMatch(/Crude Oil/);
+  });
+
+  it("includes the move percentage in the note", () => {
+    const note = buildLargeMoverCoverageNote([makeNamedSnap("Silver", -3.84)], 58);
+    expect(note).toMatch(/3\.8/);
+  });
+
+  it("lists multiple large movers when several qualify", () => {
+    const snaps = [
+      makeNamedSnap("Silver", -3.84),
+      makeNamedSnap("Platinum", -3.83),
+      makeNamedSnap("Ripple", -3.37),
+    ];
+    const note = buildLargeMoverCoverageNote(snaps, 58);
+    expect(note).toMatch(/Silver/);
+    expect(note).toMatch(/Platinum/);
+    expect(note).toMatch(/Ripple/);
+  });
+
+  it("does NOT include instruments that moved less than 3%", () => {
+    const snaps = [makeNamedSnap("EUR/USD", 2.99), makeNamedSnap("Gold", 3.5)];
+    const note = buildLargeMoverCoverageNote(snaps, 58);
+    expect(note).not.toMatch(/EUR\/USD/);
+    expect(note).toMatch(/Gold/);
+  });
+
+  it("requires explicit written rejection when setup not viable", () => {
+    const note = buildLargeMoverCoverageNote([makeNamedSnap("Crude Oil", 3.5)], 60).toLowerCase();
+    expect(note).toMatch(/rejection|rejected|reject|written/);
+  });
+
+  it("requires R:R >= 1.3 in setup or rejection reason", () => {
+    const note = buildLargeMoverCoverageNote([makeNamedSnap("Gold", -4.0)], 60);
+    expect(note).toMatch(/1\.3/);
+  });
+
+  it("handles negative (bearish) large moves correctly", () => {
+    const note = buildLargeMoverCoverageNote([makeNamedSnap("Bitcoin", -5.0)], 60);
+    expect(note).toMatch(/Bitcoin/);
+    expect(note.length).toBeGreaterThan(0);
+  });
+
+  it("returns empty when snapshots array is empty", () => {
+    expect(buildLargeMoverCoverageNote([], 60)).toBe("");
   });
 });
