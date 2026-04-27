@@ -279,6 +279,7 @@ ${weekendTemplate}
   const executionForceNote = !isWeekend ? buildExecutionForceNote(parsed.analysis ?? "", rawConf) : "";
   const crossAssetNote = !isWeekend ? buildR039R040CrossAssetNote(snapshots, rawConf) : "";
   const oilEnforcementNote = !isWeekend ? buildOilEnforcementNote(snapshots, rawConf) : "";
+  const largeMoverNote = buildLargeMoverCoverageNote(snapshots, rawConf);
   const minSetupNote = buildMinSetupNote(rawConf);
   const weekdayTemplate = !isWeekend ? buildWeekdayScreeningTemplate(snapshots, rawConf) : "";
   const minNonNeutral = rawConf >= 60 ? 4 : 3;
@@ -322,7 +323,7 @@ RULES:
 - Weekend crypto sessions: at least 2 setups from available crypto instruments regardless of confidence
 - Every setup MUST have: entry, stop, target, RR, timeframe
 - ENTRY: nearest support/resistance, session high/low, or key level
-- STOP: beyond the next structural level, or 1x ATR from entry${r029Note}${crossAssetNote}${oilEnforcementNote}
+- STOP: beyond the next structural level, or 1x ATR from entry${r029Note}${crossAssetNote}${oilEnforcementNote}${largeMoverNote}
 - TARGET: next liquidity level, psychological number, or swing point
 - RR must be > 1.3 \u2014 do not include setups with risk exceeding reward${rrSelfCheckNote}${executionForceNote}
 - Include instrument, type, direction, description, and invalidation
@@ -1031,6 +1032,32 @@ At confidence ${confidence}%, you MUST include one of the following for Crude Oi
       - "Conflicting structure: [LEVEL] identified but higher timeframe trend invalidates setup"
 Omitting Crude Oil without a written rejection is an execution gap — exceptional moves require explicit evaluation.
 `;
+}
+
+// ── Large mover coverage enforcement ──────────────────────
+// When any instrument moves ≥3% AND confidence ≥55%, ORACLE must explicitly
+// evaluate that instrument — either construct a complete setup (R:R ≥1.3) or
+// provide a written rejection with exact price math.
+// Root cause: sessions #217-#220 had oil +3.44%, silver -3.84%, platinum -3.83%,
+// XRP -3.37% all left as null/neutral without written rejections, producing only
+// 1 valid setup at 58% confidence and triggering r026/r039/r041 violations.
+export function buildLargeMoverCoverageNote(snapshots: MarketSnapshot[], confidence: number): string {
+  if (confidence < 55) return "";
+  const largeMovers = snapshots.filter(s => Math.abs(s.changePercent ?? 0) >= 3);
+  if (largeMovers.length === 0) return "";
+
+  const lines: string[] = [
+    "",
+    `LARGE MOVER COVERAGE REQUIREMENT (confidence ${confidence}% — MANDATORY):`,
+    `The following instruments moved ≥3% this session. Each MUST have either a complete setup OR a written rejection:`,
+  ];
+  for (const s of largeMovers) {
+    const pct = (s.changePercent ?? 0);
+    const sign = pct > 0 ? "+" : "";
+    lines.push(`  • ${s.name}: ${sign}${pct.toFixed(2)}% — provide (a) entry/stop/target/RR ≥1.3 setup, OR (b) written rejection: "Rejected: entry [X], stop [Y], nearest target [Z] gives R:R [W] — below 1.3 minimum"`);
+  }
+  lines.push(`Returning null/neutral for large movers without a written rejection is an execution failure.`);
+  return lines.join("\n");
 }
 
 // ── RR self-check enforcement ──────────────────────────────
