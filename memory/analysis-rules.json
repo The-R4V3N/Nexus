@@ -361,10 +361,18 @@
       "weight": 8,
       "addedSession": 211,
       "lastModifiedSession": 211
+    },
+    {
+      "id": "r045",
+      "category": "icr_classification",
+      "description": "When confluence factors include trend alignment, structure breaks, or key levels, classify as specific ICT patterns: trend+structure = MSS, liquidity+key levels = Liquidity Sweep, gap alignment = FVG, rejection zones = OB. 'Other' only when genuinely no ICT confluence present.",
+      "weight": 9,
+      "addedSession": 221,
+      "lastModifiedSession": 221
     }
   ],
-  "version": 110,
-  "lastUpdated": "2026-04-25T00:18:32.503Z",
+  "version": 111,
+  "lastUpdated": "2026-04-28T13:39:10.210Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -372,5 +380,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #211"
+  "sessionNotes": "Last updated: Session #221"
 }
