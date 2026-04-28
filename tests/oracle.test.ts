@@ -1936,3 +1936,51 @@ describe("buildLargeMoverCoverageNote", () => {
     expect(buildLargeMoverCoverageNote([], 60)).toBe("");
   });
 });
+
+describe("reclassifyOtherSetups — session #221 regression patterns", () => {
+  function makeOther(instrument: string, description: string): any {
+    return { instrument, type: "Other", direction: "bearish", description, entry: 1.17, stop: 1.18, target: 1.16, RR: 1.5, timeframe: "4H" };
+  }
+
+  it("reclassifies EUR/USD 'strength continuation' to MSS (session #221 pattern)", () => {
+    const setup = makeOther("EUR/USD", "USD strength continuation amid broad DXY surge, targeting 1.1650 support breakdown");
+    const [result] = reclassifyOtherSetups([setup]);
+    expect(result.type).toBe("MSS");
+  });
+
+  it("reclassifies Ethereum 'targeting support' to PDH/PDL (session #221 pattern)", () => {
+    const setup = makeOther("Ethereum", "Following BTC weakness, targeting 2200 support with crypto sector risk-off");
+    const [result] = reclassifyOtherSetups([setup]);
+    expect(result.type).toBe("PDH/PDL");
+  });
+
+  it("reclassifies Gold 'targeting support breakdown' to PDH/PDL (session #221 pattern)", () => {
+    const setup = makeOther("Gold", "Risk-on precious metals selloff -2.47% targeting 4550 support breakdown amid USD strength");
+    const [result] = reclassifyOtherSetups([setup]);
+    expect(result.type).toBe("PDH/PDL");
+  });
+
+  it("reclassifies 'weakness continuation' to MSS", () => {
+    const setup = makeOther("GBP/USD", "GBP weakness continuation below 1.3450 structure break targeting 1.34");
+    const [result] = reclassifyOtherSetups([setup]);
+    expect(result.type).toBe("MSS");
+  });
+
+  it("reclassifies 'targeting resistance with momentum continuation' to MSS (momentum takes priority)", () => {
+    const setup = makeOther("USD/CHF", "USD strength targeting 0.80 resistance with momentum continuation");
+    const [result] = reclassifyOtherSetups([setup]);
+    expect(result.type).toBe("MSS");
+  });
+
+  it("reclassifies 'support breakdown' to PDH/PDL", () => {
+    const setup = makeOther("Silver", "Precious metals support breakdown below 30.00, targeting 29.50");
+    const [result] = reclassifyOtherSetups([setup]);
+    expect(result.type).toBe("PDH/PDL");
+  });
+
+  it("does not reclassify already-classified setups", () => {
+    const setup = { ...makeOther("Gold", "targeting 4550 support"), type: "OB" };
+    const [result] = reclassifyOtherSetups([setup]);
+    expect(result.type).toBe("OB");
+  });
+});
