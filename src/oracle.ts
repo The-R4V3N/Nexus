@@ -802,8 +802,13 @@ export function reclassifyOtherSetups(setups: any[]): any[] {
     { type: "OB",             patterns: /order\s+block|\bob\b|mitigation\s+block|institutional\s+(level|order)/i },
     { type: "CISD",           patterns: /\bcisd\b|change\s+in\s+state\s+of\s+delivery|displacement\s+candle/i },
     { type: "Liquidity Sweep",patterns: /liquidity\s+sweep|stop\s+hunt|liquidity\s+grab|equal\s+highs|equal\s+lows|sell.?side\s+liquidity|buy.?side\s+liquidity|oversold.{0,100}(bounce|reversal|reversion|recovery)|(extreme|severe).{0,20}(decline|collapse|drop|fall).{0,60}(bounce|reversal)|(supply|demand)\s+shock.{0,20}(exhaustion|bounce|reversal)/i },
-    { type: "PDH/PDL",        patterns: /\bpdh\b|\bpdl\b|previous\s+day\s+high|previous\s+day\s+low|prior\s+day\s+high|prior\s+day\s+low|session\s+(high|low)|psychological\s+(level|support|number)|(approaching|testing|near|rejection\s+from|rejecting)\s+.{0,30}(key\s+|major\s+|critical\s+|psychological\s+)?(resistance|support)|rejection\s+from\s+.{0,20}(high|low)\b|(resistance|support).{0,30}being\s+tested/i },
-    { type: "MSS",            patterns: /market\s+structure\s+shift|structure\s+(break|shift)|structural\s+break|\bmss\b|\bmomentum\b|breakout|breaking\s+(above|below)|break\s+(above|below)/i },
+    // High-priority MSS: continuation/momentum patterns must fire BEFORE PDH/PDL
+    // so "USD strength continuation ... targeting support" goes to MSS, not PDH/PDL.
+    // Also catches "\bmomentum\b" descriptions like "driving momentum above X, targeting Y resistance"
+    // before PDH/PDL's "targeting ... resistance" can steal them.
+    { type: "MSS",            patterns: /\b(momentum|strength|weakness|trend)\s+continuation\b|\bmomentum\b/i },
+    { type: "PDH/PDL",        patterns: /\bpdh\b|\bpdl\b|previous\s+day\s+high|previous\s+day\s+low|prior\s+day\s+high|prior\s+day\s+low|session\s+(high|low)|psychological\s+(level|support|number)|(approaching|testing|near|rejection\s+from|rejecting)\s+.{0,30}(key\s+|major\s+|critical\s+|psychological\s+)?(resistance|support)|rejection\s+from\s+.{0,20}(high|low)\b|(resistance|support).{0,30}being\s+tested|targeting.{0,40}(support|resistance)|support\s+breakdown|resistance\s+breakdown/i },
+    { type: "MSS",            patterns: /market\s+structure\s+shift|structure\s+(break|shift)|structural\s+break|\bmss\b|breakout|breaking\s+(above|below)|break\s+(above|below)/i },
   ];
 
   return setups.map(setup => {
