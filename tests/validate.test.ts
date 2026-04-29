@@ -1948,6 +1948,36 @@ describe("applySetupCountPenalty", () => {
     // Actually weekend always requires 2, so this should penalize
     expect(result.penalized).toBe(35);
   });
+
+  // ── regression: #49 — 55-65% confidence with <3 setups after r029 filtering ──
+
+  it("penalizes 2 setups at 57% confidence (session #222 post-r029-filter scenario)", () => {
+    // Session #222: ORACLE produced 3 setups (NASDAQ, DAX, Crude Oil).
+    // computeOracleConfidence saw 3 setups → no penalty at 57%.
+    // filterNonCompliantSetups removed Crude Oil (0.82% stop, oil moved 3.6%).
+    // After filtering: 2 setups remain, confidence should be re-penalised.
+    // This test verifies the penalty function returns the right value for the
+    // post-filter inputs (agent.ts re-application is the integration fix).
+    const result = applySetupCountPenalty(57, 2, false);
+    expect(result.penalized).toBe(47);
+    expect(result.reason).not.toBeNull();
+    expect(result.reason).toMatch(/2\/3/);
+  });
+
+  it("penalizes 2 setups at 58% confidence (session #217 post-r029-filter scenario)", () => {
+    const result = applySetupCountPenalty(58, 2, false);
+    expect(result.penalized).toBe(48);
+    expect(result.reason).not.toBeNull();
+  });
+
+  it("does NOT double-penalize already-penalised confidence (≤50% has no setup requirement)", () => {
+    // If confidence was already reduced to 47% by a prior penalty, re-calling
+    // applySetupCountPenalty(47, 2, false) should return no further penalty
+    // because 47 ≤ 50 means minSetups = 0.
+    const result = applySetupCountPenalty(47, 2, false);
+    expect(result.penalized).toBe(47);
+    expect(result.reason).toBeNull();
+  });
 });
 
 // ── r031: confidence cap enforcement ─────────────────────────
