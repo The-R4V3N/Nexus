@@ -230,10 +230,14 @@ ${(() => {
   // Per-setup validation results so AXIOM sees explicit COMPLIANT/VIOLATION verdicts
   const setups = oracle.setups ?? [];
   const setupLines: string[] = [];
+  // Track which volatile instruments actually have a setup so we can flag the rest
+  const instrumentsWithSetup = new Set<string>();
   for (const setup of setups) {
     if (typeof (setup as any).entry !== "number" || typeof (setup as any).stop !== "number") continue;
     const instrKey = ((setup as any).instrument ?? "").toLowerCase();
     const instrKeyNorm = instrKey.replace(/[^a-z0-9]/g, "");
+    instrumentsWithSetup.add(instrKey);
+    instrumentsWithSetup.add(instrKeyNorm);
     const instrMove = volatilityMap.get(instrKey) ?? volatilityMap.get(instrKeyNorm) ?? 0;
     const stopPct = (Math.abs((setup as any).entry - (setup as any).stop) / (setup as any).entry) * 100;
     let verdict: string;
@@ -250,11 +254,20 @@ ${(() => {
     }
     setupLines.push(`  - ${(setup as any).instrument}: stop ${stopPct.toFixed(2)}% — ${verdict}`);
   }
+  // Explicitly mark volatile instruments that have NO setup — prevents AXIOM from inventing violations
+  for (const s of [...extreme, ...moderate]) {
+    const key = s.name.toLowerCase();
+    const keyNorm = key.replace(/[^a-z0-9]/g, "");
+    if (!instrumentsWithSetup.has(key) && !instrumentsWithSetup.has(keyNorm)) {
+      setupLines.push(`  - ${s.name}: NO SETUP this session — r029 not applicable (moved ${Math.abs(s.changePercent ?? 0).toFixed(1)}% but no setup was constructed)`);
+    }
+  }
   if (setupLines.length) {
     lines.push("");
     lines.push("r029 validation per setup (authoritative — do not contradict these verdicts):");
     lines.push(...setupLines);
     lines.push("Stops marked COMPLIANT are NOT r029 violations. Do NOT report them as failures.");
+    lines.push("Instruments marked NO SETUP have no stop to validate — do NOT invent r029 violations for them.");
   }
   return lines.join("\n");
 })()}
@@ -546,7 +559,8 @@ export function parseAxiomResponse(
   }
 
   // r029 false-positive suppression: if AXIOM complained about r029/stop violations
-  // but all setups are actually per-instrument compliant, remove the injected self-task.
+  // but all setups are actually per-instrument compliant, remove the injected self-task
+  // AND scrub the hallucinated complaint from whatFailed so it doesn't pollute the journal.
   // This prevents repeated false alerts when AXIOM applies global-max reasoning despite
   // the per-instrument compliance verdicts injected into its prompt.
   if (oracle && /r029|stop distance|stop.*violation|violation.*stop/i.test(rawParsed.whatFailed ?? "")) {
@@ -555,6 +569,15 @@ export function parseAxiomResponse(
       parsed.newSelfTasks = (parsed.newSelfTasks ?? []).filter(
         (t: any) => t.category !== "rule-gap"
       );
+      // Also scrub the r029 hallucination from whatFailed sentence-by-sentence,
+      // preserving any non-r029 content (e.g. "Single asset class coverage only.")
+      if (parsed.whatFailed) {
+        parsed.whatFailed = parsed.whatFailed
+          .split(/(?<=[.!?])\s+/)
+          .filter((sentence: string) => !/r029|stop distance|stop.*violation|violation.*stop/i.test(sentence))
+          .join(" ")
+          .trim();
+      }
       console.warn("  ⚠ Axiom: r029 false positive suppressed — AXIOM cited stop violations but all setups are per-instrument compliant");
     }
   }
