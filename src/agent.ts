@@ -26,7 +26,7 @@ import {
   loadAllJournalEntries,
   saveJournalEntry,
 } from "./journal";
-import { validateOracleOutput, validateWeekendCryptoScreening, filterNonCompliantSetups, filterR036Setups, logFailure, loadRecentFailures } from "./validate";
+import { validateOracleOutput, validateWeekendCryptoScreening, filterNonCompliantSetups, filterR036Setups, logFailure, loadRecentFailures, applySetupCountPenalty } from "./validate";
 import { buildAnalyticsSummary }                                    from "./analytics";
 import { fetchRSSNews, formatRSSForPrompt }                          from "./rss";
 import { notifySessionComplete }                                     from "./notifications";
@@ -569,6 +569,23 @@ export async function runAndValidateOracle(
       console.warn(`  ⚠ r036: removed setup [${r.instrument}] — ${r.reason}`);
     }
     oracle = r036FilteredOracle;
+  }
+
+  // Re-apply setup count penalty if r029/r036 filtering reduced the setup count after
+  // computeOracleConfidence() already computed confidence using the pre-filter count.
+  // Example (session #222): ORACLE produced 3 setups → no penalty at 57%. filterNonCompliantSetups
+  // removed the Oil setup (0.82% stop, oil moved 3.6%) → 2 setups remain, confidence never recomputed.
+  // We call applySetupCountPenalty on the already-penalised confidence, which is safe because:
+  //   • if count didn't change, same threshold applies → no new penalty
+  //   • if count dropped below threshold, penalty fires on the already-penalised value
+  //   • if already-penalised value is ≤50%, minSetups=0 → no double-penalty (backlog #23 guard)
+  // Do NOT call resolveConfidence() — it would undo prior penalties (backlog #23).
+  const { penalized: postFilterConf, reason: postFilterReason } = applySetupCountPenalty(
+    oracle.confidence, oracle.setups.length, weekendMode
+  );
+  if (postFilterReason) {
+    console.warn(`  ⚠ Post-filter setup count penalty: ${postFilterReason}`);
+    oracle = { ...oracle, confidence: postFilterConf };
   }
 
   // Note: confidence is already resolved and penalized by computeOracleConfidence() inside
