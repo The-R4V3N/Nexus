@@ -253,6 +253,30 @@ describe("buildAxiomPrompt", () => {
     const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
     expect(userMessage).toMatch(/Crude Oil.*VIOLATION|VIOLATION.*Crude Oil/i);
   });
+
+  // ── regression: #51 — AXIOM hallucinates oil r029 violation when no oil setup exists ──
+
+  it("explicitly marks oil as NO SETUP when oil moved ≥3% but no oil setup was constructed (regression #51)", () => {
+    // Session #222 root cause: oil moved 3.6%, NASDAQ+DAX were the only setups.
+    // The r029 note listed "≥3% (requires ≥1.0% stop): Crude Oil" in the header
+    // but produced no per-setup verdict for oil → AXIOM invented a violation.
+    const snapshots = [
+      { name: "Crude Oil", symbol: "OIL", category: "commodities" as const, price: 99.31, previousClose: 95.85, change: 3.46, changePercent: 3.61, high: 100, low: 95, timestamp: new Date() },
+      { name: "NASDAQ 100", symbol: "NAS100", category: "indices" as const, price: 27029, previousClose: 26480, change: 549, changePercent: 2.08, high: 27100, low: 26700, timestamp: new Date() },
+    ];
+    const setups: any[] = [
+      // NASDAQ setup only — no oil setup
+      { instrument: "NASDAQ 100", type: "MSS", direction: "bullish", description: "breakout", invalidation: "below 26800",
+        entry: 27029, stop: 26750, target: 27450, RR: 1.51, timeframe: "4H" },
+    ];
+    const oracle = makeOracle({ marketSnapshots: snapshots, setups });
+    const rules = makeRules();
+    const { userMessage } = buildAxiomPrompt(oracle, 1, "", "", "", 0, "", rules, "");
+    // Must explicitly say oil has no setup — not just show the header volatility requirement
+    expect(userMessage).toMatch(/Crude Oil.*NO SETUP|NO SETUP.*Crude Oil/i);
+    // Must NOT show a VIOLATION verdict for oil (there is no setup to violate)
+    expect(userMessage).not.toMatch(/Crude Oil.*VIOLATION|VIOLATION.*Crude Oil/i);
+  });
 });
 
 // ── parseAxiomResponse ────────────────────────────────────
@@ -858,5 +882,37 @@ describe("parseAxiomResponse — r011 false-positive suppression", () => {
     const hasForexTask = (result.newSelfTasks ?? []).some((t: any) => /forex/i.test(t.title ?? ""));
     expect(hasr011Task).toBe(false);
     expect(hasForexTask).toBe(true);
+  });
+
+  // ── regression: #51 — r029 hallucination scrubbed from whatFailed ──
+
+  it("scrubs r029 oil violation from whatFailed when no oil setup exists (regression #51)", () => {
+    // Session #222: AXIOM wrote "Critical r029 violation on crude oil setup" in whatFailed
+    // but no oil setup existed. The false-positive suppressor stripped the self-task
+    // but left the hallucinated text in whatFailed, polluting the journal entry.
+    const oracle = makeOracle({
+      marketSnapshots: [
+        { name: "Crude Oil", symbol: "OIL", category: "commodities" as const, price: 99.31, previousClose: 95.85, change: 3.46, changePercent: 3.61, high: 100, low: 95, timestamp: new Date() },
+        { name: "NASDAQ 100", symbol: "NAS100", category: "indices" as const, price: 27029, previousClose: 26480, change: 549, changePercent: 2.08, high: 27100, low: 26700, timestamp: new Date() },
+      ],
+      setups: [
+        { instrument: "NASDAQ 100", type: "MSS", direction: "bullish", description: "breakout", invalidation: "below 26800",
+          entry: 27029, stop: 26750, target: 27450, RR: 1.51, timeframe: "4H" },
+      ],
+    });
+    const whatFailed = "Critical r029 violation on crude oil setup - stop distance only 0.82% despite instrument moving 3.6%. Single asset class coverage only.";
+    const json = JSON.stringify({
+      whatWorked: "Good cross-asset analysis",
+      whatFailed,
+      cognitiveBiases: ["volatility anchoring"],
+      evolutionSummary: "Identified stop distance gap",
+      ruleUpdates: [], newRules: [], systemPromptAdditions: "",
+      newSelfTasks: [], resolvedSelfTasks: [], codeChanges: [],
+    });
+    const result = parseAxiomResponse(json, 222, rules, oracle);
+    // Hallucinated r029 oil complaint must be removed from whatFailed
+    expect(result.whatFailed).not.toMatch(/r029.*crude oil|crude oil.*r029/i);
+    // Non-r029 content must survive
+    expect(result.whatFailed).toMatch(/single asset class/i);
   });
 });
