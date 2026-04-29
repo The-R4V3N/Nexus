@@ -1267,6 +1267,23 @@ describe("buildR039R040CrossAssetNote", () => {
     expect(note).toContain("67%");
   });
 
+  // ── backlog #55 — r040 (≥60%) note must require 3+ classes, not just 2 ──
+
+  it("requires 3+ asset classes in branch A when r040 triggers (confidence ≥60%)", () => {
+    // r026 Branch A: 4 setups from 3+ classes. At confidence ≥60%, the note must
+    // explicitly say 3+ classes, not just "2 different classes".
+    // Session #224: 61%, NASDAQ+S&P (indices) + Bitcoin (crypto) = 2 classes — non-compliant.
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 61);
+    expect(note).toMatch(/3\+? (different )?asset classes|three.*(different )?asset|3 classes/i);
+  });
+
+  it("still requires only 2 classes when only r039 triggers (55-59%, not r040)", () => {
+    // Below 60%, r040 doesn't trigger — only r039's 2-class requirement applies.
+    const note = buildR039R040CrossAssetNote(multiClassSnaps, 57);
+    // Should NOT require 3 classes at this confidence level
+    expect(note).not.toMatch(/3\+? different asset classes|branch A.*3 class/i);
+  });
+
   // ── regression: #53 — note must clarify that two index setups = same class ──
 
   it("explicitly warns that NASDAQ+DAX = same asset class = not cross-asset (regression #53)", () => {
@@ -1342,6 +1359,7 @@ describe("applyR039R040Penalty", () => {
   const crossClassSetups = [
     { instrument: "EUR/USD",   entry: 1.1781, stop: 1.174, target: 1.185 },
     { instrument: "NASDAQ 100", entry: 26248, stop: 25900, target: 26800 },
+    { instrument: "Crude Oil",  entry: 104,   stop: 106,   target: 98    },
   ];
 
   it("applies penalty when only forex setups at ≥60% confidence with 3+ big-move classes", () => {
@@ -1356,7 +1374,7 @@ describe("applyR039R040Penalty", () => {
     expect(result.reason).not.toBeNull();
   });
 
-  it("does NOT penalize when setups span ≥2 asset classes", () => {
+  it("does NOT penalize when setups span ≥3 asset classes at ≥60% confidence", () => {
     const result = applyR039R040Penalty(67, multiSnaps, crossClassSetups, false);
     expect(result.penalized).toBe(67);
     expect(result.reason).toBeNull();
@@ -1408,6 +1426,46 @@ describe("applyR039R040Penalty", () => {
     expect(result.penalized).toBeLessThan(57);
     expect(result.reason).not.toBeNull();
     expect(result.reason).toMatch(/r039/i);
+  });
+
+  // ── backlog #55 — r040 (≥60%) must require 3+ classes, not just 2 ──
+
+  it("penalizes 2-class coverage at ≥60% confidence (r040 branch A requires 3+)", () => {
+    // Session #224: 61% confidence, NASDAQ 100 (indices) + S&P 500 (indices) + Bitcoin (crypto)
+    // = 2 classes. r026 Branch A requires 4 setups from 3+ classes.
+    // The penalty currently passes at setupClasses.size >= 2 — this test verifies it is fixed.
+    const twoClassSetups = [
+      { instrument: "NASDAQ 100", entry: 27012, stop: 27100, target: 26800 },
+      { instrument: "S&P 500",    entry: 7125,  stop: 7150,  target: 7050  },
+      { instrument: "Bitcoin",    entry: 76681, stop: 77500, target: 75500 },
+    ];
+    const result = applyR039R040Penalty(61, multiSnaps, twoClassSetups, false);
+    expect(result.penalized).toBeLessThan(61);
+    expect(result.reason).not.toBeNull();
+    expect(result.reason).toMatch(/r040/i);
+  });
+
+  it("does NOT penalize 3-class coverage at ≥60% confidence (r026 branch A satisfied)", () => {
+    const threeClassSetups = [
+      { instrument: "NASDAQ 100", entry: 27012, stop: 27100, target: 26800 },
+      { instrument: "EUR/USD",    entry: 1.1688, stop: 1.16, target: 1.185 },
+      { instrument: "Bitcoin",    entry: 76681, stop: 77500, target: 75500 },
+      { instrument: "Crude Oil",  entry: 104,   stop: 106,   target: 98    },
+    ];
+    const result = applyR039R040Penalty(61, multiSnaps, threeClassSetups, false);
+    expect(result.penalized).toBe(61);
+    expect(result.reason).toBeNull();
+  });
+
+  it("still allows 2-class coverage when only r039 triggers (55-59%, r040 not active)", () => {
+    // Below 60%, r040 doesn't fire. 2 classes satisfies r039's 2-class requirement.
+    const twoClassSetups = [
+      { instrument: "NASDAQ 100", entry: 27012, stop: 27100, target: 26800 },
+      { instrument: "EUR/USD",    entry: 1.1688, stop: 1.16,  target: 1.185 },
+    ];
+    const result = applyR039R040Penalty(57, multiSnaps, twoClassSetups, false);
+    expect(result.penalized).toBe(57);
+    expect(result.reason).toBeNull();
   });
 });
 

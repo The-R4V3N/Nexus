@@ -735,12 +735,13 @@ export function applyR039R040Penalty(
   const r040Triggers = confidence >= 60;
 
   if (!r039Triggers && !r040Triggers) return { penalized: confidence, reason: null };
-  if (setupClasses.size >= 2) return { penalized: confidence, reason: null };
+  const requiredClasses = r040Triggers ? 3 : 2;
+  if (setupClasses.size >= requiredClasses) return { penalized: confidence, reason: null };
 
   const penalty = r040Triggers ? 15 : 10;
   const penalized = Math.max(35, confidence - penalty);
   const rule = r039Triggers && r040Triggers ? "r039+r040" : r039Triggers ? "r039" : "r040";
-  const coveredClass = setupClasses.size === 0 ? "no" : [...setupClasses][0];
+  const coveredClass = setupClasses.size === 0 ? "no" : [...setupClasses].join("+");
   return {
     penalized,
     reason: `${rule} cross-asset enforcement: ${confidence}% confidence, setups cover only ${coveredClass} — reduced by ${penalty}pts to ${penalized}%`,
