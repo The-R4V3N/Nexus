@@ -978,7 +978,14 @@ You MUST either:
       • Poor RR (<1.3) at the identified structural level
       • Stop distance >2% required
       • Conflicting higher timeframe structure
-Submitting only forex setups when indices, crypto, and commodities are all moving is a RULE VIOLATION.
+
+IMPORTANT — "different asset class" means different CATEGORY, not different instrument:
+  ✗ NASDAQ 100 + DAX = both indices = SAME class = NOT cross-asset coverage
+  ✗ EUR/USD + GBP/USD = both forex = SAME class = NOT cross-asset coverage
+  ✓ NASDAQ 100 (indices) + EUR/USD (forex) = 2 different classes = compliant
+  ✓ Bitcoin (crypto) + Crude Oil (commodities) + EUR/USD (forex) = 3 classes = compliant
+
+Submitting only forex setups, or only indices setups, when multiple asset classes are moving is a RULE VIOLATION.
 `;
 }
 

@@ -1266,6 +1266,23 @@ describe("buildR039R040CrossAssetNote", () => {
     const note = buildR039R040CrossAssetNote(multiClassSnaps, 67);
     expect(note).toContain("67%");
   });
+
+  // ── regression: #53 — note must clarify that two index setups = same class ──
+
+  it("explicitly warns that NASDAQ+DAX = same asset class = not cross-asset (regression #53)", () => {
+    // Session #222 root cause: ORACLE produced NASDAQ 100 + DAX setups — both indices.
+    // The prompt said "AT LEAST 2 DIFFERENT asset classes" but didn't give concrete
+    // examples, so ORACLE counted 2 setups and thought it complied.
+    const snaps = [
+      makeCrossSnap("NASDAQ 100", "NAS100",  2.08), // indices >2%
+      makeCrossSnap("Crude Oil",  "OIL",     3.61), // commodities >2%
+      makeCrossSnap("XRP",        "XRP",    -2.84), // crypto >2%
+      makeCrossSnap("DAX",        "DAX",    -1.04), // indices <2%
+    ];
+    const note = buildR039R040CrossAssetNote(snaps, 57);
+    // Must explicitly clarify what "different" means — same class doesn't count
+    expect(note).toMatch(/nasdaq.*dax.*same|dax.*nasdaq.*same|indices.*same|same.*class|NASDAQ.*DAX.*same/i);
+  });
 });
 
 // ── r031 auto-cap in computeOracleConfidence ──────────────
@@ -1376,6 +1393,21 @@ describe("applyR039R040Penalty", () => {
   it("reason string mentions r039 or r040", () => {
     const result = applyR039R040Penalty(67, multiSnaps, forexOnlySetups, false);
     expect(result.reason).toMatch(/r039|r040/i);
+  });
+
+  // ── regression: #53 — indices-only setups must be penalized like forex-only ──
+
+  it("penalizes indices-only setups (NASDAQ+DAX) as single-class coverage (regression #53)", () => {
+    // Session #222: NASDAQ 100 + DAX both classify as "indices" — setupClasses.size = 1.
+    // Penalty should fire just as it does for forex-only setups.
+    const indicesOnlySetups = [
+      { instrument: "NASDAQ 100", entry: 27029, stop: 26750, target: 27450 },
+      { instrument: "DAX",        entry: 24018, stop: 24280, target: 23650 },
+    ];
+    const result = applyR039R040Penalty(57, multiSnaps, indicesOnlySetups, false);
+    expect(result.penalized).toBeLessThan(57);
+    expect(result.reason).not.toBeNull();
+    expect(result.reason).toMatch(/r039/i);
   });
 });
 
