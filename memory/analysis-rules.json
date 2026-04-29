@@ -233,10 +233,10 @@
     {
       "id": "r029",
       "category": "setup_precision",
-      "description": "Stop distance validation with volatility context: when any instrument individually moves ≥5% in session, that specific instrument requires stop ≥1.5% from entry unless exceptional coordination conditions apply (3+ asset classes >2% moves). When moves ≥3% but <5%, requires stop ≥1.0% from entry. During exceptional coordination sessions, apply market-wide volatility assessment - if session exhibits >2x coordination across multiple classes, allow reduced stops for correlated instruments. Validation",
+      "description": "Stop distance validation with volatility context: when any instrument individually moves ≥5% in session, that specific instrument requires stop ≥1.5% from entry. When moves ≥3% but <5%, requires stop ≥1.0% from entry. No exceptions during exceptional coordination - elevated volatility demands wider stops regardless of correlation. Validation must occur before setup completion, not after session end.",
       "weight": 9,
       "addedSession": 56,
-      "lastModifiedSession": 198
+      "lastModifiedSession": 222
     },
     {
       "id": "r030",
@@ -371,8 +371,8 @@
       "lastModifiedSession": 221
     }
   ],
-  "version": 111,
-  "lastUpdated": "2026-04-28T13:39:10.210Z",
+  "version": 112,
+  "lastUpdated": "2026-04-29T01:05:50.169Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -380,5 +380,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #221"
+  "sessionNotes": "Last updated: Session #222"
 }
