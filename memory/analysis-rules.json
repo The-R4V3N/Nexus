@@ -133,10 +133,10 @@
     {
       "id": "r017",
       "category": "setup_requirements",
-      "description": "Every setup must include: (1) specific timeframe, (2) entry level with 0.5-1% buffer from current price for volatility, (3) clear invalidation point, (4) risk/reward ratio >1.3. Setups missing any element or with RR <1.3 must be classified as 'incomplete'.",
+      "description": "Every setup must include: (1) specific timeframe, (2) entry level with 0.5-1% buffer from current price for volatility, (3) clear invalidation point, (4) risk/reward ratio >1.3 and <4.0. Setups with RR <1.3 or >4.0 must be classified as 'incomplete' - ratios exceeding 4.0 indicate calculation errors requiring immediate correction.",
       "weight": 8,
       "addedSession": 4,
-      "lastModifiedSession": 55
+      "lastModifiedSession": 234
     },
     {
       "id": "r018",
@@ -355,8 +355,8 @@
       "lastModifiedSession": 221
     }
   ],
-  "version": 113,
-  "lastUpdated": "2026-04-29T13:38:05.688Z",
+  "version": 114,
+  "lastUpdated": "2026-05-03T00:22:21.896Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -364,5 +364,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #224"
+  "sessionNotes": "Last updated: Session #234"
 }
