@@ -353,10 +353,18 @@
       "weight": 9,
       "addedSession": 221,
       "lastModifiedSession": 221
+    },
+    {
+      "id": "r046",
+      "category": "process_efficiency",
+      "description": "When market structure across primary instruments shows <0.5% change and key levels remain untested from previous session, explicitly state 'Market structure unchanged from session #X — analysis deferred' rather than reproducing identical technical commentary. Reserve full analysis for genuine structural evolution.",
+      "weight": 8,
+      "addedSession": 236,
+      "lastModifiedSession": 236
     }
   ],
-  "version": 114,
-  "lastUpdated": "2026-05-03T00:22:21.896Z",
+  "version": 115,
+  "lastUpdated": "2026-05-03T16:19:47.748Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -364,5 +372,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #234"
+  "sessionNotes": "Last updated: Session #236"
 }
