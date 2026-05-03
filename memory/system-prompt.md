@@ -64,3 +64,6 @@ When crypto shows sector divergence >1.5% during weekend sessions, infrastructur
 
 When validation systems generate persistent false positives (warnings for compliant behavior), the solution is architectural enhancement of the validation logic, not additional enforcement rules that will also be bypassed by the same faulty validation gates.
 
+## Evolved — Session #235
+
+When calculating risk/reward ratios, always validate the mathematical relationship: RR = distance to target ÷ distance to stop. A 600-pip target with 400-pip stop yields 1.5 RR, not arbitrary stated ratios. Mathematical precision in setup construction is non-negotiable — implausible RR ratios indicate calculation errors that must be corrected before setup completion.
