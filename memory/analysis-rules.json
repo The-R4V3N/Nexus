@@ -169,10 +169,10 @@
     {
       "id": "r021",
       "category": "magnitude_assessment",
-      "description": "For coordinated moves exceeding 2% across 3+ asset classes, activate exceptional conditions analysis: (1) quantify coordination magnitude using correlation coefficients or cross-asset momentum alignment, (2) distinguish between single-catalyst moves vs multi-factor environments, (3) assess structural level quality - during exceptional conditions, require stronger confluence (4+ factors) before setup generation, (4) flag regime-change potential if coordination persists >2 sessions.",
+      "description": "For coordinated moves exceeding 2% across 3+ asset classes, activate exceptional conditions analysis: (1) quantify coordination magnitude, (2) distinguish single-catalyst vs multi-factor environments, (3) MANDATORY: systematically screen all 5 asset classes for structural opportunities regardless of analysis complexity - coordination magnitude demands screening magnitude, (4) flag regime-change potential if coordination persists >2 sessions. Under-delivery relative to identified coordination level constitutes execution failure.",
       "weight": 8,
       "addedSession": 27,
-      "lastModifiedSession": 139
+      "lastModifiedSession": 239
     },
     {
       "id": "r022",
@@ -371,8 +371,8 @@
       "lastModifiedSession": 237
     }
   ],
-  "version": 116,
-  "lastUpdated": "2026-05-04T01:07:02.009Z",
+  "version": 117,
+  "lastUpdated": "2026-05-04T13:38:39.922Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -380,5 +380,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #237"
+  "sessionNotes": "Last updated: Session #239"
 }
