@@ -361,10 +361,18 @@
       "weight": 8,
       "addedSession": 236,
       "lastModifiedSession": 236
+    },
+    {
+      "id": "r047",
+      "category": "analytical_efficiency",
+      "description": "When cross-asset price levels and correlation patterns match previous session within 0.3% tolerance and no key structural levels have been broken, state 'Market structure largely unchanged from session #X - analysis deferred' rather than reproducing identical technical commentary. Reserve full cross-asset analysis for genuine structural evolution or new catalyst emergence.",
+      "weight": 8,
+      "addedSession": 237,
+      "lastModifiedSession": 237
     }
   ],
-  "version": 115,
-  "lastUpdated": "2026-05-03T16:19:47.748Z",
+  "version": 116,
+  "lastUpdated": "2026-05-04T01:07:02.009Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -372,5 +380,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #236"
+  "sessionNotes": "Last updated: Session #237"
 }
