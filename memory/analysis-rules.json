@@ -385,10 +385,18 @@
       "weight": 9,
       "addedSession": 241,
       "lastModifiedSession": 241
+    },
+    {
+      "id": "r050",
+      "category": "execution_accountability",
+      "description": "When confidence exceeds 55% during exceptional coordination (4+ asset classes moving >2x ranges), document specific structural level evaluation for minimum 1 instrument per affected asset class in analysis text before finalizing session. Each evaluation must specify price level and setup viability assessment.",
+      "weight": 9,
+      "addedSession": 242,
+      "lastModifiedSession": 242
     }
   ],
-  "version": 119,
-  "lastUpdated": "2026-05-05T09:43:13.100Z",
+  "version": 120,
+  "lastUpdated": "2026-05-05T13:40:33.938Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -396,5 +404,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #241"
+  "sessionNotes": "Last updated: Session #242"
 }
