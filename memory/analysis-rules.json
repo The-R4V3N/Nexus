@@ -377,10 +377,18 @@
       "weight": 9,
       "addedSession": 240,
       "lastModifiedSession": 240
+    },
+    {
+      "id": "r049",
+      "category": "execution_enforcement",
+      "description": "When coordination exceeds 2x ranges across 4+ asset classes, systematically document attempted screening of minimum 2 specific structural levels per affected asset class before finalizing session. Each level attempt must specify instrument, price level, and rejection reason (poor RR, high volatility, or conflicting timeframes). Incomplete screening documentation indicates systematic execution failure requiring immediate correction.",
+      "weight": 9,
+      "addedSession": 241,
+      "lastModifiedSession": 241
     }
   ],
-  "version": 118,
-  "lastUpdated": "2026-05-05T01:00:58.571Z",
+  "version": 119,
+  "lastUpdated": "2026-05-05T09:43:13.100Z",
   "focusInstruments": [
     "NAS100",
     "EUR/USD",
@@ -388,5 +396,5 @@
     "Gold",
     "BTC"
   ],
-  "sessionNotes": "Last updated: Session #240"
+  "sessionNotes": "Last updated: Session #241"
 }
